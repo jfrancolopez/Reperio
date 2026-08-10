@@ -16,7 +16,7 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 MAX_REPOSITORY_FILE_BYTES = 5 * 1024 * 1024
-EXPECTED_BACKLOG_IDS = {f"RPR-{number:03d}" for number in range(1, 178)}
+EXPECTED_BACKLOG_IDS = {f"RPR-{number:03d}" for number in range(1, 192)}
 WORKFLOW_DIRECTORY = ROOT / ".github" / "workflows"
 
 FORBIDDEN_ROOT_DIRECTORIES = {

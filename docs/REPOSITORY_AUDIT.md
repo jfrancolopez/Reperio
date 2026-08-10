@@ -19,7 +19,7 @@ This is a point-in-time audit, not a permanent status page. Use `git status`, th
 
 | Finding | Risk | Disposition on this branch |
 |---|---|---|
-| No ignore rules | Secrets, disk content, runtime state, and large recovery artifacts could be added accidentally. | Added layered ignore rules for secrets, credentials, state, scratch, exports, disk images, databases, models, wordlists, build output, logs, and editor files. |
+| No ignore rules | Secrets, source-media content, runtime state, and large recovery artifacts could be added accidentally. | Added layered ignore rules for secrets, credentials, state, scratch, exports, disk images, databases, models, wordlists, build output, logs, and editor files. |
 | Ignore rules alone are bypassable | `git add -f` or a renamed file can still enter history. | Added a dependency-free validator that inspects tracked and untracked candidate files for prohibited paths/types, secret signatures, symlinks, size, and hygiene. |
 | No continuous integration | Agents could claim completion without a common validation result. | Added a pull-request/`main` workflow with repository policy, checksum-verified worktree/full-history Gitleaks, and dependency review jobs. |
 | Workflow supply-chain risk | Mutable action tags can be retargeted; broad tokens can amplify compromise. | Every Action is pinned to a full commit SHA; workflow permissions are read-only, checkout credentials are not persisted, and jobs have timeouts. Local policy blocks unsafe triggers, write permissions, mutable Actions, and expression interpolation in shell steps. |
@@ -36,7 +36,7 @@ This is a point-in-time audit, not a permanent status page. Use `git status`, th
 - Repository files are below 5 MiB and symbolic links are absent.
 - UTF-8 text hygiene, final newlines, and Git whitespace checks pass.
 - Local Markdown links resolve within the repository.
-- The backlog defines every `RPR-001` through `RPR-177` exactly once and documentation references no undefined numeric task.
+- The backlog defines every `RPR-001` through `RPR-191` exactly once and documentation references no undefined numeric task.
 - JSON and shell scripts have valid syntax.
 - Workflows use safe triggers, read-only permissions, immutable Action SHAs, bounded jobs, and no direct GitHub-context expression inside shell commands.
 

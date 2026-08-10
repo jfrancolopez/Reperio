@@ -1,22 +1,26 @@
 # Reperio master plan
 
 Status: approved product direction; implementation not started
-Plan version: 1.0
+Plan version: 1.1
 Last updated: 2026-08-10
+
+Version 1.1 expands the source model from disks to removable flash/cards, optical discs, floppies, and validated legacy adapters; it also makes cross-platform Trash/Recycle Bin reconstruction explicit.
 
 This document is the product and architecture source of truth. `BACKLOG.md` is the execution source of truth. If the two disagree, resolve the disagreement in both documents before implementing the affected feature.
 
 ## 1. Product definition
 
-Reperio is a single-operator, local-first disk discovery and recovery application for authorized personal and company-owned media. It performs a slow, exhaustive, resumable scan directly against one physical source disk, creates a searchable catalog while scanning, and allows selected material to be copied to separate local or remote storage.
+Reperio is a single-operator, local-first media discovery and recovery application for authorized personal and company-owned storage. It performs a slow, exhaustive, resumable scan directly against one physical source medium, creates a searchable catalog while scanning, and allows selected material to be copied to separate local or remote storage. A source may be a hard drive, SSD, USB flash drive, SD/microSD or other memory card, optical disc, floppy, or a later validated legacy-media adapter.
 
 Reperio is deliberately not a disk-cleaning product. It will contain no wipe workflow and no source repair workflow. A user may destroy or reuse a disk with other tools only after independently deciding that Reperio's exports are sufficient.
 
 ### 1.1 Desired outcome
 
-An operator can attach an old Windows, macOS, Linux, mobile-backup, DVR, RAID, or raw disk and answer:
+An operator can attach an old Windows, macOS, Linux, mobile-backup, DVR, RAID, or raw disk; insert a CD, DVD, Blu-ray, or floppy; or connect removable flash media and answer:
 
 - What allocated, hidden, deleted, orphaned, and signature-carved files are recoverable?
+- What is still present in Windows Recycle Bin, macOS Trash, or freedesktop Trash, and what deleted content can be reconstructed after those locations were emptied?
+- Which optical sessions, tracks, older directory trees, or reusable-media remnants are readable, and what limitations prevent deeper recovery?
 - Which findings are likely personal or user-manipulated rather than operating-system noise?
 - What photos, videos, documents, archives, messages, backups, source code, databases, wallets, password vaults, and software artifacts exist?
 - Which files are encrypted, password-protected, corrupted, duplicated, or only partially recoverable?
@@ -29,7 +33,7 @@ An operator can attach an old Windows, macOS, Linux, mobile-backup, DVR, RAID, o
 The product is successful when an operator can:
 
 1. Install a signed, version-pinned release on a supported Linux host with one documented command.
-2. Positively select an external disk using model, serial, size, transport, and stable device identity.
+2. Positively select an external source using drive facts plus media-specific identity: model/serial/transport when available, and capacity, geometry, table of contents, session layout, and sampled media fingerprint where removable media has no stable serial.
 3. Start a deep scan that cannot write to the source even if the UI, AI, or a parser is compromised.
 4. Disconnect or restart the application and resume completed stages without repeating successful work; sector carving resumes from a durable checkpoint where the underlying tool supports it.
 5. Browse findings and export verified originals while later scan stages continue.
@@ -41,14 +45,14 @@ The product is successful when an operator can:
 
 | Area | Decision |
 |---|---|
-| Authorization | The operator confirms ownership or explicit authority for every source disk. |
+| Authorization | The operator confirms ownership or explicit authority for every source medium. |
 | Scan mode | One deep scan mode. No fast-scan product mode. Individual stages may still expose progress. |
-| Source | One physical source disk per Reperio instance. |
-| Acquisition | Direct device scanning; Reperio does not create a forensic image. |
+| Source | One physical source medium per Reperio instance: disk, SSD, flash drive, memory card, optical disc, floppy, or validated legacy adapter. One reader containing one inserted medium counts as one source. |
+| Acquisition | Direct source-medium scanning; Reperio does not create a forensic image. |
 | Working storage | Persistent state/checkpoint storage and separate scratch storage are required. Scratch contains extracted/carved copies and derivatives, not a disk image. RAM-only operation cannot support exhaustive carving and reliable resume on large disks. |
-| Coverage | Allocated files, deleted entries, lost/deleted partitions, unallocated-space carving, corrupted artifacts, and recoverable content. |
-| Priority | Windows first, macOS second, Linux third, then RAID/DVR/raw/proprietary formats. |
-| Source mutation | Prohibited permanently: no write, delete, repair, wipe, format, or partition modification. |
+| Coverage | Allocated files, logical trash/recycle items, deleted entries, older optical sessions, lost/deleted partitions, unallocated-space carving, corrupted artifacts, and recoverable content. |
+| Priority | Windows disks and FAT/exFAT removable flash first, macOS second, Linux third, optical/floppy next, then RAID/DVR/raw/proprietary and other legacy formats. |
+| Source mutation | Prohibited permanently: no write, delete, repair, wipe, initialize, format, optical burn/blank, or partition modification. |
 | Review | Findings appear progressively and remain reviewable/exportable before scan completion. |
 | Dismissal | Bulk dismiss is allowed, reversible, and catalog-only. |
 | Previews | Sensitive content is not hidden. Safe thumbnails and full-screen preview are desired. |
@@ -66,7 +70,7 @@ These properties are requirements, not implementation suggestions.
 
 ### 3.1 No source writes
 
-1. The source device is selected through a stable `/dev/disk/by-id` identity, never a bare name such as `/dev/sdb` alone.
+1. A disk or flash device uses a stable `/dev/disk/by-id` identity when available. Media without a stable device ID—especially a disc or floppy inserted into a reusable drive—uses the stable reader identity plus capacity/geometry, table of contents or session facts, and a newly sampled media fingerprint. A bare path such as `/dev/sdb`, `/dev/sr0`, or `/dev/fd0` is never sufficient by itself.
 2. The host controller asks the Linux kernel to set the entire selected device read-only and verifies the flag before a scan starts.
 3. The source and its partitions must not remain mounted read-write. The start screen clearly reports mounted state.
 4. The control plane, UI, model providers, export workers, notification workers, and preview workers never receive a source-device handle.
@@ -74,7 +78,7 @@ These properties are requirements, not implementation suggestions.
 6. Filesystem analysis uses parsers against the device rather than mounting the source in the core workflow.
 7. Recovered and carved bytes go to a scratch/export device proven not to be the source or one of its children.
 8. The application has no API route, command, plugin permission, or UI control for destructive source operations.
-9. Automated integration tests use a sacrificial block-device fixture and prove that attempted writes fail at every layer.
+9. Automated integration tests use sacrificial block, optical, and floppy-style fixtures and prove that attempted writes fail at every applicable layer. Hardware acceptance tests cover representative readers before support is advertised.
 
 Reperio necessarily writes its own catalog, checkpoints, scratch copies, derivatives, and requested exports. The read-only guarantee applies to the selected source device and its contents. Completed recovered copies are not automatically deleted. Only incomplete temporary files may be cleaned according to a documented owned-state policy; uninstall preserves Reperio state unless the operator separately requests its removal.
 
@@ -93,15 +97,18 @@ A disk can contain intentionally malicious images, archives, documents, fonts, d
 - A source item is never considered backed up merely because it appears in the catalog.
 - An export is complete only after the destination copy is checked by size and SHA-256 where the destination supports reading/checksums.
 - The export manifest records failures and unsupported verification methods.
-- Reperio never silently uses the source disk as scratch or export storage.
+- Reperio never silently uses the source medium or its backing device as scratch or export storage.
 
 ## 4. Honest limitations
 
 The UI and documentation must communicate these limitations without implying forensic certainty:
 
 - Overwritten, TRIM-discarded, physically unreadable, strongly encrypted, or fragmented carved data may be unrecoverable.
+- Flash controllers may discard or remap deleted blocks through TRIM, garbage collection, and wear leveling. Continued use of a USB drive or memory card can overwrite recoverable clusters even when the visible files appear unchanged.
+- Optical recovery depends on media type, drive firmware, readable table-of-contents/session metadata, physical condition, and whether sectors were actually overwritten. Earlier append-only sessions and some quick-blanked rewritable discs may remain readable; fully overwritten DVD-RW/DVD+RW/BD-RE content may not. Reperio reports only sessions and sectors the drive can address.
+- Floppies commonly have bad sectors, ambiguous geometry, weak metadata, and reused clusters. Deleted filenames or initial clusters may survive while the rest of the file does not; confidence and partial state must remain visible.
 - Direct scanning repeatedly reads the original. A mechanically failing disk can deteriorate during a long scan. Reperio reports SMART and I/O-error signals and can pause, but it does not image the drive. The operator may use an external imaging/recovery specialist outside Reperio.
-- A direct scan cannot guarantee an identical view if the device is disconnected, altered elsewhere, or re-enumerated. Resume is allowed only after stable identity, size, sector size, and sampled fingerprints match.
+- A direct scan cannot guarantee an identical view if the device is disconnected, altered elsewhere, re-enumerated, or replaced in the same reader. Resume is allowed only after the full media identity—including geometry or optical session/TOC facts where applicable—and sampled fingerprints match.
 - A deep direct scan is not RAM-only. Deleted-space carving can recover hundreds of gigabytes, and durable resume requires persistent checkpoints. The operator must provide separate local or network-backed scratch storage sized for the expected recovered content.
 - Filesystem timestamps do not prove human action. Reperio reports evidence and confidence, not an absolute claim that a user manipulated a file.
 - Deleted browser history, private browsing, cleared SQLite pages, cache artifacts, and synchronized history have different evidentiary quality. The UI identifies the source parser and recovery condition.
@@ -115,8 +122,8 @@ The UI and documentation must communicate these limitations without implying for
 
 - Scanner host: modern Linux with systemd, Docker Engine or Podman, `amd64` or `arm64`.
 - User interface: current desktop browser on Linux, Windows, macOS, or a tablet on the same network.
-- Source transport: USB/SATA/SAS devices visible to Linux as a block device. Some USB bridges do not expose SMART data; scanning still works with a warning.
-- One active source per installed instance. A second disk requires a second isolated Reperio instance.
+- Source transport: USB/SATA/SAS block devices; USB/PCIe SD, microSD, CompactFlash, Memory Stick, MMC and similar readers; Linux optical devices; and supported floppy controllers/USB floppy readers. A medium is supported only when Linux exposes a reliable read path and the adapter's fixture/hardware matrix passes. SMART is unavailable for many readers and media, so scanning continues with a capability warning rather than invented health data.
+- One active source medium per installed instance. A second simultaneous source requires a second isolated Reperio instance; sequential one-at-a-time media cases remain available in the same catalog.
 
 ### 5.2 “One command” installation
 
@@ -135,7 +142,7 @@ The real release URL will be created later. The installer must:
 5. Install the narrow host controller and its system service.
 6. Create dedicated state, scratch, and secrets directories with restrictive permissions.
 7. Start the control plane and print the local URL, LAN URL, safety status, and uninstall instructions.
-8. Never make a disk selection or begin scanning during installation.
+8. Never make a source-media selection or begin scanning during installation.
 
 Piping a network script into a privileged shell is inherently sensitive. Releases must also offer a download-verify-run sequence and packages so cautious operators can inspect before execution.
 
@@ -168,9 +175,9 @@ flowchart LR
 
 The host controller is the smallest privileged component. It must not contain parsing, AI, preview, export, or general shell functionality. Its allowlisted responsibilities are:
 
-- Observe block-device add/remove events and return sanitized device facts.
-- Resolve a selected stable device identity to the current kernel path.
-- Report parent/child relationships, mounts, holders, RAID/LVM membership, capacity, sector sizes, transport, model, and serial.
+- Observe block-device and removable-media add/remove/change events and return sanitized reader and inserted-medium facts.
+- Resolve a selected stable device/media identity to the current kernel path without trusting the path as identity.
+- Report parent/child relationships, mounts, holders, RAID/LVM membership, capacity, sector sizes or geometry, transport, model, serial, optical TOC/sessions, and media-change generation.
 - Read SMART/health information where supported.
 - Set and verify the kernel read-only flag.
 - Launch, monitor, pause, resume, and stop the single scanner with a fixed container specification.
@@ -193,7 +200,7 @@ SQLite is intentional: one scanner and one operator do not justify PostgreSQL, R
 
 ### 6.3 Scanner worker
 
-The scanner is an ephemeral, network-isolated process with the source block device and separate checkpoint/scratch mounts. It runs adapters through structured subprocess wrappers and emits normalized records. It does not serve HTTP and does not know provider or destination credentials.
+The scanner is an ephemeral, network-isolated process with the selected source device exposed read-only and separate checkpoint/scratch mounts. The source may be a disk/flash block device, optical device, floppy, or validated legacy adapter. It runs adapters through structured subprocess wrappers and emits normalized records. It does not serve HTTP and does not know provider or destination credentials.
 
 The worker is restartable. Every stage has an idempotency key, state, input identity, tool version, cursor/checkpoint, counters, timestamps, structured error, and retry policy.
 
@@ -218,24 +225,27 @@ The product has one deep scan composed of observable stages. Stages can overlap 
 
 ### Stage A: source validation and health
 
-1. Resolve stable identity and record device facts.
-2. Verify destination/state storage does not share the source physical disk.
+1. Resolve stable reader/device identity and record media facts. For removable media, fingerprint the inserted medium separately from the reusable reader and detect media-change events.
+2. Verify destination/state storage does not share the source physical backing device.
 3. Record mount/holder state and set kernel read-only.
-4. Read partition tables without modifying them.
-5. Read SMART/health data and warn about reallocated, pending, uncorrectable, temperature, or transport-error signals.
-6. Create a resume fingerprint using immutable device facts plus small sampled hashes from non-secret sector ranges. Do not hash the full disk before scanning.
+4. Read partition tables, floppy geometry, or optical TOC/track/session metadata without modifying the medium.
+5. Read SMART/health data where available and warn about reallocated, pending, uncorrectable, temperature, transport, media-change, or read-error signals. Report `unavailable` for readers that expose no health interface.
+6. Create a resume fingerprint using immutable device/reader facts, media geometry or session facts, and small sampled hashes from non-secret sector ranges. Do not hash the full source before scanning.
 
 ### Stage B: volume discovery
 
 - Discover GPT, MBR, extended, Apple, BSD, LVM, mdraid, and recognizable lost partition candidates.
+- Detect partitionless “superfloppy” filesystems commonly used by memory cards and USB flash devices.
+- For optical media, enumerate data/audio tracks and every addressable session rather than treating only the newest directory tree as the whole source.
 - Detect filesystem and encryption/container signatures.
-- Create volume records with offsets, sizes, confidence, parser support, and locked/unlocked state.
+- Create volume/session/track records with offsets, sizes, confidence, parser support, allocation or historical state, and locked/unlocked state.
 - Do not repair or write a partition table.
 
 ### Stage C: filesystem enumeration
 
-- Use The Sleuth Kit as the initial cross-filesystem enumerator because it can analyze NTFS, FAT, exFAT, APFS, HFS, ext-family, UFS, and other formats without mounting.
+- Use The Sleuth Kit as the initial cross-filesystem enumerator because it can analyze NTFS, FAT12/16/32, exFAT, APFS, HFS, ext-family, UFS, ISO 9660, and other validated formats without mounting.
 - Add Dissect as a complementary parser where it improves artifact access or filesystem coverage.
+- Add dedicated read-only optical adapters for ISO 9660/Joliet/Rock Ridge, UDF, track tables, and previous-session directory trees where the generic parser lacks coverage. These adapters receive no write-capable device access or output-drive command.
 - Enumerate allocated, deleted, orphaned, hidden, alternate data streams, metadata-only, sparse, symlink, and special entries where the filesystem exposes them.
 - Normalize paths, filenames, users/owners, timestamps with raw values and timezone interpretation, sizes, allocation state, attributes, object IDs, and physical extents.
 - Stream SHA-256 when extracting a finding. Avoid reading the same content repeatedly by sharing a content-addressed scratch object.
@@ -281,6 +291,7 @@ Artifact locators search all user profiles and application paths for:
 - Virtual machines, disk images, backup catalogs, and archives
 - Wallet files, wallet applications, seed/backups, password vaults, keys, and certificates
 - Databases, source repositories, scripts, installers, and licensed application data
+- Windows `$Recycle.Bin`, macOS user/volume Trash, and freedesktop Trash layouts, preserving original path/deletion-time metadata where present and linking still-allocated payloads to deleted/carved copies
 
 Detection produces an artifact record even if parsing fails, so unsupported or encrypted data remains visible.
 
@@ -305,6 +316,8 @@ Thumbnail policy is tiered:
 ### Stage G: deleted-space carving
 
 - Use PhotoRec as the initial signature-carving engine. It operates read-only and supports durable session resume.
+- Apply filesystem-aware deleted-entry recovery before raw carving on FAT12/16/32, exFAT, NTFS, ext, and other validated formats. A partitionless memory card or floppy is scanned from its filesystem start; a partitioned flash device uses each volume plus remaining unallocated ranges.
+- For optical media, scan addressable older sessions and obsolete directory trees first, then carve readable sectors. Quick-blanked or damaged rewritable media is attempted only when the drive exposes a nonzero readable range; fully overwritten or firmware-hidden sectors are reported as unavailable, not “empty.”
 - Carved outputs are written only to scratch storage and immediately ingested, hashed, classified, and linked to source offsets.
 - Record that carved names and dates may be synthetic or unavailable.
 - Deduplicate carved content against allocated/deleted filesystem entries without discarding provenance.
@@ -318,7 +331,7 @@ Thumbnail policy is tiered:
 - Run John the Ripper or Hashcat locally with configurable dictionaries, rules, masks/combinations, resource schedules, and time budgets.
 - Never print candidate or recovered passwords in logs or notifications.
 - Successful decryption produces a separate scratch copy; original bytes and protected status remain intact.
-- File repair/regeneration runs only against copies in scratch and preserves the damaged original copy. No repair tool receives the source block device.
+- File repair/regeneration runs only against copies in scratch and preserves the damaged original copy. No repair tool receives the source device or reader.
 
 ### Stage I: semantic enrichment
 
@@ -386,23 +399,26 @@ Every row records operating-system user, browser, profile, artifact type, source
 10. Backups and mobile data
 11. Wallets, vaults, keys, and sensitive artifacts
 12. Software, source code, and databases
-13. Deleted and carved
-14. Unknown and unsupported
-15. Exports
-16. Settings and diagnostics
+13. Trash and Recycle Bin
+14. Deleted and carved
+15. Unknown and unsupported
+16. Exports
+17. Settings and diagnostics
 
 ### 9.2 Progressive live experience
 
 The live-scan screen shows:
 
-- Source identity and read-only status
+- Source medium and reader identity, media type, read-only status, and whether the medium changed since the case began
 - Current stage and subtask
 - Bytes/sectors examined where meaningful
 - Volumes, filesystem entries, findings, deleted entries, carved files, errors, and recoverable bytes
 - Counts by category and newly discovered high-interest artifacts
 - Per-stage status: pending, running, paused, retrying, completed, completed-with-warnings, failed, skipped-unsupported
 - Estimated percentage only when a denominator is credible; otherwise show activity and completed units rather than a deceptive ETA
-- Pause/resume and safe stop; no action that writes the disk
+- Pause/resume and safe stop; no action that writes, blanks, burns, formats, or repairs the source medium
+
+The source selector groups whole disks, flash devices/memory cards, optical drives with inserted media, and floppy/legacy readers. It displays capacity, transport, filesystem hints, physical write-lock signal when available, kernel read-only proof, optical sessions/tracks, and any missing identity evidence. When a disc or floppy is replaced in the same drive, the previous case remains closed/disconnected and the new medium requires a fresh selection; it is never silently treated as a resume.
 
 ### 9.3 Finding interactions
 
@@ -430,15 +446,17 @@ Photos and video use a responsive masonry layout inspired by established visual-
 
 The physical schema can evolve, but the following concepts are mandatory:
 
-- `source_devices`: stable identity, model, serial, capacity, sectors, transport, sampled fingerprint, safety state
-- `scan_cases`: source, configuration snapshot, status, start/end, app version
-- `volumes`: offsets, partitions, filesystem/encryption types, confidence, unlock state
+- `source_devices`: stable reader/controller identity, model, serial, transport, capabilities, current kernel path, safety state
+- `source_media`: source kind, device relationship, capacity, sectors/geometry, write-protect signals, TOC/session facts, sampled fingerprint, insertion/change generation
+- `scan_cases`: source medium, configuration snapshot, status, start/end, app version
+- `volumes` and `media_sessions`: offsets, partitions/tracks/sessions, filesystem/encryption types, historical/current state, confidence, unlock state
 - `jobs`: stage, state, lease, idempotency key, attempt, progress, checkpoint, errors
 - `filesystem_entries`: parent/object IDs, path, names, attributes, allocation state, raw/normalized timestamps, extents
 - `contents`: content hash, size, scratch location, health, extraction state, reference count
 - `findings`: entry/content link, category, interest/noise, confidence, review state, export state
 - `evidence`: finding, rule/parser/model, reason code, version, value, confidence
 - `artifacts`: application/browser/backup/wallet/etc. instance and owning OS user/profile
+- `trash_records`: platform/user, original path, deletion time, metadata/payload linkage, present/deleted/carved state, parser confidence
 - `browser_events`: normalized browser records with raw provenance
 - `derivatives`: thumbnail, preview, OCR, transcript, translation, rendered page, waveform
 - `model_runs` and `model_opinions`: prompt/schema versions, provider/model, result, usage, error, agreement group
@@ -539,6 +557,9 @@ Every tool must pass a license, maintenance, architecture, sandbox, output-schem
 | Complementary target parsing | [Dissect](https://docs.dissect.tools/en/stable/overview/index.html) | Cross-check and artifact access, especially Windows targets and virtual containers. |
 | Signature carving | [PhotoRec](https://www.cgsecurity.org/wiki/PhotoRec) | Read-only deleted/raw carving to separate scratch; preserve `photorec.ses` for resume. |
 | Partition recovery insight | TestDisk signatures/library only after safety review | Never expose TestDisk write/repair actions; prefer TSK partition parsing. |
+| Optical TOC and ISO sessions | [libcdio](https://www.gnu.org/software/libcdio/) and inspection-only [xorriso](https://www.gnu.org/software/xorriso/) profiles | Enumerate drive/media capabilities, tracks, TOC, ISO 9660 trees, and older sessions. Kernel/device write denial remains mandatory because these tools also contain write-capable functions outside the allowlisted profile. |
+| UDF optical parsing | [libudfread](https://code.videolan.org/videolan/libudfread) or another validated read-only parser | Enumerate UDF from the source byte stream without mounting; exact UDF versions and deleted-entry capability require fixtures before claims. |
+| FAT removable undelete | TSK plus inspection-only TestDisk/PhotoRec adapters after safety review | Recover FAT12/16/32 and exFAT deleted entries and carve flash/floppy data; repair, boot-sector rebuild, format, and source-copy destinations are excluded. |
 | Timeline/artifacts | [Plaso/log2timeline](https://plaso.readthedocs.io/en/stable/sources/user/Using-log2timeline.html) | Optional deep artifact/timeline extraction and browser cross-validation. |
 | Artifact paths | ForensicArtifacts definitions | Versioned application path definitions; normalize into Reperio schema. |
 | Mobile backups | [iLEAPP](https://github.com/abrignoni/ILEAPP), ALEAPP | Optional sandbox plugins for detected iOS/Finder and Android extraction/backup layouts. |
@@ -564,6 +585,13 @@ Tools with GPL or other reciprocal licenses may be executed as separate, unmodif
 - Windows user/profile discovery, Recycle Bin, shadow-copy detection, registry, LNK/jump lists, installed applications, browser and email artifacts
 - NTFS deleted entries, alternate data streams, sparse/compressed files
 
+### Tier 1: removable flash and memory cards
+
+- USB flash drives; SD, microSD, CompactFlash, Memory Stick, SmartMedia, MMC, Microdrive, and similar media exposed as Linux block devices
+- Partitioned and partitionless FAT16/FAT32/exFAT first, with NTFS/ext and other existing adapters reused when detected
+- Allocated and deleted entries, lost partitions, unallocated/whole-medium carving, camera/DCIM and device-backup recognition, and explicit TRIM/wear-level/continued-use limitations
+- Physical write-lock is reported when available but never replaces kernel read-only enforcement
+
 ### Tier 2: macOS disks
 
 - APFS, HFS+, CoreStorage/FileVault detection and read-only unlock where supported
@@ -574,11 +602,20 @@ Tools with GPL or other reciprocal licenses may be executed as separate, unmodif
 - ext2/3/4 first; XFS, Btrfs, LVM, LUKS detection/read-only unlock as validated
 - Home directories, browser profiles, common desktop/application data, containers and package/application inventories
 
+### Tier 3: optical discs and floppies
+
+- CD-ROM/R/RW, DVD-ROM/R/RW/RAM/+R/+RW, and Blu-ray ROM/R/RE where the Linux drive exposes readable data sectors
+- Data and mixed-mode track inventory; ISO 9660/Joliet/Rock Ridge and UDF; addressable previous sessions; deleted/obsolete directory entries; readable-sector carving
+- DOS FAT12 floppies first, including partitionless geometry and deleted-entry recovery; non-DOS floppy filesystems only through fixture-backed legacy adapters
+- Scratched, quick-blanked, ambiguous-geometry, bad-sector, and overwritten cases remain visibly partial/unsupported rather than silently successful
+
 ### Tier 4: complex and proprietary media
 
 - Linux mdraid assembly in read-only mode, then common RAID metadata families
 - ZFS pools and storage appliances after dedicated fixtures
 - DVR/CCTV and proprietary layouts through isolated plugins
+- Zip/Jaz, LS-120/SuperDisk, magneto-optical, non-DOS floppy, and other legacy block media through a media-plugin contract and exact format/version capability claims
+- Sequential tape and non-data optical extraction require separate feasibility work and compatible hardware; they are not implied by block-media support
 - Raw NAND/flash translation and severe hardware recovery remain specialist/out-of-scope unless a safe external tool adapter is proven
 
 ## 16. Quality strategy
@@ -618,11 +655,11 @@ Repository standards, ADRs, schemas, host-controller contract, source-write thre
 
 ### Phase 1: usable Windows allocated-file MVP
 
-Linux installation, read-only disk selection, NTFS/FAT/exFAT allocated enumeration, durable catalog, live UI, deterministic classification, photos/documents views, dismiss/undo, local verified export.
+Linux installation, read-only disk/flash selection, NTFS/FAT/exFAT allocated enumeration, durable catalog, live UI, deterministic classification, photos/documents views, dismiss/undo, local verified export.
 
-### Phase 2: complete deep Windows scan
+### Phase 2: complete deep Windows and removable-media scan
 
-Deleted entries, lost-volume detection, PhotoRec carving/resume, browser history, application/backups discovery, safe previews, OCR, search, notifications, remote exports.
+Deleted entries, lost-volume detection, PhotoRec carving/resume, browser history, application/backups discovery, unified Trash/Recycle Bin, flash/memory-card recovery, optical sessions, FAT12 floppy recovery, safe previews, OCR, search, notifications, remote exports.
 
 ### Phase 3: intelligence and protected content
 
@@ -632,9 +669,9 @@ Local embeddings, multi-model comparison, language/translation, encrypted-artifa
 
 APFS/HFS+/ext and platform-specific users, Photos/iMessage/Mail/mobile backups, Safari, Linux artifacts, read-only encryption unlock.
 
-### Phase 5: complex storage and release hardening
+### Phase 5: complex and legacy storage plus release hardening
 
-RAID/DVR plugins, hardware/architecture coverage, signed multi-arch releases, backup/restore of Reperio state, upgrade testing, performance and security audit.
+RAID/DVR and legacy-media plugins, hardware/reader coverage, sequential-media feasibility, signed multi-arch releases, backup/restore of Reperio state, upgrade testing, performance and security audit.
 
 ## 18. Architecture decisions requiring explicit future review
 

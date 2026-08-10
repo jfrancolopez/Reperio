@@ -23,7 +23,7 @@ make validate
 
 ## Safety review
 
-- [ ] No source-disk write, mount, repair, wipe, format, or delete path was added.
+- [ ] No source-media write, mount, repair, wipe, initialize, format, optical burn/blank, or delete path was added.
 - [ ] No recovered content, disk image, runtime database, wordlist, credential, token, or personal data is included.
 - [ ] Discovered content is never executed and remains isolated from network-enabled workers.
 - [ ] New third-party actions, tools, images, and dependencies are immutably pinned and documented.

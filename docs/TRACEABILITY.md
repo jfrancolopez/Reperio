@@ -7,7 +7,7 @@ This matrix prevents later agents from overlooking a confirmed requirement. A re
 | One-command, pull-and-run experience | Master plan 5.2 | RPR-145–147, RPR-154–156 |
 | Browser UI accessible from the LAN | 2, 5.1, 9 | RPR-117–132, RPR-145, RPR-154 |
 | Optional single password, disabled by default | 2, 4, 9 | RPR-130, RPR-145, RPR-151, RPR-154 |
-| One source disk per instance | 2, 5, 6 | RPR-007, RPR-009–019, RPR-028, RPR-118 |
+| One source medium per instance, including replaceable media in a reader | 2, 5, 6, 15 | RPR-007, RPR-009–019, RPR-028, RPR-118, RPR-178–180, RPR-187 |
 | Permanently no wipe/delete/format/repair of source | 1–3 | RPR-002–003, RPR-009, RPR-013–020, RPR-035, RPR-070, RPR-153, RPR-155 |
 | No source mounting in core workflow | 3, 6, 7 | RPR-002–003, RPR-019–020, RPR-035–043, RPR-153 |
 | Direct scan; no forensic image | 2, 4, 7 | RPR-003, RPR-035–049, RPR-154 |
@@ -15,6 +15,15 @@ This matrix prevents later agents from overlooking a confirmed requirement. A re
 | No automatic deletion of completed recovered copies | 3, 12 | RPR-030, RPR-039, RPR-106–108, RPR-145, RPR-153 |
 | Deep scan only; time is secondary | 1, 2, 7 | RPR-034, RPR-036–059, RPR-119, RPR-152 |
 | Allocated, hidden, deleted, orphaned, carved files | 1, 7 | RPR-037–049, RPR-050–054, RPR-125, RPR-155 |
+| USB flash, SD/microSD, CompactFlash, Memory Stick and similar card recovery | 1–2, 5, 7, 15 | RPR-010–020, RPR-036–054, RPR-178–181, RPR-187–188 |
+| Partitionless/superfloppy removable filesystems | 7, 15 | RPR-036–049, RPR-178–182, RPR-188 |
+| FAT12 floppy allocated/deleted/carved recovery | 4, 7, 15 | RPR-008, RPR-037–049, RPR-178–180, RPR-182, RPR-188 |
+| CD/DVD/Blu-ray tracks, ISO/UDF, and previous sessions | 4, 7, 15 | RPR-178–180, RPR-183–185, RPR-188 |
+| Quick-blanked/damaged rewritable optical attempts with honest overwrite limits | 4, 7, 15 | RPR-046–049, RPR-183, RPR-185, RPR-188 |
+| Windows Recycle Bin, macOS Trash, and freedesktop Trash | 1, 7, 9, 15 | RPR-051, RPR-125, RPR-135, RPR-140, RPR-160, RPR-186–188 |
+| One-at-a-time batch workflow for many removable media | 2, 5, 9 | RPR-118–121, RPR-178–181, RPR-187 |
+| Legacy Zip/Jaz/LS-120/magneto-optical/non-DOS media expansion | 15, 18 | RPR-143, RPR-178–180, RPR-189–190 |
+| Sequential tape and non-data optical feasibility is explicit, not implied | 4, 15, 18 | RPR-178–180, RPR-183, RPR-189, RPR-191 |
 | Deleted/lost partitions and corrupt filesystems | 1, 7 | RPR-036, RPR-044, RPR-046–049, RPR-082 |
 | Resume after disconnect/restart | 1, 4, 7 | RPR-012, RPR-019, RPR-023–025, RPR-045, RPR-047, RPR-150 |
 | Progressive results during scan | 1, 7, 9 | RPR-026, RPR-033–034, RPR-048, RPR-108, RPR-119 |
@@ -52,7 +61,7 @@ This matrix prevents later agents from overlooking a confirmed requirement. A re
 | RAID/DVR/raw later | 2, 15 | RPR-046–049, RPR-142–143, RPR-168, RPR-174–177 |
 | Linux AMD64/ARM64 and Raspberry Pi class | 5, 15 | RPR-144, RPR-146, RPR-152, RPR-156 |
 | Reuse mature tools instead of rebuilding everything | 14 | RPR-001, RPR-036–049, RPR-069–082, RPR-099–100, RPR-109, RPR-112, RPR-138, RPR-147–148, RPR-163, RPR-169–170, RPR-174–177 |
-| Treat disk content as hostile | 3 | RPR-002, RPR-019–020, RPR-070–082, RPR-151, RPR-153 |
+| Treat all source-media content as hostile | 3 | RPR-002, RPR-019–020, RPR-070–082, RPR-151, RPR-153, RPR-179, RPR-183–191 |
 | Windows registry, recent activity, shadow copies, and mail | 7, 15 | RPR-160–162 |
 | Nested disk images and virtual machines | 7, 15 | RPR-056, RPR-165 |
 | FileVault/APFS encryption | 7, 15 | RPR-134, RPR-166 |

@@ -28,11 +28,11 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 | Milestone | Outcome | Primary IDs |
 |---|---|---|
-| M0 Safety/contracts | Repository, contracts, fixtures, and demonstrated no-write boundary | RPR-001–020 |
-| M1 Allocated Windows MVP | NTFS/FAT/exFAT inventory, catalog, live review, local export | RPR-021–054, RPR-105–108, RPR-116–121, RPR-127–130 |
-| M2 Deep Windows | Deleted entries, carving/resume, browser history, previews/OCR, notifications | RPR-042–082, RPR-109–115, RPR-122–132, RPR-160–165, RPR-169–174 |
+| M0 Safety/contracts | Repository, contracts, fixtures, demonstrated no-write boundary, and removable-media identity | RPR-001–020, RPR-178–180 |
+| M1 Allocated Windows/removable MVP | NTFS/FAT/exFAT disk and flash inventory, catalog, live review, local export | RPR-021–054, RPR-105–108, RPR-116–121, RPR-127–130, RPR-181, RPR-187 |
+| M2 Deep Windows/removable media | Deleted entries, trash, carving/resume, browser history, optical/floppy recovery, previews/OCR, notifications | RPR-042–082, RPR-109–115, RPR-122–132, RPR-160–165, RPR-169–174, RPR-182–188 |
 | M3 Intelligence/protected files | Multi-model enrichment, semantic search, password workflows | RPR-083–104, RPR-157–159 |
-| M4 macOS/Linux/mobile | Additional filesystems and platform artifacts | RPR-133–144, RPR-166–168, RPR-175–177 |
+| M4 macOS/Linux/mobile/legacy | Additional filesystems, platform artifacts, complex storage, and legacy media adapters | RPR-133–144, RPR-166–168, RPR-175–177, RPR-189–191 |
 | M5 Release | Signed multi-architecture install, fault testing, docs, acceptance | RPR-145–156 |
 
 ---
@@ -110,7 +110,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 - **Depends:** RPR-009.
 - **Deliver:** host implementation using udev/sysfs/`lsblk`-equivalent data to list whole disks and child partitions with sanitized facts.
-- **Acceptance:** loop, USB, SATA, NVMe, optical, device-mapper, and partition relationships are represented; transient devices do not crash listing.
+- **Acceptance:** loop, USB, SATA, NVMe, SD/card readers, optical, floppy, device-mapper, and partition relationships are represented; empty readers and transient/media-change events do not crash listing.
 - **Tests:** mocked sysfs fixtures plus privileged CI loop-device coverage.
 
 ### RPR-011 — Implement stable device identity `[P0, M0]`
@@ -768,7 +768,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 - **Depends:** RPR-097, RPR-098.
 - **Deliver:** GPU/CPU/device capability check, allowed modes, benchmark-derived warnings, resource/temperature policy, session restore, and normalized progress.
-- **Acceptance:** unsupported hardware disables cleanly; engine never receives source disk; workload cannot starve scanner beyond configured policy.
+- **Acceptance:** unsupported hardware disables cleanly; engine never receives the source device/medium; workload cannot starve scanner beyond configured policy.
 - **Tests:** mocked CPU/GPU capability, synthetic recovery, pause/resume, wrong mode, OOM/thermal signal, no-match.
 
 ### RPR-101 — Schedule and checkpoint password work `[P1, M3]`
@@ -900,10 +900,10 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-118 — Build new-scan device wizard `[P0, M1]`
 
-- **Depends:** RPR-028, RPR-116, RPR-117.
-- **Deliver:** device cards with model/serial/size/transport/mount/system/health, exact-device confirmation, scratch separation, safety checks, configuration summary, and start.
-- **Acceptance:** ambiguous device cannot start; system disk/failed RO/same-disk destination blockers are clear; no scan starts automatically.
-- **Tests:** valid, swapped/stale, mounted RW, system disk, missing serial, health warning, hostd unavailable.
+- **Depends:** RPR-028, RPR-116, RPR-117, RPR-178–180.
+- **Deliver:** source cards grouped by disk, flash/card, optical, floppy/legacy reader, with reader/media identity, model/serial/size/transport/geometry or sessions, mount/system/health, exact-source confirmation, scratch separation, safety checks, configuration summary, and start.
+- **Acceptance:** ambiguous or changed media cannot start; system disk/failed RO/same-disk destination blockers are clear; replacing a disc/floppy in the same reader requires fresh selection; no scan starts automatically.
+- **Tests:** valid disk/flash/optical/floppy, swapped/stale media, empty reader, mounted RW, system disk, missing serial, health unavailable/warning, hostd unavailable.
 
 ### RPR-119 — Build live-scan dashboard `[P1, M1]`
 
@@ -949,8 +949,8 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-125 — Build remaining category tabs `[P1, M2]`
 
-- **Depends:** RPR-054–058, RPR-116, RPR-121.
-- **Deliver:** messages/email, archives/encrypted, backups/mobile, wallets/vaults/keys, software/code/databases, deleted/carved, unknown/unsupported views using shared primitives and category-specific summaries.
+- **Depends:** RPR-054–058, RPR-116, RPR-121, RPR-186.
+- **Deliver:** messages/email, archives/encrypted, backups/mobile, wallets/vaults/keys, software/code/databases, Trash/Recycle Bin, deleted/carved, unknown/unsupported views using shared primitives and category-specific summaries.
 - **Acceptance:** every finding is reachable in All Findings; unsupported artifacts remain visible; sensitive labels do not hide content.
 - **Tests:** representative state fixtures and cross-tab multi-label item.
 
@@ -1023,8 +1023,8 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-135 — Discover macOS installations, users, and artifacts `[P2, M4]`
 
-- **Depends:** RPR-051, RPR-134.
-- **Deliver:** macOS system/user profiles, application support, Trash, aliases, Finder metadata, installed apps, cloud roots, and Time Machine evidence.
+- **Depends:** RPR-051, RPR-134, RPR-186.
+- **Deliver:** macOS system/user profiles, application support, aliases, Finder metadata, installed apps, cloud roots, Time Machine evidence, and linkage to normalized Trash records from RPR-186.
 - **Acceptance:** mac system noise rules are versioned and reversible like Windows rules.
 - **Tests:** multiple users, moved home, case sensitivity, Time Machine layout, partial installation.
 
@@ -1058,8 +1058,8 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-140 — Discover Linux users and application artifacts `[P2, M4]`
 
-- **Depends:** RPR-051, RPR-139.
-- **Deliver:** `/home` and passwd-derived users, browsers, desktop app data, email, SSH/GPG, containers/VMs, package/application inventory, and Linux noise rules.
+- **Depends:** RPR-051, RPR-139, RPR-186.
+- **Deliver:** `/home` and passwd-derived users, browsers, desktop app data, email, SSH/GPG, containers/VMs, package/application inventory, Linux noise rules, and linkage to normalized freedesktop Trash records from RPR-186.
 - **Acceptance:** ownership/display identity distinction preserved; system paths remain accessible through noise toggle.
 - **Tests:** multiple distros/user layouts, moved home, container data, partial `/etc`, false positives.
 
@@ -1208,8 +1208,8 @@ These IDs were added after the original milestone numbering. Schedule them by th
 
 ### RPR-160 — Parse Windows activity and user-interaction artifacts `[P2, M2]`
 
-- **Depends:** RPR-039, RPR-051, RPR-070.
-- **Deliver:** isolated parsers for registry hives, LNK files, jump lists, recent documents, shell bags, Windows Timeline, prefetch, Recycle Bin metadata, and selected event logs, normalized to artifact/timeline evidence.
+- **Depends:** RPR-039, RPR-051, RPR-070, RPR-186.
+- **Deliver:** isolated parsers for registry hives, LNK files, jump lists, recent documents, shell bags, Windows Timeline, prefetch, selected event logs, and links to normalized Recycle Bin evidence from RPR-186.
 - **Acceptance:** artifacts support classification and related-file links without claiming the timestamp proves a human action; parser/version/raw source are retained.
 - **Tests:** synthetic multi-user fixtures for every advertised artifact, corrupt/missing hive/log, version differences, and cross-parser comparison.
 
@@ -1334,6 +1334,110 @@ These IDs were added after the original milestone numbering. Schedule them by th
 
 ---
 
+## Epic O — removable, optical, floppy, and legacy media
+
+These tasks extend the same one-source, read-only pipeline to media that may have no serial number, may be replaced inside a reusable reader, or may expose sessions/tracks rather than a normal partition table. They do not authorize imaging, mounting, formatting, blanking, burning, repair, or source writes.
+
+### RPR-178 — Extend the source identity contract to removable media `[P0, M0]`
+
+- **Depends:** RPR-007, RPR-009–012.
+- **Deliver:** versioned source-kind and media-identity schemas for fixed disks, USB flash, card readers/media, optical drives/discs, floppy drives/media, and legacy adapters; separate reusable reader identity from inserted-medium identity; include capacity, sector/block size, geometry, write-protect signals, TOC/session facts, sampled fingerprint, and media-change generation.
+- **Acceptance:** no API treats `/dev/sdX`, `/dev/sr0`, or `/dev/fd0` alone as identity; missing serials use documented evidence and warnings; inserting a different same-capacity disc/card/floppy in the same reader produces a distinct source identity.
+- **Tests:** stable USB serial, SD card without serial, two same-size cards, optical disc swap in one drive, floppy swap, empty reader, changed TOC, unreadable fingerprint sample, identity-schema compatibility.
+
+### RPR-179 — Enumerate and enforce read-only removable sources `[P0, M0]`
+
+- **Depends:** RPR-013–020, RPR-178.
+- **Deliver:** host-controller discovery/preparation for flash/card, optical, and floppy devices; hotplug/media-change reporting; automount/holder detection; kernel/device read-only verification; physical lock/capability reporting; fixed allowlisted read-only operations for geometry and optical TOC.
+- **Acceptance:** scan launch fails when read-only status or medium identity cannot be proven; physical SD lock and write-once optical media are informational defense-in-depth, not substitutes for kernel/process denial; no eject, burn, blank, format, packet-write, repair, or generic ioctl/API exists.
+- **Tests:** mocked udev/sysfs for populated/empty readers, mounted RW/RO card, write-lock states, optical writer with RW disc, floppy, unplug race, media swap race, and hardware/virtual source byte comparison before/after attempted writes.
+
+### RPR-180 — Persist media, session, and replacement-aware checkpoints `[P0, M1]`
+
+- **Depends:** RPR-021–025, RPR-178–179.
+- **Deliver:** catalog migrations for `source_devices`, inserted `source_media`, media-change generations, geometry, optical tracks/sessions, and replacement/disconnect events; checkpoint keys bind to full medium identity rather than reader path.
+- **Acceptance:** a scan can resume after reinserting the same verified medium; a changed fingerprint, geometry, TOC, session table, or capacity blocks resume and offers a new case; prior findings remain browsable when the source is absent.
+- **Tests:** same-medium reinsertion, same reader/different medium, same capacity/different samples, added optical session, changed floppy geometry, unreadable sample, migration round trip, interrupted checkpoint.
+
+### RPR-181 — Run the deep pipeline on USB flash and memory cards `[P1, M1]`
+
+- **Depends:** RPR-036–054, RPR-178–180.
+- **Deliver:** partitioned and partitionless/superfloppy scanning for USB flash, SD/microSD, CompactFlash, Memory Stick, SmartMedia, MMC, Microdrive, and similar Linux block media; reuse validated FAT16/32, exFAT, NTFS, and ext adapters; run filesystem deleted-entry recovery followed by bounded unallocated/whole-medium carving and normal classification/export.
+- **Acceptance:** allocated, hidden, trashed, deleted, and carved findings have distinct provenance; camera/DCIM and portable-backup content ranks usefully without hiding other files; UI states TRIM, garbage-collection, wear-leveling, and continued-use limits without declaring unrecoverable blocks “clean.”
+- **Tests:** partitioned FAT32 SD, partitionless exFAT card, FAT16 camera card, NTFS USB, deleted/fragmented/overwritten files, lost partition, corrupt boot sector, disconnect/resume, same-source byte comparison, export to separate storage.
+
+### RPR-182 — Add FAT12 floppy enumeration and deleted recovery `[P2, M2]`
+
+- **Depends:** RPR-008, RPR-037–049, RPR-178–180.
+- **Deliver:** DOS FAT12/superfloppy geometry detection, allocated/deleted directory entry normalization, deleted cluster-chain confidence, bad-sector handling, and raw carving for readable unallocated sectors; support exact validated capacities/geometries first.
+- **Acceptance:** ambiguous geometry is not guessed silently; original names/timestamps are preserved only when metadata survives; reused, fragmented, partial, and bad-sector files are labeled; no filesystem repair or boot-sector rebuild function is exposed.
+- **Tests:** generated 360 KiB/720 KiB/1.2 MiB/1.44 MiB fixtures as supported, deleted allocated/reused/fragmented files, bad sectors, corrupt FAT copies, non-DOS signature, swap/resume denial, source byte comparison.
+
+### RPR-183 — Inventory optical drives, tracks, and sessions `[P2, M2]`
+
+- **Depends:** RPR-019–020, RPR-070, RPR-178–180.
+- **Deliver:** fixed read-only libcdio/xorriso-equivalent inspection adapters for CD, DVD, and Blu-ray media type/state, data versus audio tracks, TOC, addressable session starts/sizes, writer capabilities, readable range, and media fingerprint; normalize each data session/track as a scan target.
+- **Acceptance:** single-session, multisession, mixed-mode, overwritable, quick-blanked, blank, empty-drive, unsupported, and firmware-blocked states are distinguishable; an optical writer never receives an output drive or write/blank/format command.
+- **Tests:** synthetic/sacrificial single and multisession CD, DVD/BD-shaped metadata, mixed-mode, formatted DVD-RW single-visible-state, quick-blanked/zero-size response, disc swap, malicious tool output, timeout, no-write proof.
+
+### RPR-184 — Enumerate ISO 9660, UDF, and previous optical sessions `[P2, M2]`
+
+- **Depends:** RPR-037–040, RPR-070, RPR-183.
+- **Deliver:** read-only ISO 9660/Joliet/Rock Ridge and UDF adapters; enumerate every addressable historical session/directory tree; link files hidden/removed by newer sessions; normalize names, timestamps, extents, session provenance, duplicates, and parser limitations without mounting.
+- **Acceptance:** the newest session is not assumed to be the only evidence; identical content across sessions deduplicates bytes but preserves every provenance record; unsupported UDF versions and overwritable media without visible history remain explicit findings/capabilities.
+- **Tests:** ISO/Joliet/Rock Ridge Unicode, multisession add/remove/rename, duplicate extents, UDF allocated/deleted where supported, malformed descriptors, conflicting timestamps, mixed data tracks, parser disagreement, source byte comparison.
+
+### RPR-185 — Recover readable deleted and raw optical content `[P2, M2]`
+
+- **Depends:** RPR-046–049, RPR-070, RPR-183–184.
+- **Deliver:** addressable older-session recovery, UDF/metadata deleted-entry recovery where validated, and PhotoRec-compatible carving over readable optical sector ranges with slow/bad-sector progress, partial outputs, source offsets, and durable checkpoints.
+- **Acceptance:** quick-blanked media is attempted only when the drive exposes readable sectors; fully overwritten or firmware-hidden ranges are labeled unavailable rather than empty; retries are bounded and never block already recovered findings; all output goes to separate scratch/export storage.
+- **Tests:** obsolete previous-session file, quick-blanked readable-range fixture, overwritten negative fixture, scratched/bad-sector map, partial carved file, drive returning zero capacity, disconnect/reinsert, resume, byte-identical source proof.
+
+### RPR-186 — Normalize Recycle Bin and Trash across platforms `[P1, M2]`
+
+- **Depends:** RPR-039, RPR-051, RPR-070.
+- **Deliver:** isolated parsers/locators for Windows `$Recycle.Bin` metadata/payload pairs, macOS user and volume Trash layouts, and freedesktop `files`/`info` Trash layouts; normalize platform/user, original path, deletion time, metadata/payload link, and present/deleted/carved recovery state.
+- **Acceptance:** “currently in trash” and “filesystem-deleted after trash was emptied” are separate states; missing metadata or payload remains visible; original paths are treated as untrusted data and never used as host output paths; recovered trash items appear in a dedicated filter/tab and normal categories.
+- **Tests:** multiple users/volumes, Windows paired/orphan metadata and payload, macOS/freedesktop layouts, Unicode/path traversal, missing/corrupt info, trashed then filesystem-deleted payload, carved duplicate, timestamp uncertainty.
+
+### RPR-187 — Build the removable-media selection and batch workflow `[P1, M1]`
+
+- **Depends:** RPR-118–121, RPR-178–181.
+- **Deliver:** non-technical source selector grouping disks, flash/cards, optical, and floppy/legacy readers; media/reader facts, session/geometry summary, read-only proof, identity-strength warning, capacity-aware scratch estimate, insertion/removal state, and one-at-a-time “finish this medium, insert the next” case workflow.
+- **Acceptance:** replacing media never resumes or starts automatically; the operator can browse/export completed prior cases while scanning the next medium; empty readers and unsupported media explain what is needed; no erase, format, initialize, burn, blank, repair, or source-delete control exists.
+- **Tests:** USB/SD/optical/floppy cards, empty/swap/disconnect/reinsert, same-reader new medium, unsupported format, insufficient scratch, prior-case navigation, keyboard/accessibility, destructive-label/API absence.
+
+### RPR-188 — Establish the removable-media acceptance matrix `[P1, M2]`
+
+- **Depends:** RPR-008, RPR-178–187.
+- **Deliver:** reproducible generated fixtures, optional sacrificial-hardware procedure, and signed expected-results matrix for every advertised flash/card, optical filesystem/session, floppy geometry, trash layout, reader architecture, disconnect, bad-sector, and read-only property.
+- **Acceptance:** no capability appears in the UI/release manifest without a passing positive, malformed/negative, resume, and source-byte comparison case; fixtures contain no real personal data and generated disk/media images remain outside Git.
+- **Tests:** deterministic fixture rebuilds, full adapter matrix on amd64/arm64 where supported, pre/post hashes, tool-version change, missing hardware skip truthfulness, deliberate unsupported-capability rejection.
+
+### RPR-189 — Define the legacy removable-media plugin contract `[P3, M4]`
+
+- **Depends:** RPR-033, RPR-070, RPR-143, RPR-178–180.
+- **Deliver:** source-kind detection and isolated range-reader/plugin contract for Zip/Jaz, LS-120/SuperDisk, magneto-optical, non-DOS floppy, and other block-addressable legacy media; include geometry/encoding/version capabilities, checkpoint, normalized entries, and exact support claims.
+- **Acceptance:** unknown media stays visible and eligible for safe raw carving; a plugin cannot mount, write, format, repair, issue generic device commands, or claim a family from a weak signature; adapters are separately removable and license reviewed.
+- **Tests:** safe sample plugin, false signature, geometry mismatch, malicious permission request, crash/resume, output flood, unknown-media fallback, source byte comparison.
+
+### RPR-190 — Implement the first evidence-backed legacy-media adapter `[P3, M4]`
+
+- **Depends:** RPR-182, RPR-188–189.
+- **Deliver:** select one high-value legacy block format based on authorized media and compatible hardware—such as a specific Zip/Jaz, LS-120, magneto-optical, or non-DOS floppy filesystem—and implement exact read-only allocated/deleted recovery, raw fallback, fixtures, and capability documentation.
+- **Acceptance:** the claim names the exact media/filesystem/version and reader constraints; no generic “all legacy media” claim; unsupported variants remain inventory/raw-carving candidates; recovered output uses separate scratch.
+- **Tests:** allocated/deleted/partial/corrupt fixture, wrong geometry/version, bad sector, disconnect/resume, unknown variant, source byte comparison, cross-tool comparison when available.
+
+### RPR-191 — Evaluate sequential tape and non-data optical extraction `[P3, M4]`
+
+- **Depends:** RPR-002, RPR-070, RPR-178–180, RPR-183, RPR-189.
+- **Deliver:** feasibility ADR and prototype boundary for DAT/DLT/LTO or other available sequential tape plus audio/mixed-mode optical tracks; document Linux hardware access, positioning/read commands, identity, resume, output formats, licensing, drive-cleaning/firmware risks, and whether each belongs in Reperio.
+- **Acceptance:** block-media support never implies tape support; no production claim or adapter proceeds without compatible authorized hardware and a no-write test; unsupported/audio-only content is inventoried truthfully; extraction writes only scratch.
+- **Tests:** mocked command/protocol fixtures, media swap, read error, end-of-data, resume-position mismatch, malicious metadata, unsupported hardware, and a manual sacrificial-media byte/no-write checklist if the spike advances.
+
+---
+
 ## Recommended first agent assignments
 
 Do not begin feature coding with the UI. The safest initial sequence is:
@@ -1341,9 +1445,9 @@ Do not begin feature coding with the UI. The safest initial sequence is:
 1. RPR-001 and RPR-002 in parallel.
 2. RPR-003 after threat-model review.
 3. RPR-004–008 to create the executable skeleton and fixtures.
-4. RPR-009–020 in dependency order until the no-write integration suite passes.
+4. RPR-009–020 and RPR-178–180 in dependency order until fixed and removable source no-write/identity suites pass.
 5. RPR-021–035 for catalog/job/scanner contracts.
-6. RPR-036–040 for the first read-only allocated-file path.
+6. RPR-036–040 and RPR-181 for the first read-only disk/flash allocated-file path.
 7. RPR-050–054, RPR-105–107, and RPR-116–121 for the first useful review/export loop.
 
 No agent should integrate PhotoRec, archive parsers, password tools, AI providers, or remote destinations before the generic safety and sandbox dependencies named in those tasks are complete.

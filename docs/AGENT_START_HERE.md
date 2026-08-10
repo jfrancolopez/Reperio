@@ -52,7 +52,7 @@ A reviewer verifies all of the following before merge:
 - A source-touching change has explicit negative proof that writes fail.
 - New public schemas and interfaces are versioned; data changes include migrations and compatibility checks.
 - New tools/actions/images are immutably pinned, license-reviewed, sandboxed, and fixture-backed.
-- No actual disk content, history, passwords, tokens, provider sessions, logs, images, databases, large artifacts, or recovery outputs are present.
+- No actual source-media content, history, passwords, tokens, provider sessions, logs, images, databases, large artifacts, or recovery outputs are present.
 - Documentation and `docs/TRACEABILITY.md` remain accurate.
 - Required GitHub checks pass without bypass, permission expansion, or a reduced test scope.
 

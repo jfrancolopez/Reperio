@@ -4,17 +4,17 @@ These rules apply to every task and every file in this repository.
 
 ## Source-disk safety is the first invariant
 
-- Never add a wipe, erase, delete-from-source, format, initialize, partition-write, filesystem-repair, or source-remount-write operation.
+- Never add a wipe, erase, delete-from-source, format, initialize, optical burn/blank, partition-write, filesystem-repair, or source-remount-write operation.
 - Open the source block device and every source file read-only. Do not rely on a UI promise; enforce the rule at the kernel, container, process, and code levels.
 - Do not mount a source filesystem in the core workflow. Use read-only filesystem parsers against the block device. A future exception requires a new architecture decision and automated proof that it cannot write.
 - Never pass the source device into a general-purpose AI tool, script console, archive extractor, preview renderer, or network-enabled process.
 - Recovered files, thumbnails, OCR products, indexes, reports, checkpoints, and logs must go to dedicated scratch or export storage, never to the source device.
 - Do not automatically delete completed recovered copies. Cleanup may remove only proven-incomplete files in Reperio-owned temporary storage under a documented policy; uninstall preserves state by default.
-- Before any copy or export, prove that the destination is not the selected source disk or one of its child partitions.
+- Before any copy or export, prove that the destination is not the selected source medium, its reader-backed device, or one of its child partitions.
 - “Dismiss” is a reversible catalog flag. It must never remove the original, a recovered copy, or the only metadata record.
 - If an implementation proposal conflicts with these rules, stop and document the conflict instead of weakening a guardrail.
 
-## Treat all disk content as hostile
+## Treat all source-media content as hostile
 
 - Never execute a discovered binary, script, macro, shortcut, installer, browser extension, or document action.
 - Run third-party parsers and preview generators without network access, without Linux capabilities, as a non-root user, with a read-only root filesystem, bounded CPU/memory/PIDs/output, and a timeout.

@@ -1,6 +1,6 @@
 # Security policy
 
-Reperio processes untrusted disk content and may expose highly sensitive recovered information. Please do not open a public issue containing a vulnerability, credential, browser record, recovered file, source-device identifier, or scan output.
+Reperio processes untrusted storage-media content and may expose highly sensitive recovered information. Please do not open a public issue containing a vulnerability, credential, browser record, recovered file, source-device/media identifier, or scan output.
 
 ## Reporting a vulnerability
 
@@ -14,6 +14,6 @@ Reperio is pre-release and has no supported runtime release yet. Security correc
 
 ## Security boundaries
 
-The central guarantee is no writes to the selected source disk. Reports involving a source write, unexpected mount, execution of discovered content, sandbox escape, path traversal, unauthorized LAN access, credential disclosure, unsafe preview, or destination/source identity confusion should be treated as high priority.
+The central guarantee is no writes to the selected source medium. Reports involving a source write, unexpected mount, optical burn/blank command, format/repair action, execution of discovered content, sandbox escape, path traversal, unauthorized LAN access, credential disclosure, unsafe preview, media-swap confusion, or destination/source identity confusion should be treated as high priority.
 
 Reperio is a recovery and discovery tool for authorized media. It is not a forensic-certification product and does not promise recovery of overwritten, TRIM-discarded, physically unreadable, or strongly encrypted data.

@@ -45,7 +45,7 @@ Copy this template into an issue or agent prompt. Replace every bracketed value.
 ## Safety constraints
 
 - The source device and source files are read-only.
-- No mount, write, repair, wipe, format, or source deletion path may be added.
+- No mount, write, repair, wipe, initialize, format, optical burn/blank, or source deletion path may be added.
 - No untrusted discovered content may execute or receive network access.
 - No credentials, recovered passwords, provider sessions, source bytes, or personal content may enter logs, fixtures, or source control.
 - Recovered/derived output goes only to validated separate scratch/export storage.
