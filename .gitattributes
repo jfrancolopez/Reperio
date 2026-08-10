@@ -1,0 +1,39 @@
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=lf
+*.sh text eol=lf
+*.md text eol=lf diff=markdown
+*.yml text eol=lf
+*.yaml text eol=lf
+
+*.7z binary
+*.aff binary
+*.aff4 binary
+*.avif binary
+*.bmp binary
+*.dd binary
+*.e01 binary
+*.E01 binary
+*.gif binary
+*.gz binary
+*.ico binary
+*.img binary
+*.iso binary
+*.jpeg binary
+*.jpg binary
+*.mov binary
+*.mp3 binary
+*.mp4 binary
+*.pdf binary
+*.png binary
+*.raw binary
+*.tar binary
+*.vdi binary
+*.vhd binary
+*.vhdx binary
+*.vmdk binary
+*.webm binary
+*.webp binary
+*.zip binary

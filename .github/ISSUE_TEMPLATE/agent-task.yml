@@ -1,0 +1,65 @@
+name: Agent implementation task
+description: Prepare one bounded Reperio backlog task for an implementation agent.
+title: "[RPR-NNN] "
+labels:
+  - agent-task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use one issue per backlog task. Read `AGENTS.md`, the task in `docs/BACKLOG.md`, and the linked master-plan sections before editing.
+  - type: input
+    id: task-id
+    attributes:
+      label: Backlog task ID
+      description: Use the exact identifier from docs/BACKLOG.md.
+      placeholder: RPR-001
+    validations:
+      required: true
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: Copy or faithfully restate the objective from the backlog.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and contracts
+      description: List completed dependency IDs and interfaces that must be preserved.
+      placeholder: |
+        - RPR-NNN
+        - Existing schema/API contract
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Copy every acceptance criterion and make each one independently verifiable.
+      placeholder: |
+        - [ ] Criterion one
+        - [ ] Criterion two
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Required tests
+      description: Include happy, hostile/malformed, interruption, and source-write cases when applicable.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety boundaries acknowledged
+      options:
+        - label: The source device and source files remain read-only.
+          required: true
+        - label: No discovered content will be executed or given uncontrolled network access.
+          required: true
+        - label: No secrets, real recovered data, disk images, or personal content will enter Git.
+          required: true
+        - label: Work will remain inside this task and its documented interfaces.
+          required: true

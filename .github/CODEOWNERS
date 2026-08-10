@@ -1,0 +1,8 @@
+# The repository owner reviews changes to all paths by default.
+* @jfrancolopez
+
+# Safety-sensitive repository controls require explicit owner review.
+/.github/ @jfrancolopez
+/AGENTS.md @jfrancolopez
+/docs/MASTER_PLAN.md @jfrancolopez
+/scripts/ @jfrancolopez
