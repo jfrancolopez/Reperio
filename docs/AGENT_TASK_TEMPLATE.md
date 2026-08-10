@@ -22,6 +22,14 @@ Copy this template into an issue or agent prompt. Replace every bracketed value.
 - Existing interfaces that must be preserved: [schemas/endpoints/classes]
 - Test fixtures to use: [fixture IDs]
 - Do not implement: [neighboring/follow-up task IDs]
+- Execution mode: one active implementation agent, one task, single `main` checkout; no parallel task/agent/worktree
+- Publication authorization: [report only / stage and commit / stage, commit, push, and verify CI]
+
+## Development-agent neutrality
+
+- This packet and the checked-in repository contain all required context.
+- The implementation and tests must not depend on Codex, OpenCode, or any other coding-agent/model vendor.
+- If a named agent-only capability appears necessary, replace it with a repository command/contract or report the missing prerequisite instead of inventing hidden behavior.
 
 ## Deliverables
 
@@ -48,8 +56,10 @@ Copy this template into an issue or agent prompt. Replace every bracketed value.
 - No mount, write, repair, wipe, initialize, format, optical burn/blank, or source deletion path may be added.
 - No untrusted discovered content may execute or receive network access.
 - No credentials, recovered passwords, provider sessions, source bytes, or personal content may enter logs, fixtures, or source control.
+- Wallet files, seeds, private keys, keystores, and decrypted vault values may not enter logs, notifications, remote AI requests, task transcripts, general search text, fixtures, or source control. Do not query balances, sign data, or broadcast transactions.
 - Recovered/derived output goes only to validated separate scratch/export storage.
 - AI output cannot dismiss, delete, or make a finding inaccessible.
+- Engineering priority and interest/noise scores do not determine content value; every finding remains reachable and any system/noise suppression is explainable and reversible.
 
 ## Completion response
 
@@ -60,6 +70,7 @@ Report:
 3. Exact test commands and results.
 4. Safety controls affected and evidence they still hold.
 5. Known limitations and follow-up IDs.
+6. If publication was authorized: commit ID, push result, and GitHub Actions result. Do not start another task while a check is failing or pending.
 ```
 
 ## Reviewer checklist

@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use one issue per backlog task. Read `AGENTS.md`, the task in `docs/BACKLOG.md`, and the linked master-plan sections before editing.
+        Use one issue per backlog task. Run one implementation agent/task at a time in the authorized single `main` checkout; do not create a parallel worktree or assignment. The packet must work with any capable coding agent/model from repository context. Read `AGENTS.md`, the task in `docs/BACKLOG.md`, and the linked master-plan sections before editing.
   - type: input
     id: task-id
     attributes:
@@ -61,5 +61,11 @@ body:
           required: true
         - label: No secrets, real recovered data, disk images, or personal content will enter Git.
           required: true
+        - label: No wallet file, seed, private key, keystore, decrypted vault value, or recovered password will enter logs, notifications, remote AI requests, fixtures, task transcripts, or Git.
+          required: true
         - label: Work will remain inside this task and its documented interfaces.
+          required: true
+        - label: No second implementation agent, task, branch, or worktree will run in parallel.
+          required: true
+        - label: The task will not depend on a particular coding-agent or LLM vendor/model.
           required: true

@@ -6,6 +6,8 @@ This matrix prevents later agents from overlooking a confirmed requirement. A re
 |---|---|---|
 | One-command, pull-and-run experience | Master plan 5.2 | RPR-145–147, RPR-154–156 |
 | Browser UI accessible from the LAN | 2, 5.1, 9 | RPR-117–132, RPR-145, RPR-154 |
+| Linux-only scanner host: Arch Linux/Omarchy and Ubuntu/Debian first, validated Unraid/NAS profile | 2, 5, 15 | RPR-003, RPR-007, RPR-019–020, RPR-144–146, RPR-152, RPR-154–156 |
+| macOS and Windows supported as browser clients, not scanner hosts | 2, 5 | RPR-117–132, RPR-145, RPR-154–156 |
 | Optional single password, disabled by default | 2, 4, 9 | RPR-130, RPR-145, RPR-151, RPR-154 |
 | One source medium per instance, including replaceable media in a reader | 2, 5, 6, 15 | RPR-007, RPR-009–019, RPR-028, RPR-118, RPR-178–180, RPR-187 |
 | Permanently no wipe/delete/format/repair of source | 1–3 | RPR-002–003, RPR-009, RPR-013–020, RPR-035, RPR-070, RPR-153, RPR-155 |
@@ -32,6 +34,7 @@ This matrix prevents later agents from overlooking a confirmed requirement. A re
 | Verified copies and export manifest | 3, 12 | RPR-106–107, RPR-115, RPR-128, RPR-155 |
 | Dismiss in bulk and undo | 2, 9 | RPR-030, RPR-120–121, RPR-127 |
 | Avoid OS/DLL/cache image noise without hiding it permanently | 1, 7, 9 | RPR-050–054, RPR-121, RPR-125–126 |
+| No user-data category is treated as intrinsically lower value or made inaccessible | 2, 7, 9 | RPR-029–030, RPR-038, RPR-050–054, RPR-120–127, RPR-155 |
 | Full inventory and explainable classification | 1, 7, 10 | RPR-038, RPR-050–059, RPR-120–126, RPR-160–172 |
 | Photos in masonry/Pinterest-like experience | 2, 9 | RPR-059, RPR-072–074, RPR-122, RPR-126, RPR-132 |
 | Full-screen safe media viewing | 2, 9 | RPR-070, RPR-073–075, RPR-122, RPR-126, RPR-151 |
@@ -43,7 +46,8 @@ This matrix prevents later agents from overlooking a confirmed requirement. A re
 | Browser CSV/JSON/full-detail report export | 8, 12 | RPR-068, RPR-114, RPR-124 |
 | Find iPhone/Android backups and application data | 1, 7, 15 | RPR-056–057, RPR-137–138, RPR-163 |
 | Find iMessage/WhatsApp/media/mail | 7, 15 | RPR-125, RPR-137–138, RPR-162–163 |
-| Find wallets, password vaults, keys, certificates | 1, 7 | RPR-058, RPR-081, RPR-104, RPR-125 |
+| High-value wallet/digital-asset recovery across allocated, trashed, deleted, carved, protected, browser, backup, document, image, and OCR findings | 1, 2, 7, 9, 12 | RPR-038–054, RPR-058, RPR-071, RPR-076–081, RPR-095–104, RPR-111, RPR-125–128, RPR-155 |
+| Bitcoin, Ethereum/Web3, and extensible multi-chain wallet coverage with secret redaction and no network/balance/transaction actions | 3, 7, 11, 12 | RPR-031, RPR-058, RPR-070, RPR-081, RPR-102–104, RPR-111, RPR-125–126, RPR-151, RPR-153, RPR-155 |
 | Detect protected files | 2, 7 | RPR-080–081, RPR-095, RPR-125 |
 | Supplied password attempts | 2, 7 | RPR-096, RPR-102–103 |
 | Dictionaries, rules, combinations, offline recovery | 2, 7 | RPR-097–101, RPR-129 |
@@ -51,6 +55,7 @@ This matrix prevents later agents from overlooking a confirmed requirement. A re
 | Repair/regenerate damaged copies only | 2, 3, 7 | RPR-039, RPR-070, RPR-082, RPR-153 |
 | Local/LAN LLMs with no key | 2, 11 | RPR-083–093, RPR-129 |
 | Primary/secondary/third+ model comparison | 2, 11 | RPR-084, RPR-087–090, RPR-126, RPR-129 |
+| Runtime AI adapters and deterministic product behavior are provider/model agnostic | 2, 7, 11 | RPR-007, RPR-053–054, RPR-083–094, RPR-126, RPR-129, RPR-153, RPR-157–159 |
 | Optional cloud-subscription clients without token scraping | 11 | RPR-093–094, RPR-129, RPR-157–159 |
 | AI is optional and never controls deletion | 3, 7, 11 | RPR-053–054, RPR-083–093, RPR-126, RPR-153 |
 | Background operation without operator prompts | 2, 7, 13 | RPR-023–026, RPR-034, RPR-044–048, RPR-101, RPR-111–113 |
@@ -60,6 +65,8 @@ This matrix prevents later agents from overlooking a confirmed requirement. A re
 | Linux third | 2, 15 | RPR-139–141, RPR-155 |
 | RAID/DVR/raw later | 2, 15 | RPR-046–049, RPR-142–143, RPR-168, RPR-174–177 |
 | Linux AMD64/ARM64 and Raspberry Pi class | 5, 15 | RPR-144, RPR-146, RPR-152, RPR-156 |
+| One implementation agent and one backlog task at a time | Repository operating contract | RPR-003–006; `AGENTS.md`; agent start/task guides |
+| Implementation tasks are coding-agent and LLM vendor/model agnostic | Repository operating contract | RPR-003–008; `AGENTS.md`; agent start/task guides |
 | Reuse mature tools instead of rebuilding everything | 14 | RPR-001, RPR-036–049, RPR-069–082, RPR-099–100, RPR-109, RPR-112, RPR-138, RPR-147–148, RPR-163, RPR-169–170, RPR-174–177 |
 | Treat all source-media content as hostile | 3 | RPR-002, RPR-019–020, RPR-070–082, RPR-151, RPR-153, RPR-179, RPR-183–191 |
 | Windows registry, recent activity, shadow copies, and mail | 7, 15 | RPR-160–162 |

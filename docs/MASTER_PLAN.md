@@ -1,10 +1,10 @@
 # Reperio master plan
 
 Status: approved product direction; implementation not started
-Plan version: 1.1
+Plan version: 1.2
 Last updated: 2026-08-10
 
-Version 1.1 expands the source model from disks to removable flash/cards, optical discs, floppies, and validated legacy adapters; it also makes cross-platform Trash/Recycle Bin reconstruction explicit.
+Version 1.2 makes wallet recovery a first-class early capability, defines category-neutral finding retention, limits the scanner-host roadmap to Linux, and records the sequential, model-agnostic implementation workflow. Version 1.1 expanded the source model from disks to removable flash/cards, optical discs, floppies, and validated legacy adapters and made cross-platform Trash/Recycle Bin reconstruction explicit.
 
 This document is the product and architecture source of truth. `BACKLOG.md` is the execution source of truth. If the two disagree, resolve the disagreement in both documents before implementing the affected feature.
 
@@ -22,7 +22,7 @@ An operator can attach an old Windows, macOS, Linux, mobile-backup, DVR, RAID, o
 - What is still present in Windows Recycle Bin, macOS Trash, or freedesktop Trash, and what deleted content can be reconstructed after those locations were emptied?
 - Which optical sessions, tracks, older directory trees, or reusable-media remnants are readable, and what limitations prevent deeper recovery?
 - Which findings are likely personal or user-manipulated rather than operating-system noise?
-- What photos, videos, documents, archives, messages, backups, source code, databases, wallets, password vaults, and software artifacts exist?
+- What photos, videos, documents, archives, messages, backups, source code, databases, password vaults, software artifacts, and digital-asset wallets exist—including Bitcoin, Ethereum/Web3, and other wallet families, their backups, keystores, vaults, and recovery-material indicators?
 - Which files are encrypted, password-protected, corrupted, duplicated, or only partially recoverable?
 - Which users and browser profiles existed, and what browsing, download, bookmark, search, and session history can be reconstructed?
 - What can be previewed, searched, translated, dismissed, restored, or exported now, even if the scan is unfinished?
@@ -51,14 +51,18 @@ The product is successful when an operator can:
 | Acquisition | Direct source-medium scanning; Reperio does not create a forensic image. |
 | Working storage | Persistent state/checkpoint storage and separate scratch storage are required. Scratch contains extracted/carved copies and derivatives, not a disk image. RAM-only operation cannot support exhaustive carving and reliable resume on large disks. |
 | Coverage | Allocated files, logical trash/recycle items, deleted entries, older optical sessions, lost/deleted partitions, unallocated-space carving, corrupted artifacts, and recoverable content. |
-| Priority | Windows disks and FAT/exFAT removable flash first, macOS second, Linux third, optical/floppy next, then RAID/DVR/raw/proprietary and other legacy formats. |
+| Source-format sequence | Windows disks and FAT/exFAT removable flash first, macOS second, Linux third, optical/floppy next, then RAID/DVR/raw/proprietary and other legacy formats. This is implementation order, not a statement about the value of findings. |
+| Finding value | No user-data category is intrinsically low value. All findings remain reachable; scheduling priorities and interest/noise scores exist only to manage dependencies and navigation. Wallets receive an early dedicated high-value/sensitive path without reducing coverage or visibility for any other category. |
 | Source mutation | Prohibited permanently: no write, delete, repair, wipe, initialize, format, optical burn/blank, or partition modification. |
 | Review | Findings appear progressively and remain reviewable/exportable before scan completion. |
 | Dismissal | Bulk dismiss is allowed, reversible, and catalog-only. |
 | Previews | Sensitive content is not hidden. Safe thumbnails and full-screen preview are desired. |
 | Access | Browser UI available on the local network. Authentication is optional and disabled unless configured. |
 | Users | One administrative operator; no multi-user roles. |
-| AI | Optional. Multiple ordered providers can run independently and comparison/disagreement is visible. |
+| Scanner host | Linux only for the foreseeable scanner roadmap: Arch Linux/Omarchy and Ubuntu/Debian first, plus validated NAS/container hosts such as Unraid. macOS and Windows remain supported browser clients, not raw-device scanner hosts. |
+| Implementation workflow | One implementation agent works on one backlog task at a time. The owner reviews its evidence and commit before the next task begins; parallel agents and parallel worktrees are not assumed. |
+| Development-agent portability | Tasks, contracts, tests, and commands are vendor/model agnostic and complete from repository state. No task may depend on Codex, OpenCode, or any other agent's hidden memory or proprietary-only capability. |
+| AI | Optional at runtime. Multiple ordered providers can run independently and comparison/disagreement is visible; runtime model fan-out is separate from the one-at-a-time implementation workflow. |
 | Languages | English and Spanish directly; detect other languages and offer adjacent or tooltip translation. |
 | Exports | Local disks, NAS, SFTP/FTP, WebDAV, S3-compatible/cloud destinations, and other rclone-supported remotes. |
 | Notifications | Progress, noteworthy-count thresholds, pause/failure, export completion, and scan completion through email or third-party notification routes. |
@@ -120,7 +124,7 @@ The UI and documentation must communicate these limitations without implying for
 
 ### 5.1 Supported first release
 
-- Scanner host: modern Linux with systemd, Docker Engine or Podman, `amd64` or `arm64`.
+- Scanner host: Linux `amd64` or `arm64`. Arch Linux/Omarchy and Ubuntu/Debian are first-class installation and test profiles. Unraid receives a validated NAS/container-host profile that accounts for its host lifecycle rather than assuming systemd. Other Linux distributions are capability-detected and are not advertised until fixture and hardware acceptance passes.
 - User interface: current desktop browser on Linux, Windows, macOS, or a tablet on the same network.
 - Source transport: USB/SATA/SAS block devices; USB/PCIe SD, microSD, CompactFlash, Memory Stick, MMC and similar readers; Linux optical devices; and supported floppy controllers/USB floppy readers. A medium is supported only when Linux exposes a reliable read path and the adapter's fixture/hardware matrix passes. SMART is unavailable for many readers and media, so scanning continues with a capability warning rather than invented health data.
 - One active source medium per installed instance. A second simultaneous source requires a second isolated Reperio instance; sequential one-at-a-time media cases remain available in the same catalog.
@@ -148,7 +152,9 @@ Piping a network script into a privileged shell is inherently sensitive. Release
 
 ### 5.3 Portability boundary
 
-The containerized control plane is portable. Reliable physical raw-device access is host-specific. Linux is the first scanner platform. Later Windows and macOS host agents may communicate with the same control-plane contract, but raw disks will not be advertised as supported through Docker Desktop alone.
+The containerized control plane and browser UI are portable, but reliable physical raw-device access is host-specific. Linux is the only scanner-host platform in the foreseeable plan. Reperio does not plan a Windows/Windows-Docker or macOS raw-device scanner; a future change requires an explicit ADR, a source-write threat-model update, and fixture-backed hardware tests. Windows and macOS computers may use the LAN web UI without becoming scanner hosts.
+
+On Unraid or another storage appliance, the active array, parity, cache, boot, Reperio state, and Reperio scratch devices are protected destinations and are not eligible source media. Only an explicitly attached source that passes the same identity, ancestry, holder, mount, and read-only checks may be scanned.
 
 ## 6. System architecture
 
@@ -294,6 +300,19 @@ Artifact locators search all user profiles and application paths for:
 - Windows `$Recycle.Bin`, macOS user/volume Trash, and freedesktop Trash layouts, preserving original path/deletion-time metadata where present and linking still-allocated payloads to deleted/carved copies
 
 Detection produces an artifact record even if parsing fails, so unsupported or encrypted data remains visible.
+
+#### Wallet and digital-asset recovery priority
+
+Wallet recovery is a first-class, high-value/sensitive capability beginning in the allocated-file MVP. It does not replace or lower the value of photos, documents, messages, backups, browser records, or any other category. The deterministic locator and later protected-format plugins must cover, with fixture-backed versioned rules:
+
+- [Bitcoin Core](https://github.com/bitcoin/bitcoin/blob/master/doc/managing-wallets.md) legacy and descriptor wallets, wallet directories, `wallet.dat` files, and backups; Electrum and other validated Bitcoin-family wallet layouts; BIP32/[BIP39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)-style recovery-material indicators; and private-key or watch-only exports.
+- [Ethereum/Web3 Secret Storage](https://ethereum.org/en/developers/docs/data-structures-and-encoding/web3-secret-storage/) JSON keystores, validated desktop/mobile wallet layouts, and encrypted browser-extension vault evidence, including [MetaMask recovery](https://support.metamask.io/configure/wallet/how-to-restore-your-metamask-wallet-from-secret-recovery-phrase/) artifacts where the exact supported version is proven.
+- Hardware-wallet companion data and backup/recovery indicators, plus additional chain and wallet families through a registry that can expand without changing the core finding schema.
+- Allocated files, Trash/Recycle Bin records, filesystem-deleted entries, carved output, browser profiles, application data, archives, backups, email attachments, documents, images, and OCR text. Password-protected forms continue through the bounded local password workflow.
+
+A path or filename alone is weak evidence. Detection must combine exact locations, file signatures, schemas, database keys, application/profile evidence, and validated recovery-phrase or key-export structure without storing the sensitive value as general searchable text. Seed phrases, private keys, decrypted vault values, and recovered passwords never enter logs, notifications, remote AI requests, task transcripts, or source control. Remote model providers are never eligible for wallet secret material; deterministic local rules are the default and local models may receive only explicitly redacted derivatives.
+
+Reperio never launches wallet software, connects a recovered wallet to a network, queries balances, signs data, or broadcasts a transaction. Notifications reveal only redacted counts. Export can create a related-item bundle containing exact selected bytes, source/recovery provenance, hashes, duplicate relationships, and verification state so the operator can preserve the evidence before working with wallet software outside Reperio.
 
 ### Stage F: metadata, previews, and text
 
@@ -469,6 +488,8 @@ The physical schema can evolve, but the following concepts are mandatory:
 Paths are data, not identifiers. Stable internal IDs must survive renames, duplicate paths, unusual encodings, and carved files with no original path.
 
 ## 11. AI and model-provider architecture
+
+Runtime AI contracts are provider-, vendor-, and model-agnostic. Discovery, wallet location, categorization, and safety never depend on a particular model or on AI being available. Every adapter consumes the same versioned bounded-input contract and returns a validated structured opinion; unsupported capabilities degrade to deterministic behavior. Likewise, implementation task packets must be executable by any capable coding agent from the checked-in repository and may not require hidden context from a particular product.
 
 ### 11.1 Provider types
 
@@ -655,7 +676,7 @@ Repository standards, ADRs, schemas, host-controller contract, source-write thre
 
 ### Phase 1: usable Windows allocated-file MVP
 
-Linux installation, read-only disk/flash selection, NTFS/FAT/exFAT allocated enumeration, durable catalog, live UI, deterministic classification, photos/documents views, dismiss/undo, local verified export.
+Linux installation, read-only disk/flash selection, NTFS/FAT/exFAT allocated enumeration, durable catalog, live UI, deterministic classification, early wallet/vault/key inventory, photos/documents views, dismiss/undo, local verified export.
 
 ### Phase 2: complete deep Windows and removable-media scan
 
@@ -663,7 +684,7 @@ Deleted entries, lost-volume detection, PhotoRec carving/resume, browser history
 
 ### Phase 3: intelligence and protected content
 
-Local embeddings, multi-model comparison, language/translation, encrypted-artifact inventory, password dictionaries/rules, safe decrypted copies, wallet/vault detection.
+Local embeddings, multi-model comparison, language/translation, encrypted-artifact inventory, password dictionaries/rules, safe decrypted copies, and protected wallet/vault format recovery building on the Phase 1 locator.
 
 ### Phase 4: macOS and Linux
 

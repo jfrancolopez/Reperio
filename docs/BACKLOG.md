@@ -7,12 +7,14 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 ## How to execute this backlog
 
 - Work in dependency and milestone order. Task IDs are permanent references, not an exact schedule; later planning additions may have higher IDs while belonging to an earlier milestone.
-- Give one task to one agent. An agent must not absorb neighboring tasks without being assigned them.
+- Run exactly one active implementation task with one implementation agent at a time. Do not assign independent tasks in parallel or create parallel agent worktrees unless the owner explicitly changes this operating decision.
+- Finish, validate, review, and record the current task before starting the next. An agent must not absorb neighboring tasks without being assigned them.
+- Task packets, repository commands, fixtures, and completion evidence must be vendor/model agnostic. The checked-in repository must contain all required context; do not depend on a particular agent product, private memory, or proprietary-only capability.
 - Before editing, the agent reads `AGENTS.md`, the assigned task, its dependencies, and the relevant master-plan section.
 - If an acceptance criterion is ambiguous, write or update a contract/ADR before implementation. Do not silently choose behavior that weakens read-only safety.
 - Every public JSON object, database change, tool wrapper, and command output has a versioned schema or fixture.
 - A tool being installed is not completion. A fixture must prove normalized output and the failure path.
-- Tasks marked `P0` block safe scanning. `P1` forms the first useful product. `P2` adds the requested deep feature set. `P3` expands platforms and convenience.
+- Tasks marked `P0` block safe scanning. `P1` forms the first useful product. `P2` adds the requested deep feature set. `P3` expands platforms and convenience. These labels schedule engineering dependencies and risk; they do not assign lower value to any recovered-content category.
 
 ## Definition of done for every task
 
@@ -29,7 +31,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 | Milestone | Outcome | Primary IDs |
 |---|---|---|
 | M0 Safety/contracts | Repository, contracts, fixtures, demonstrated no-write boundary, and removable-media identity | RPR-001–020, RPR-178–180 |
-| M1 Allocated Windows/removable MVP | NTFS/FAT/exFAT disk and flash inventory, catalog, live review, local export | RPR-021–054, RPR-105–108, RPR-116–121, RPR-127–130, RPR-181, RPR-187 |
+| M1 Allocated Windows/removable MVP | NTFS/FAT/exFAT disk and flash inventory, catalog, wallet/vault/key location, live review, local export | RPR-021–054, RPR-058, RPR-105–108, RPR-116–121, RPR-127–130, RPR-181, RPR-187 |
 | M2 Deep Windows/removable media | Deleted entries, trash, carving/resume, browser history, optical/floppy recovery, previews/OCR, notifications | RPR-042–082, RPR-109–115, RPR-122–132, RPR-160–165, RPR-169–174, RPR-182–188 |
 | M3 Intelligence/protected files | Multi-model enrichment, semantic search, password workflows | RPR-083–104, RPR-157–159 |
 | M4 macOS/Linux/mobile/legacy | Additional filesystems, platform artifacts, complex storage, and legacy media adapters | RPR-133–144, RPR-166–168, RPR-175–177, RPR-189–191 |
@@ -79,7 +81,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 - **Depends:** RPR-005.
 - **Deliver:** unprivileged pull-request CI for backend/frontend tests, schema compatibility, dependency license metadata, secret scanning, and container build smoke tests.
 - **Acceptance:** least-privilege CI has no production credentials, raw devices, or privileged containers; artifacts have retention limits.
-- **Tests:** a deliberately broken schema branch fixture demonstrates the compatibility gate fails.
+- **Tests:** a deliberately broken schema compatibility fixture demonstrates the gate fails.
 
 ### RPR-007 — Define configuration and capability schemas `[P0, M0]`
 
@@ -423,14 +425,14 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 - **Depends:** RPR-050–052.
 - **Deliver:** pure versioned scoring engine combining path, owner, type, metadata, state, application, and rule signals into independent scores/evidence/confidence.
-- **Acceptance:** same inputs/version produce same output; no AI result is required; score thresholds are configuration, not hard deletion.
+- **Acceptance:** same inputs/version produce same output; no AI result is required; score thresholds are configuration, not hard deletion; no user-data category is deprioritized solely by its category label, while OS/cache noise requires explainable path/application evidence.
 - **Tests:** golden table, boundary values, missing evidence, contradictory signals, and rules-version migration.
 
 ### RPR-054 — Assign core categories `[P1, M1]`
 
 - **Depends:** RPR-050, RPR-053.
 - **Deliver:** multi-label taxonomy for media, documents, archives, messages/email, browser, backups/mobile, wallets/vaults/keys, software/code/databases, deleted/carved, corrupted, unknown, and system/noise.
-- **Acceptance:** one finding may occupy several relevant tabs; category evidence is queryable and explainable.
+- **Acceptance:** one finding may occupy several relevant tabs; category evidence is queryable and explainable; every category remains reachable in All Findings and no category is silently excluded because of an implementation-priority label.
 - **Tests:** representative and ambiguous fixtures; category version stored.
 
 ### RPR-055 — Inventory installed software and utilities `[P2, M2]`
@@ -454,12 +456,12 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 - **Acceptance:** detection succeeds before optional iLEAPP/ALEAPP integration; unsupported/encrypted backups remain visible.
 - **Tests:** multiple devices, partial backup, encrypted test backup, moved folder, and false-positive manifest.
 
-### RPR-058 — Locate wallets, vaults, keys, and certificates `[P2, M3]`
+### RPR-058 — Locate wallets, vaults, keys, and certificates `[P1, M1]`
 
 - **Depends:** RPR-050, RPR-051, RPR-054.
-- **Deliver:** versioned path/signature rules for major wallet files/apps, password vaults, SSH/GPG keys, certificates, keystores, seed/backup indicators, with sensitivity label.
-- **Acceptance:** detection does not claim value/balance, execute wallet software, or transmit content; generic text “wallet” names alone have low confidence.
-- **Tests:** safe synthetic formats, renamed files, encrypted vault, decoy name, and incomplete artifact.
+- **Deliver:** a versioned, extensible locator registry for Bitcoin Core legacy/descriptor wallet directories, `wallet.dat` and backups; Electrum and validated Bitcoin-family layouts; Ethereum/Web3 Secret Storage JSON keystores; validated browser-extension vault evidence; BIP32/BIP39-style recovery-material and private-key export indicators; hardware-wallet companion/backups; password vaults; SSH/GPG keys; certificates; and later chain-specific plugins. Apply it to normalized allocated, Trash/Recycle Bin, deleted, carved, browser-profile, application-data, archive, backup, attachment, document, image, and OCR findings as those ingestion stages become available.
+- **Acceptance:** each result carries exact evidence, confidence, source/recovery state, sensitivity, and related application/profile data; weak filename or generic “wallet” text alone is low confidence; locator hooks work for later deleted/carved/OCR ingestion without schema redesign; seeds, private keys, decrypted values, and passwords never enter logs, notifications, remote AI/model requests, or general search text; detection never claims value/balance, executes wallet software, contacts a network, signs data, or broadcasts a transaction.
+- **Tests:** safe synthetic Bitcoin Core legacy/descriptor, Electrum-family, Web3 JSON keystore, browser-vault evidence, recovery-indicator, renamed, encrypted, deleted/carved-origin, decoy-name, false-positive mnemonic prose, incomplete artifact, redaction, and no-network fixtures.
 
 ### RPR-059 — Add exact and perceptual duplicate groups `[P2, M2]`
 
@@ -792,12 +794,12 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 - **Acceptance:** original is never replaced; recursion/bombs are bounded; repeated successful password is reusable only through explicit secret-set policy.
 - **Tests:** encrypted nested archive, duplicate decrypted content, depth limit, wrong output, restart.
 
-### RPR-104 — Add wallet/vault-specific protected formats `[P2, M3]`
+### RPR-104 — Add wallet/vault-specific protected formats `[P1, M3]`
 
 - **Depends:** RPR-058, RPR-081, RPR-098–103.
-- **Deliver:** researched, fixture-backed plugins for prioritized wallet/vault/key formats, metadata-only inventory, supported password verification, and safe content display.
-- **Acceptance:** each format has license/source/version and synthetic fixture; no balance/network lookup or transaction broadcast occurs.
-- **Tests:** locked/unlocked/corrupt/versioned synthetic artifacts and false positives.
+- **Deliver:** researched, fixture-backed plugins for an explicit supported-format matrix covering the protected wallet/vault/key families prioritized by RPR-058, metadata-only inventory, supported password verification, safe redacted display, and a related-item export bundle with exact selected bytes, provenance, checksums, duplicate relationships, and verification state.
+- **Acceptance:** each advertised format/version has license/source/version facts and a synthetic fixture; recovered secrets follow RPR-102 controls; unsupported versions remain visible; no secret reaches a remote model; no balance/network lookup, signing, or transaction broadcast occurs.
+- **Tests:** locked/unlocked/corrupt/versioned synthetic artifacts, unsupported version, false positives, bundle verification, remote-provider denial, and secret redaction.
 
 ---
 
@@ -848,8 +850,8 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 ### RPR-111 — Define notification rules and event summaries `[P1, M2]`
 
 - **Depends:** RPR-026, RPR-031.
-- **Deliver:** configurable start/progress/heartbeat/count/health/disconnect/pause/failure/export/password-success/completion rules, throttling, quiet hours, and redacted templates.
-- **Acceptance:** no filenames, URLs, document text, thumbnails, or passwords by default; delivery failure cannot affect job state.
+- **Deliver:** configurable start/progress/heartbeat/count/high-value-sensitive-count/health/disconnect/pause/failure/export/password-success/completion rules, throttling, quiet hours, and redacted templates.
+- **Acceptance:** no filenames, URLs, document text, thumbnails, wallet identifiers, recovery phrases, keys, or passwords by default; high-value/sensitive alerts contain counts and a local UI link only; delivery failure cannot affect job state.
 - **Tests:** rule matching, threshold once, throttle, quiet hours, redaction, delivery-failure outbox.
 
 ### RPR-112 — Integrate Apprise notifications `[P1, M2]`
@@ -950,8 +952,8 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 ### RPR-125 — Build remaining category tabs `[P1, M2]`
 
 - **Depends:** RPR-054–058, RPR-116, RPR-121, RPR-186.
-- **Deliver:** messages/email, archives/encrypted, backups/mobile, wallets/vaults/keys, software/code/databases, Trash/Recycle Bin, deleted/carved, unknown/unsupported views using shared primitives and category-specific summaries.
-- **Acceptance:** every finding is reachable in All Findings; unsupported artifacts remain visible; sensitive labels do not hide content.
+- **Deliver:** messages/email, archives/encrypted, backups/mobile, first-class wallets/vaults/keys, software/code/databases, Trash/Recycle Bin, deleted/carved, unknown/unsupported views using shared primitives and category-specific summaries. The wallet view groups family/application, OS user/profile, allocated/deleted/carved/protected state, confidence, related artifacts, and export readiness without revealing secrets in list views.
+- **Acceptance:** every finding is reachable in All Findings; unsupported artifacts remain visible; sensitive labels do not hide content; wallet summaries never imply balance or successful recovery when only locator evidence exists.
 - **Tests:** representative state fixtures and cross-tab multi-label item.
 
 ### RPR-126 — Build full-screen finding inspector `[P1, M2]`
@@ -1098,9 +1100,9 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 ### RPR-145 — Implement version-pinned installer `[P1, M5]`
 
 - **Depends:** RPR-019, RPR-027, RPR-130.
-- **Deliver:** inspectable install script/package flow, prerequisite/architecture checks, signed manifest verification, digest-pinned images, hostd systemd unit, directories/permissions, URLs, status, and uninstall instructions.
-- **Acceptance:** installer never lists/selects/scans a disk automatically; reinstall is idempotent; failure rolls back only files it created; uninstall preserves catalog, checkpoints, scratch, and exports unless the operator runs a separate explicit owned-state removal command.
-- **Tests:** clean install, upgrade handoff, unsupported OS/arch, bad signature/digest, occupied port, rootless/container runtime variants.
+- **Deliver:** inspectable install script/package flow, prerequisite/architecture checks, signed manifest verification, digest-pinned images, Arch Linux/Omarchy and Ubuntu/Debian systemd profiles, a validated Unraid lifecycle/template profile, directories/permissions, URLs, status, and uninstall instructions.
+- **Acceptance:** Linux is the only scanner-host target; macOS/Windows are browser clients only; the installer never lists/selects/scans a disk automatically; Unraid active array/parity/cache/boot and Reperio state/scratch devices are ineligible as sources; reinstall is idempotent; failure rolls back only files it created; uninstall preserves catalog, checkpoints, scratch, and exports unless the operator runs a separate explicit owned-state removal command.
+- **Tests:** clean Arch/Omarchy and Ubuntu/Debian installs, Unraid profile validation, upgrade handoff, unsupported non-Linux host/OS/arch, protected NAS-device rejection, bad signature/digest, occupied port, and rootful/rootless container-runtime variants.
 
 ### RPR-146 — Build signed multi-architecture OCI releases `[P1, M5]`
 
@@ -1161,16 +1163,16 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 ### RPR-154 — Write operator and administrator documentation `[P1, M5]`
 
 - **Depends:** RPR-118–145.
-- **Deliver:** install/update/uninstall, supported platforms/filesystems, attach/select, read-only proof, scratch sizing, resume/reconnect, review/dismiss/undo, exports, browser reports, AI privacy, passwords, notifications, auth/LAN, limitations, troubleshooting.
-- **Acceptance:** no promise of complete recovery; failing-disk warning and no-wipe boundary are prominent; commands are version-pinned and tested.
+- **Deliver:** install/update/uninstall for Arch Linux/Omarchy, Ubuntu/Debian, and validated Unraid deployments; Linux-only scanner-host and cross-platform browser-client boundaries; supported platforms/filesystems; attach/select; read-only proof; scratch sizing; resume/reconnect; review/dismiss/undo; wallet handling; exports; browser reports; AI privacy; passwords; notifications; auth/LAN; limitations; troubleshooting.
+- **Acceptance:** no promise of complete recovery; failing-disk warning, wallet-secret handling, category-neutral retention, protected NAS devices, and no-wipe boundary are prominent; commands are version-pinned and tested.
 - **Tests:** docs command validation, link check, fresh-operator walkthrough, screenshots/version check.
 
 ### RPR-155 — Create release acceptance fixture suite `[P0, M5]`
 
 - **Depends:** RPR-008, RPR-133–144, RPR-146–154.
-- **Deliver:** signed expected-results suite for every advertised filesystem/browser/artifact/destination/architecture plus install-to-export end-to-end workflow.
-- **Acceptance:** release manifest lists only passing capabilities; failures remove/disable claims rather than being waived silently.
-- **Tests:** full matrix on exact release images/digests and source byte comparison before/after.
+- **Deliver:** signed expected-results suite for every advertised filesystem/browser/artifact/destination/architecture, wallet-locator/protected-format claim, and Linux host profile, plus install-to-export end-to-end workflow.
+- **Acceptance:** release manifest lists only passing capabilities; Arch Linux/Omarchy, Ubuntu/Debian, and Unraid claims are distinct; macOS/Windows are identified only as browser clients; failures remove/disable claims rather than being waived silently.
+- **Tests:** full matrix on exact release images/digests, wallet redaction/no-network checks, Linux host-profile fixtures, and source byte comparison before/after.
 
 ### RPR-156 — Cut the first release candidate `[P1, M5]`
 
@@ -1442,12 +1444,12 @@ These tasks extend the same one-source, read-only pipeline to media that may hav
 
 Do not begin feature coding with the UI. The safest initial sequence is:
 
-1. RPR-001 and RPR-002 in parallel.
+1. RPR-001, then RPR-002. Review and record each task before starting the next.
 2. RPR-003 after threat-model review.
 3. RPR-004–008 to create the executable skeleton and fixtures.
 4. RPR-009–020 and RPR-178–180 in dependency order until fixed and removable source no-write/identity suites pass.
 5. RPR-021–035 for catalog/job/scanner contracts.
 6. RPR-036–040 and RPR-181 for the first read-only disk/flash allocated-file path.
-7. RPR-050–054, RPR-105–107, and RPR-116–121 for the first useful review/export loop.
+7. RPR-050–054, then RPR-058, RPR-105–107, and RPR-116–121 for the first useful review/export loop with early wallet/vault/key inventory.
 
 No agent should integrate PhotoRec, archive parsers, password tools, AI providers, or remote destinations before the generic safety and sandbox dependencies named in those tasks are complete.

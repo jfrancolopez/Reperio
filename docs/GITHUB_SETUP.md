@@ -1,25 +1,29 @@
 # GitHub repository setup
 
-Repository files provide local checks and GitHub workflow definitions, but they cannot protect `main` or enable server-side security features by themselves. Apply this checklist once the hardening branch is reviewed and pushed.
+Repository files provide local checks and GitHub workflow definitions, but they cannot protect `main` or enable server-side security features by themselves. This checklist matches the current single-owner workflow: one implementation agent, one task, one checkout, and direct task commits to `main`. Section 1.1 documents the optional PR mode if the owner later changes that decision.
 
-## 1. Create an active `main` ruleset
+## 1. Protect `main` for the current sequential-owner mode
 
 In **Settings → Rules → Rulesets**, create a branch ruleset targeting the default branch `main`:
 
 - Set enforcement to **Active**.
 - Restrict deletions and block force pushes.
-- Require changes to be made through a pull request.
-- In the current single-owner phase, use zero required approvals so the owner is not permanently blocked from merging their own pull request. Add at least one approval and required CODEOWNERS review as soon as a second trusted reviewer exists.
-- Require conversation resolution.
-- Require a linear history if squash or rebase merges are the chosen merge strategies.
-- Require these status checks:
-  - `repository-policy`
-  - `secret-scan`
-  - `dependency-review`
-- Require branches to be up to date before merging.
+- Require a linear history.
+- Do not require pull requests or pre-push status checks while direct-to-`main` owner mode is active. A new commit cannot earn its own GitHub-hosted checks until GitHub receives it, so local `make validate`, task tests, `make secret-scan`, and diff review are mandatory before push.
+- Keep direct pushes limited to the owner. GitHub Actions runs `repository-policy` and `secret-scan` after every `main` push. A failure keeps the same task active until a corrective commit passes; never rewrite the failed commit out of history.
 - Do not create broad bypass entries. If an emergency bypass is ever used, record why and immediately restore enforcement.
 
-GitHub normally requires a check to have run successfully in the repository before it can be selected as required. Open the first pull request, let the workflow run, then finish the required-check selection.
+This mode gives up pre-merge enforcement in exchange for the requested no-branch/no-worktree workflow. Git remains the audit trail, force-push/deletion protection preserves history, and local plus post-push gates provide validation.
+
+### 1.1 Optional pull-request mode
+
+If the owner later requests PR-based review, edit the ruleset to require pull requests, conversation resolution, up-to-date branches, and these status checks:
+
+- `repository-policy`
+- `secret-scan`
+- `dependency-review`
+
+Use zero required approvals only while there is one trusted owner; add approvals and CODEOWNERS review when a second trusted reviewer exists. GitHub normally requires a check to have run before it can be selected, so open a disposable documentation PR and let the workflow finish first. Switching to PR mode does not authorize parallel implementation agents.
 
 ## 2. Restrict GitHub Actions
 
@@ -50,9 +54,7 @@ In **Settings → Security / Code security and analysis**:
 In **Settings → General**:
 
 - Keep `main` as the default branch.
-- Enable automatic deletion of merged head branches.
-- Prefer squash merge for one-task pull requests, or rebase merge if individual task commits are intentionally curated.
-- Disable merge commits if linear history is required by the ruleset.
+- If optional PR mode is used, enable automatic deletion of merged head branches and prefer squash or rebase merges that retain linear history.
 - Keep issues enabled for backlog task packets and security reports routed privately.
 - Add repository topics and a description only after the README's claims match an implemented milestone.
 
@@ -60,14 +62,15 @@ Do not publish a release or advertise the installer until the M5 release tasks a
 
 ## 5. Validate the protection
 
-Use a disposable pull request to prove enforcement:
+For current sequential-owner mode:
 
-1. Make a harmless documentation change and confirm all three required checks appear.
-2. Add a temporary intentionally broken local link and confirm `repository-policy` fails; remove it afterward.
-3. Use a synthetic fake pattern supported by the scanner's test guidance—never a live credential—and confirm `secret-scan` fails; remove it afterward.
-4. Confirm a direct push to `main` is rejected once the ruleset is active.
-5. Confirm a pull request cannot merge with a failing or pending required check.
-6. Confirm Dependabot can open an Action update that preserves a full-SHA pin and updates its version comment.
+1. Run `make validate`, task tests, and `make secret-scan` before a scoped documentation commit.
+2. Push normally and confirm `repository-policy` and `secret-scan` pass for the exact `main` commit.
+3. Inspect the active ruleset and confirm deletion and force-push protections target `main`; do not perform a destructive test against `main`.
+4. Confirm a normal non-force follow-up push remains possible for the owner.
+5. Confirm Dependabot can open an Action update that preserves a full-SHA pin and updates its version comment.
+
+For optional PR mode, additionally use a disposable branch/PR to confirm all three required checks appear and a PR cannot merge while a check is failing or pending. Use only inert synthetic secret-scanner fixtures and remove them before merge; never test a broken gate by pushing deliberately invalid content to `main`.
 
 Record the ruleset export or screenshots in private operational documentation if company change-control evidence is required. Do not store account secrets, personal drive content, or recovered reports in this repository.
 

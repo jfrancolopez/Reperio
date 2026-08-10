@@ -14,10 +14,13 @@ Reperio is a local-first, read-only media discovery and recovery workstation for
 |---|---|
 | Find everything useful | Inventory allocated, trashed, hidden, deleted, orphaned, carved, encrypted, corrupted, older-session, and application-managed artifacts. |
 | Avoid system noise | Keep every finding available while ranking user-created and user-manipulated material above operating-system, cache, and application boilerplate. |
+| Preserve every category | No user-data category is intrinsically lower value or made unreachable. Engineering priority labels schedule dependencies; they do not decide what is worth saving. |
+| Recover wallets safely | Treat Bitcoin, Ethereum/Web3, and other wallet files, backups, keystores, vaults, and recovery indicators as first-class high-value/sensitive findings without querying balances or exposing secrets. |
 | Recover before reuse | Preview, dismiss, search, and export findings while a resumable deep scan continues in the background. |
 | Preserve the source | Enforce read-only access at the host, kernel, container, process, API, and product-design layers. Reperio will never include wiping or source repair. |
 | Stay local by default | Discovery is deterministic and offline. Local or LAN AI is optional; separately enabled remote providers receive only explicit derived content. |
 | Remain easy to operate | One disk and one operator per instance, a LAN-accessible web UI, progressive results, notifications, and verified exports to separate storage. |
+| Run on Linux | Target Arch Linux/Omarchy and Ubuntu/Debian first, with a validated Unraid/NAS profile. macOS and Windows may open the web UI but are not planned scanner hosts. |
 
 ## The operator experience
 
@@ -38,10 +41,11 @@ Reperio never wipes, formats, initializes, blanks, burns, repairs, repartitions,
 - CD, DVD, and Blu-ray data recovery with track/session inventory, ISO 9660/UDF enumeration, addressable previous sessions, quick-blanked/damaged-media attempts, and honest overwritten/firmware limits.
 - DOS FAT12 floppy recovery first, followed by exact fixture-backed legacy formats such as Zip/Jaz, LS-120, magneto-optical, or non-DOS floppies.
 - A unified Recycle Bin/Trash view across Windows, macOS, and freedesktop layouts, distinguishing items still in trash from filesystem-deleted or carved remnants.
+- First-class Bitcoin, Ethereum/Web3, and extensible multi-chain wallet discovery across allocated files, deleted/carved output, browser profiles, backups, archives, documents, images, and OCR, followed by safe local protected-format recovery where supported. Wallet secrets never go to notifications or remote AI, and Reperio never queries balances, signs, or broadcasts transactions.
 - Windows and common removable flash first, followed by macOS, Linux, optical/floppy, mobile backups, nested virtual disks, RAID, DVR/CCTV, and storage-appliance/legacy formats.
 - Browser history across operating-system users, browsers, and profiles, with timeline/search/detail views and CSV, JSON, and full-report export.
 - Safe photo and video galleries, full-screen derivatives, document/PDF reading, metadata, OCR, transcription, language detection, and translation.
-- Recognition of iPhone/Android backups, iMessage, WhatsApp, mail, source code, databases, password vaults, wallets, keys, certificates, and protected archives.
+- Recognition of iPhone/Android backups, iMessage, WhatsApp, mail, source code, databases, password vaults, keys, certificates, and protected archives.
 - Opt-in, resource-limited local password auditing with operator-supplied passwords, wordlists, rules, and combinations.
 - Search, explainable ranking, semantic enrichment, and comparison across zero, one, or several local, LAN, or explicitly enabled remote models.
 - Live progress, thresholds, completion/failure notifications, reversible bulk dismissal, and export before the scan finishes.
@@ -81,14 +85,15 @@ Direct scanning still stresses the original disk. Failing media can deteriorate,
 
 ## Building with agents
 
-Git and the protected `main` branch are the implementation source of truth. Agents receive one `RPR-NNN` task at a time and must follow its contracts, acceptance criteria, tests, and safety boundaries.
+Git `main` is the implementation source of truth. The current owner workflow uses one checkout, one active implementation agent, and one `RPR-NNN` task at a time. Finish, validate, review, commit, push, and confirm CI for that task before starting the next; do not create parallel worktrees or task branches unless the owner explicitly changes the workflow.
+
+Task packets are coding-agent and LLM vendor/model agnostic. Codex, OpenCode, or another capable agent must be able to work from the same checked-in contracts, fixtures, commands, and acceptance evidence without private context from a previous model.
 
 ```sh
-git switch -c codex/rpr-nnn-short-name
 make validate
 ```
 
-Start with [agent onboarding](docs/AGENT_START_HERE.md), use the [task packet template](docs/AGENT_TASK_TEMPLATE.md), and follow [the contribution workflow](CONTRIBUTING.md). The same dependency-free validation runs on every pull request; GitHub adds full-history secret scanning and dependency review.
+Start with [agent onboarding](docs/AGENT_START_HERE.md), use the [task packet template](docs/AGENT_TASK_TEMPLATE.md), and follow [the contribution workflow](CONTRIBUTING.md). The same dependency-free validation runs locally and in GitHub Actions; external contributions or future multi-review work may use pull requests.
 
 ## Project map
 
@@ -108,7 +113,7 @@ Start with [agent onboarding](docs/AGENT_START_HERE.md), use the [task packet te
 ## Delivery sequence
 
 1. **M0 — Safety and contracts:** prove the no-write boundary, create synthetic fixtures, and establish schemas and repository quality gates.
-2. **M1 — Allocated Windows MVP:** inventory NTFS/FAT/exFAT, show live findings, and export verified local copies.
+2. **M1 — Allocated Windows MVP:** inventory NTFS/FAT/exFAT, locate wallet/vault/key artifacts, show live findings, and export verified local copies.
 3. **M2 — Deep Windows and removable media:** add deleted/trash recovery, carving/resume, browser history, flash cards, optical sessions, FAT12 floppies, previews, OCR, application artifacts, and notifications.
 4. **M3 — Intelligence and protected files:** add multi-model enrichment, semantic search, and bounded password workflows.
 5. **M4 — macOS, Linux, mobile, RAID, DVR, and legacy media:** expand only when fixture-backed support proves each exact capability.
