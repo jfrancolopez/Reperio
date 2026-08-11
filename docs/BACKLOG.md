@@ -51,6 +51,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-002 — Write the source-write threat model `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** none.
 - **Deliver:** assets, trust boundaries, attacker/failure scenarios, explicit prohibited operations, and mitigations spanning host, kernel, container, process, API, UI, tools, AI, scratch, and exports.
 - **Acceptance:** every invariant in master-plan section 3 maps to at least one preventive control and one verification; residual risks are named.

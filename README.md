@@ -100,6 +100,7 @@ Start with [agent onboarding](docs/AGENT_START_HERE.md), use the [task packet te
 | Document | Purpose |
 |---|---|
 | [Master plan](docs/MASTER_PLAN.md) | Product decisions, safety invariants, architecture, pipeline, UX, providers, release model, and honest limitations. |
+| [Threat model](docs/THREAT_MODEL.md) | Assets, trust boundaries, attacker/failure scenarios, prohibited operations, and invariant controls/verifications for the no-write boundary. |
 | [Implementation backlog](docs/BACKLOG.md) | 191 small, dependency-ordered tasks with deliverables, acceptance criteria, and tests. |
 | [Requirements traceability](docs/TRACEABILITY.md) | Maps every confirmed requirement to specification sections and backlog coverage. |
 | [Agent start guide](docs/AGENT_START_HERE.md) | Exact workflow for giving bounded work to implementation agents. |
