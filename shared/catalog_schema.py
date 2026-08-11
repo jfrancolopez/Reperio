@@ -151,6 +151,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     max_attempts INTEGER NOT NULL DEFAULT 1 CHECK (max_attempts >= 1),
     lease_owner TEXT,
     lease_expires_at TEXT CHECK (lease_expires_at IS NULL OR ({_timestamp_check("lease_expires_at")})),
+    retry_after_at TEXT CHECK (retry_after_at IS NULL OR ({_timestamp_check("retry_after_at")})),
     error_json TEXT CHECK (error_json IS NULL OR json_valid(error_json)),
     created_at TEXT NOT NULL CHECK ({_timestamp_check("created_at")}),
     updated_at TEXT NOT NULL CHECK ({_timestamp_check("updated_at")})

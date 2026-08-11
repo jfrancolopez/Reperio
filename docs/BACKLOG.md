@@ -234,6 +234,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-024 — Add leases, retries, and idempotency `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-023.
 - **Deliver:** atomic worker leasing, heartbeat/expiry, capped exponential retry with error classes, and stage idempotency keys.
 - **Acceptance:** two workers cannot own one job; an expired job can resume without duplicate normalized records.
