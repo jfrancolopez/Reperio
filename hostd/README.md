@@ -22,3 +22,5 @@ verification, SMART where supported, and launching the fixed scanner container.
   with `O_RDONLY` access for `RPR-012`; sampled bytes are never returned.
 - **System disk denial:** `hostd.system_disks` refuses active root, boot, state,
   container-storage, and swap ancestry by default for `RPR-013`.
+- **Storage inspection:** `hostd.storage_inspection` reports source-related
+  mounts, holders, device-mapper, and mdraid facts for `RPR-014`.

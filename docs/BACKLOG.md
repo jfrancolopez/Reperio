@@ -151,6 +151,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-014 — Report mounts, holders, and stacked storage `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-010.
 - **Deliver:** read-only inspection of mount modes, open holders, LVM/device-mapper, mdraid, and child relationships.
 - **Acceptance:** preparation cannot claim safe status while a source child is mounted read-write or has an unsupported holder.
