@@ -123,4 +123,4 @@ Start with [agent onboarding](docs/AGENT_START_HERE.md), use the [task packet te
 
 Use Reperio only on media you own or are explicitly authorized to examine. The operator is responsible for applicable workplace policy, privacy, retention, and legal requirements.
 
-No project license has been selected yet. Until `RPR-001` is complete and a root license is committed, no permission is granted to copy, modify, or redistribute the project beyond rights provided by applicable law.
+Reperio is licensed under the [Apache License 2.0](LICENSE). Reciprocal-licensed third-party tools are invoked only as separate, unmodified programs and must satisfy the [dependency intake checklist](docs/DEPENDENCY_INTAKE.md); the machine check in `scripts/check_dependency_licenses.py` rejects dependencies that are missing license metadata or fall outside the [license policy](scripts/dependency-license-policy.json). See [ADR 0001](docs/adr/0001-project-license.md) for the decision and reversal conditions.

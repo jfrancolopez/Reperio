@@ -61,7 +61,7 @@ Use this only when the owner requests a branch/PR or an external contributor nee
 - Never commit actual source-disk data, recovered files, browser history, wallet files, seeds, private keys, keystores, passwords, model transcripts, logs, database state, disk images, or credentials.
 - Generate synthetic fixtures during tests; keep them minimal, deterministic, and free of real personal data.
 - Pin tools and OCI images to immutable versions or digests. Pin GitHub Actions to a full 40-character commit SHA and retain the release tag in a comment for Dependabot.
-- Record dependency source, version, license, supported architecture, sandbox needs, and removal path as required by `RPR-001` and later adapter tasks.
+- Record dependency source, version, license, supported architecture, sandbox needs, and removal path according to the [dependency intake checklist](docs/DEPENDENCY_INTAKE.md), which `RPR-001` introduced; entries must pass the license gate before committing.
 - Schema and API changes require a migration or compatibility plan plus updated contracts and tests.
 
 ## Reporting results

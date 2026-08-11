@@ -27,7 +27,7 @@ This is a point-in-time audit, not a permanent status page. Use `git status`, th
 | Server-side `main` settings are not represented in Git | Force pushes or deletion could damage the audit trail. | The setup checklist blocks force pushes/deletion while permitting the requested sequential owner pushes. Local pre-push validation and post-push Actions are mandatory; optional PR enforcement is documented separately. |
 | No private vulnerability route | Sensitive reports could be posted publicly. | Added `SECURITY.md` and a private-security-advisory contact route. |
 | Documentation was correct but sparse at entry | New operators and small implementation agents could overestimate current readiness or miss navigation. | Rebuilt the README, added agent onboarding, GitHub setup, and this audit while preserving the master plan/backlog as the authoritative contracts. |
-| No selected project license | Redistribution and dependency policy are unresolved. | Still open by design as `RPR-001`; the README clearly states that no license has been granted yet. |
+| No selected project license | Redistribution and dependency policy are unresolved. | Resolved by `RPR-001`: the project is licensed under Apache-2.0 (`LICENSE`), the decision is recorded in `docs/adr/0001-project-license.md`, and a machine-checkable dependency-license gate now runs inside `make validate`. |
 
 ## What `make validate` now proves
 
@@ -38,6 +38,7 @@ This is a point-in-time audit, not a permanent status page. Use `git status`, th
 - Local Markdown links resolve within the repository.
 - The backlog defines every `RPR-001` through `RPR-191` exactly once and documentation references no undefined numeric task.
 - JSON and shell scripts have valid syntax.
+- The dependency license gate (`scripts/check_dependency_licenses.py`) validates the dependency registry against the Apache-2.0 license policy, including the missing-metadata and reciprocal-license rejection fixtures.
 - Workflows use safe triggers, read-only permissions, immutable Action SHAs, bounded jobs, and no direct GitHub-context expression inside shell commands.
 
 These checks are repository guardrails, not proof that future application code is correct. `RPR-005` and `RPR-006` remain open until the scaffolded backend/frontend/schema/container test suites and their deliberate failure fixtures exist.
@@ -47,7 +48,7 @@ These checks are repository guardrails, not proof that future application code i
 1. Before every authorized `main` push, review the full task diff and run focused tests, `make validate`, and `make secret-scan`; run `make workflow-lint` whenever workflow files change.
 2. After every push, confirm `repository-policy` and `secret-scan` pass for the exact commit before starting another task. Correct failures with a new commit rather than rewriting history.
 3. Apply and periodically verify [the GitHub repository setup checklist](GITHUB_SETUP.md), especially force-push/deletion protection.
-4. Complete `RPR-001` before accepting dependency or redistribution choices.
+4. Keep the dependency registry complete and current; every new dependency must pass the license gate and the intake checklist before it is committed.
 5. Add application linters, tests, schema compatibility, license metadata, container smoke tests, and artifact retention as the RPR-004–006 scaffold is implemented.
 
 No secret scanner can guarantee that a credential is harmless. If a real secret is ever committed, rotate or revoke it immediately before considering history cleanup.

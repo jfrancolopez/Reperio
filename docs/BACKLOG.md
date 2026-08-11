@@ -43,6 +43,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-001 — Select the Reperio project license `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** none.
 - **Deliver:** an ADR selecting the project license; a dependency-intake checklist covering reciprocal licenses, separate-process use, image redistribution, notices, and source-offer obligations.
 - **Acceptance:** root license file exists; README no longer says undecided; CI can reject dependencies missing license metadata.

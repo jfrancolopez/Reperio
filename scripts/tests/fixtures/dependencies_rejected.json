@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "policy_document": "docs/DEPENDENCY_INTAKE.md",
+  "dependencies": [
+    {
+      "name": "rejected-missing-license",
+      "version": "1.0.0",
+      "license": "",
+      "source": "https://example.invalid/rejected-missing",
+      "architecture": ["amd64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Rejected fixture: dependency has no license metadata."
+    },
+    {
+      "name": "rejected-linked-reciprocal",
+      "version": "2.0.0",
+      "license": "GPL-3.0-only",
+      "source": "https://example.invalid/rejected-gpl",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "yes",
+      "notes": "Rejected fixture: reciprocal license incorrectly used as linked."
+    }
+  ]
+}
