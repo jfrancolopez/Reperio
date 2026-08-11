@@ -127,6 +127,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-011 — Implement stable device identity `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-010.
 - **Deliver:** resolution through `/dev/disk/by-id` plus model, serial/WWN where available, size, logical/physical sector sizes, transport, and parent topology.
 - **Acceptance:** scan APIs use opaque stable IDs, not mutable `/dev/sdX` names; missing serial uses a documented weaker identity and warning.

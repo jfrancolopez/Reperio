@@ -16,3 +16,5 @@ verification, SMART where supported, and launching the fixed scanner container.
   see `docs/HOSTD_PROTOCOL.md`.
 - **Enumeration:** `hostd.block_devices` reads sanitized sysfs-shaped block
   facts for `RPR-010`; stable identity and safety decisions are later tasks.
+- **Identity:** `hostd.identity` resolves opaque stable source IDs from
+  `/dev/disk/by-id` and immutable facts for `RPR-011`.
