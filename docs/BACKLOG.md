@@ -167,6 +167,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-016 — Enforce and verify kernel read-only state `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-011, RPR-014.
 - **Deliver:** host operation equivalent to `BLKROSET`, followed by independent verification for the whole disk and discovered children.
 - **Acceptance:** launch stops if read-only cannot be set or verified; audit records facts without source bytes.

@@ -26,3 +26,5 @@ verification, SMART where supported, and launching the fixed scanner container.
   mounts, holders, device-mapper, and mdraid facts for `RPR-014`.
 - **Destination separation:** `hostd.destination_separation` proves local
   scratch/export paths do not share the source ancestry for `RPR-015`.
+- **Read-only preparation:** `hostd.read_only` sets and verifies kernel
+  read-only state for whole disks and children for `RPR-016`.
