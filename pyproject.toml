@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools==75.8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reperio"
+version = "0.1.0.dev0"
+description = "Local-first, read-only media discovery and recovery workstation"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Reperio contributors" }]
+
+[project.optional-dependencies]
+# Developer-quality toolchain, pinned and tracked in docs/dependency-registry.json.
+dev = [
+  "mypy==1.14.1",
+  "pytest==8.3.5",
+  "ruff==0.9.10",
+]
+
+[tool.setuptools]
+packages = ["api", "hostd", "migrations", "scanner", "shared", "worker"]

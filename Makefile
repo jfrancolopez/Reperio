@@ -1,12 +1,13 @@
 SHELL := /bin/bash
 
-.PHONY: help validate secret-scan workflow-lint
+.PHONY: help validate secret-scan workflow-lint versions
 
 help:
 	@echo "Reperio repository commands"
 	@echo "  make validate     Run every dependency-free repository policy check"
 	@echo "  make secret-scan  Run a checksum-verified Gitleaks worktree/history scan"
 	@echo "  make workflow-lint  Download a checksum-verified Actionlint and lint CI"
+	@echo "  make versions     Report every package version"
 
 validate:
 	./scripts/validate-repository.sh
@@ -16,3 +17,6 @@ secret-scan:
 
 workflow-lint:
 	./scripts/lint-workflows.sh
+
+versions:
+	python3 scripts/report-versions.py

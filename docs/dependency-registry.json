@@ -1,5 +1,46 @@
 {
   "schema_version": 1,
   "policy_document": "docs/DEPENDENCY_INTAKE.md",
-  "dependencies": []
+  "dependencies": [
+    {
+      "name": "setuptools",
+      "version": "75.8.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/setuptools/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Python build backend required by pyproject.toml (RPR-004)."
+    },
+    {
+      "name": "pytest",
+      "version": "8.3.5",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pytest/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Developer test runner declared in pyproject.toml dev extra (RPR-004, wired by RPR-005)."
+    },
+    {
+      "name": "ruff",
+      "version": "0.9.10",
+      "license": "MIT",
+      "source": "https://pypi.org/project/ruff/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Linter/formatter declared in pyproject.toml dev extra (RPR-005)."
+    },
+    {
+      "name": "mypy",
+      "version": "1.14.1",
+      "license": "MIT",
+      "source": "https://pypi.org/project/mypy/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Static type checker declared in pyproject.toml dev extra (RPR-005)."
+    }
+  ]
 }

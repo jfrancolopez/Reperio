@@ -1,0 +1,7 @@
+{
+  "name": "reperio-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reperio LAN web interface (placeholder; React/TypeScript SPA later)",
+  "license": "Apache-2.0"
+}

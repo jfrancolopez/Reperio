@@ -91,7 +91,12 @@ Task packets are coding-agent and LLM vendor/model agnostic. Codex, OpenCode, or
 
 ```sh
 make validate
+make versions     # reports every package version from one command
 ```
+
+Package layout (`RPR-004` scaffold): `hostd/`, `api/`, `scanner/`, `worker/`,
+`shared/`, `migrations/` (Python), `web/` (placeholder UI), `tests/`,
+`fixtures/`, `packaging/`, and `docs/`.
 
 Start with [agent onboarding](docs/AGENT_START_HERE.md), use the [task packet template](docs/AGENT_TASK_TEMPLATE.md), and follow [the contribution workflow](CONTRIBUTING.md). The same dependency-free validation runs locally and in GitHub Actions; external contributions or future multi-review work may use pull requests.
 

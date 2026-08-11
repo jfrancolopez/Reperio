@@ -67,6 +67,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-004 — Scaffold the monorepo `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-003.
 - **Deliver:** top-level packages for `hostd`, `api`, `scanner`, `worker`, `web`, shared schemas, migrations, tests, fixtures, packaging, and docs; no feature implementation.
 - **Acceptance:** each package has a minimal entry point and ownership README; one command reports all package versions.
