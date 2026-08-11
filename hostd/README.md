@@ -30,3 +30,5 @@ verification, SMART where supported, and launching the fixed scanner container.
   read-only state for whole disks and children for `RPR-016`.
 - **Safety audit:** `hostd.safety_audit` appends redacted, hash-chained safety
   records and verifies ordering/tamper evidence for `RPR-018`.
+- **Scanner sandbox:** `hostd.scanner_sandbox` builds an immutable Docker/Podman
+  launch profile with one read-only source device for `RPR-019`.

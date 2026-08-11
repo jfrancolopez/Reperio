@@ -190,6 +190,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-019 — Launch the fixed scanner sandbox `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-009, RPR-015, RPR-016, RPR-018.
 - **Deliver:** Docker/Podman launch with one read-only device, no network, all capabilities dropped, non-root UID plus necessary read group, read-only root, bounded tmpfs/scratch, PID/memory/CPU limits, and immutable image digest.
 - **Acceptance:** callers cannot alter image, entry point, devices, mounts, network, capabilities, or security profile; scanner cannot see Docker socket or host secrets.
