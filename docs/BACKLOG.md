@@ -226,6 +226,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-023 — Implement the durable job state machine `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-021.
 - **Deliver:** pending/leased/running/paused/retrying/completed/completed-warning/failed/cancelled transitions, immutable job input, attempts, and structured errors.
 - **Acceptance:** invalid transitions are rejected; safe stop is distinct from failure; completed stages are not silently rerun.

@@ -9,3 +9,4 @@ Owner: cross-package contracts, versioned schemas, and placeholder helpers.
   package entry points stay consistent and free of feature logic.
 - Contains `shared.catalog_schema`, the first normalized SQLite catalog schema;
   migrations and schema-version tracking start in `RPR-022`.
+- Contains `shared.job_state`, the durable job state machine for `RPR-023`.
