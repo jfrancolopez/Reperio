@@ -12,3 +12,4 @@ Owner: cross-package contracts, versioned schemas, and placeholder helpers.
 - Contains `shared.job_state`, the durable job state machine plus leases,
   retries, and idempotency for `RPR-023`–`RPR-024`.
 - Contains `shared.checkpoints`, versioned checkpoint storage for `RPR-025`.
+- Contains `shared.secret_store`, encrypted host secret references for `RPR-031`.

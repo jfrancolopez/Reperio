@@ -63,6 +63,26 @@
       "notes": "Pinned Starlette runtime dependency for async request handling in RPR-027."
     },
     {
+      "name": "cffi",
+      "version": "2.1.1",
+      "license": "MIT",
+      "source": "https://pypi.org/project/cffi/2.1.1/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Pinned cryptography runtime dependency for the host secret store (RPR-031)."
+    },
+    {
+      "name": "cryptography",
+      "version": "46.0.3",
+      "license": "Apache-2.0",
+      "source": "https://pypi.org/project/cryptography/46.0.3/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "AES-GCM encryption at rest for the host secret store (RPR-031); never receives source-device handles."
+    },
+    {
       "name": "fastapi",
       "version": "0.115.8",
       "license": "MIT",
@@ -101,6 +121,16 @@
       "linkage": "linked",
       "sandbox": "no",
       "notes": "Pinned Pydantic runtime dependency for RPR-027."
+    },
+    {
+      "name": "pycparser",
+      "version": "3.0",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/pycparser/3.0/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Pinned cffi runtime dependency for RPR-031."
     },
     {
       "name": "starlette",

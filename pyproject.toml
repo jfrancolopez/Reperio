@@ -13,10 +13,13 @@ authors = [{ name = "Reperio contributors" }]
 dependencies = [
   "annotated-types==0.8.0",
   "anyio==4.14.2",
+  "cffi==2.1.1",
+  "cryptography==46.0.3",
   "fastapi==0.115.8",
   "idna==3.18",
   "pydantic==2.13.4",
   "pydantic-core==2.46.4",
+  "pycparser==3.0",
   "starlette==0.45.3",
   "typing-inspection==0.4.3",
 ]

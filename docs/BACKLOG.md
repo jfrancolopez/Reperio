@@ -286,6 +286,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-031 — Implement the host secret store `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-007, RPR-027.
 - **Deliver:** generated master key or OS keyring integration, encrypted-at-rest secret values, opaque references, rotation/delete, masked display, and file permissions.
 - **Acceptance:** secrets never appear in SQLite exports, logs, OpenAPI examples, process arguments, events, or support bundles.
