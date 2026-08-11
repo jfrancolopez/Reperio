@@ -32,3 +32,5 @@ verification, SMART where supported, and launching the fixed scanner container.
   records and verifies ordering/tamper evidence for `RPR-018`.
 - **Scanner sandbox:** `hostd.scanner_sandbox` builds an immutable Docker/Podman
   launch profile with one read-only source device for `RPR-019`.
+- **No-source-write suite:** `scripts/no_source_write_suite.py` runs the
+  disposable-fixture byte-compare harness for `RPR-020`.

@@ -198,6 +198,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-020 — Build the no-source-write integration suite `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-008, RPR-013–019.
 - **Deliver:** destructive-to-fixture-only test harness that snapshots a loop disk, tries all plausible Reperio write paths, runs a minimal scan, and byte-compares the source afterward.
 - **Acceptance:** every attempted write fails; source hash is unchanged; the suite runs only against a verified disposable fixture and refuses real disks.
