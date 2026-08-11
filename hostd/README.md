@@ -18,3 +18,5 @@ verification, SMART where supported, and launching the fixed scanner container.
   facts for `RPR-010`; stable identity and safety decisions are later tasks.
 - **Identity:** `hostd.identity` resolves opaque stable source IDs from
   `/dev/disk/by-id` and immutable facts for `RPR-011`.
+- **Fingerprinting:** `hostd.fingerprint` computes bounded sampled-sector hashes
+  with `O_RDONLY` access for `RPR-012`; sampled bytes are never returned.

@@ -135,6 +135,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-012 — Add sampled source fingerprinting `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-011, RPR-008.
 - **Deliver:** deterministic sampled-sector fingerprint definition and implementation that reads only non-secret bounded ranges alongside immutable device facts.
 - **Acceptance:** fingerprints detect a same-size replacement fixture; sampling does not scan the full disk or log sampled bytes.
