@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/fixture-manifest/v1",
+  "title": "Reperio synthetic fixture expected-results manifest",
+  "description": "Hash-pinned, machine-readable expected results for the deterministic FAT12 fixture. Every finding is read from the image by the dependency-free reader; category is attached from the builder catalog. Versioned by the version in this $id and the document schema_version.",
+  "type": "object",
+  "required": ["schema_version", "spec", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "spec": {
+      "type": "object",
+      "required": ["label", "geometry", "image_sha256", "image_size", "volume_label", "volume_serial", "categories"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "geometry": { "type": "string", "minLength": 1 },
+        "image_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "image_size": { "type": "integer", "minimum": 1 },
+        "volume_label": { "type": "string" },
+        "volume_serial": { "type": "integer", "minimum": 0 },
+        "categories": {
+          "type": "array",
+          "items": {
+            "enum": ["allocated", "deleted", "hidden", "unicode", "duplicate", "malformed", "encrypted-test", "browser-test"]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "required": ["name", "short_name", "category", "state", "attributes", "size", "read_bytes", "sha256", "first_cluster", "cluster_chain"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "short_name": { "type": "string" },
+        "category": {
+          "enum": ["allocated", "deleted", "hidden", "unicode", "duplicate", "malformed", "encrypted-test", "browser-test"]
+        },
+        "state": { "enum": ["allocated", "deleted", "truncated", "lfn-checksum-mismatch"] },
+        "attributes": {
+          "type": "array",
+          "items": { "enum": ["READ_ONLY", "HIDDEN", "SYSTEM", "VOLUME_LABEL", "DIRECTORY", "ARCHIVE"] },
+          "uniqueItems": true
+        },
+        "size": { "type": "integer", "minimum": 0 },
+        "read_bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "sha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+        "first_cluster": { "type": ["integer", "null"], "minimum": 0 },
+        "cluster_chain": { "type": ["array", "null"], "items": { "type": "integer", "minimum": 0 } }
+      }
+    }
+  }
+}

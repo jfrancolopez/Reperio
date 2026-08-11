@@ -1,0 +1,214 @@
+{
+  "findings": [
+    {
+      "attributes": [
+        "ARCHIVE"
+      ],
+      "category": "allocated",
+      "cluster_chain": [
+        2
+      ],
+      "first_cluster": 2,
+      "name": "HELLO~1.TXT",
+      "read_bytes": 38,
+      "sha256": "6eac61b4e4615aacee1c7b28e405a6e27f024b946eb1e61a0dce1a8bb12ec933",
+      "short_name": "HELLO~1.TXT",
+      "size": 38,
+      "state": "allocated"
+    },
+    {
+      "attributes": [
+        "ARCHIVE"
+      ],
+      "category": "deleted",
+      "cluster_chain": null,
+      "first_cluster": null,
+      "name": "?ELETED1.TXT",
+      "read_bytes": null,
+      "sha256": null,
+      "short_name": "?ELETED1.TXT",
+      "size": 36,
+      "state": "deleted"
+    },
+    {
+      "attributes": [
+        "HIDDEN",
+        "ARCHIVE"
+      ],
+      "category": "hidden",
+      "cluster_chain": [
+        3
+      ],
+      "first_cluster": 3,
+      "name": "HIDDEN~1.TXT",
+      "read_bytes": 35,
+      "sha256": "c42ebd54cea1b6a8f64d1b124a4c444aa860560fc57d8ca0ec1142818b562687",
+      "short_name": "HIDDEN~1.TXT",
+      "size": 35,
+      "state": "allocated"
+    },
+    {
+      "attributes": [
+        "ARCHIVE"
+      ],
+      "category": "unicode",
+      "cluster_chain": [
+        4
+      ],
+      "first_cluster": 4,
+      "name": "na\u00efve-\u6587\u4ef6.txt",
+      "read_bytes": 41,
+      "sha256": "802c22858704a707014729951b127481e77a3d98a7644eae92d1392f22f04362",
+      "short_name": "NAIVE~1.TXT",
+      "size": 41,
+      "state": "allocated"
+    },
+    {
+      "attributes": [
+        "ARCHIVE"
+      ],
+      "category": "duplicate",
+      "cluster_chain": [
+        5
+      ],
+      "first_cluster": 5,
+      "name": "COPY_A~1.TXT",
+      "read_bytes": 38,
+      "sha256": "48eb0ac344fc8abda78b0f14d6244d35474e0f394bb16ccb2995a3b993852886",
+      "short_name": "COPY_A~1.TXT",
+      "size": 38,
+      "state": "allocated"
+    },
+    {
+      "attributes": [
+        "ARCHIVE"
+      ],
+      "category": "duplicate",
+      "cluster_chain": [
+        6
+      ],
+      "first_cluster": 6,
+      "name": "COPY_B~1.TXT",
+      "read_bytes": 38,
+      "sha256": "48eb0ac344fc8abda78b0f14d6244d35474e0f394bb16ccb2995a3b993852886",
+      "short_name": "COPY_B~1.TXT",
+      "size": 38,
+      "state": "allocated"
+    },
+    {
+      "attributes": [
+        "ARCHIVE"
+      ],
+      "category": "malformed",
+      "cluster_chain": [
+        7
+      ],
+      "first_cluster": 7,
+      "name": "CORRUPT1.TXT",
+      "read_bytes": 42,
+      "sha256": "868ee232688e7ff205dbc03aad86821223e656bcc0880952efdd579fd8755ea8",
+      "short_name": "CORRUPT1.TXT",
+      "size": 42,
+      "state": "lfn-checksum-mismatch"
+    },
+    {
+      "attributes": [
+        "ARCHIVE"
+      ],
+      "category": "malformed",
+      "cluster_chain": [
+        8
+      ],
+      "first_cluster": 8,
+      "name": "DAMAGE~1.DAT",
+      "read_bytes": 512,
+      "sha256": "9422926cb79bde76c79f10022e36f556acec0e0acab6cf4e564b81ca67f44691",
+      "short_name": "DAMAGE~1.DAT",
+      "size": 4096,
+      "state": "truncated"
+    },
+    {
+      "attributes": [
+        "ARCHIVE"
+      ],
+      "category": "encrypted-test",
+      "cluster_chain": [
+        9
+      ],
+      "first_cluster": 9,
+      "name": "VAULT~1.BIN",
+      "read_bytes": 512,
+      "sha256": "55d9048eb513b315e00acaec7d9eb05db8412a1d8fd4ae0d1d9fd82796bd78bc",
+      "short_name": "VAULT~1.BIN",
+      "size": 512,
+      "state": "allocated"
+    },
+    {
+      "attributes": [
+        "ARCHIVE"
+      ],
+      "category": "browser-test",
+      "cluster_chain": [
+        10
+      ],
+      "first_cluster": 10,
+      "name": "BROWSH~1.DAT",
+      "read_bytes": 105,
+      "sha256": "27bdc18d95530124e597c0d7ae7935ab06fb864ed2a8d608934c07f0cfc4e27b",
+      "short_name": "BROWSH~1.DAT",
+      "size": 105,
+      "state": "allocated"
+    },
+    {
+      "attributes": [
+        "ARCHIVE"
+      ],
+      "category": "browser-test",
+      "cluster_chain": [
+        11
+      ],
+      "first_cluster": 11,
+      "name": "BROWSH~2.DAT",
+      "read_bytes": 106,
+      "sha256": "070e7612ebcfc667cd2309e33341fb478a53f42a847212e7d8af2e09f519157b",
+      "short_name": "BROWSH~2.DAT",
+      "size": 106,
+      "state": "allocated"
+    },
+    {
+      "attributes": [
+        "ARCHIVE"
+      ],
+      "category": "browser-test",
+      "cluster_chain": [
+        12
+      ],
+      "first_cluster": 12,
+      "name": "BROWSH~3.DAT",
+      "read_bytes": 70,
+      "sha256": "097f6d4039e3e16e880bd8a9c0939b62223284b1522e74a274ff0b37b7630a56",
+      "short_name": "BROWSH~3.DAT",
+      "size": 70,
+      "state": "allocated"
+    }
+  ],
+  "schema_version": 1,
+  "spec": {
+    "categories": [
+      "allocated",
+      "deleted",
+      "hidden",
+      "unicode",
+      "duplicate",
+      "malformed",
+      "encrypted-test",
+      "browser-test"
+    ],
+    "geometry": "1.44MB-FAT12-min",
+    "image_sha256": "a80e010b86ac3c54d18dcc140fedb93562af0b404342f93ec1058bbb91a95578",
+    "image_size": 1474560,
+    "label": "reperio-fixture-v1",
+    "volume_label": "REPERIO",
+    "volume_serial": 305419896
+  }
+}

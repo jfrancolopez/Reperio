@@ -91,10 +91,11 @@ Task packets are coding-agent and LLM vendor/model agnostic. Codex, OpenCode, or
 
 ```sh
 make dev-install   # one-time: install pinned developer quality tools
-make validate      # dependency-free repository policy gate
-make quality       # aggregate quality target: format-check, lint, type-check,
-                   #   unit-test, frontend-test, schema-check, docs-check
-make versions      # reports every package version from one command
+ make validate      # dependency-free repository policy gate
+ make quality       # aggregate quality target: format-check, lint, type-check,
+                    #   unit-test, frontend-test, schema-check, docs-check,
+                    #   config-check, fixture-check
+ make versions      # reports every package version from one command
 ```
 
 Package layout (`RPR-004` scaffold): `hostd/`, `api/`, `scanner/`, `worker/`,
@@ -119,6 +120,7 @@ Start with [agent onboarding](docs/AGENT_START_HERE.md), use the [task packet te
 | [GitHub setup](docs/GITHUB_SETUP.md) | One-time ruleset and repository-security settings needed after the first push. |
 | [Pre-push audit](docs/REPOSITORY_AUDIT.md) | Point-in-time repository findings, implemented controls, and remaining manual actions. |
 | [Configuration contract](docs/CONFIGURATION.md) | Versioned configuration/capability schemas, secret-reference rule, combination rules, and environment overrides. |
+| [Synthetic fixtures](docs/FIXTURES.md) | Deterministic, hash-pinned FAT12 fixture framework and the category-coverage manifest. |
 | [Security policy](SECURITY.md) | Private vulnerability reporting and current support boundaries. |
 
 ## Delivery sequence

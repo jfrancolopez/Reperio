@@ -34,6 +34,7 @@ VERSIONED_DOCUMENTS = (
     CONFIG_DIR / "resource-limits.json",
     CONFIG_DIR / "network-exposure.json",
     CONFIG_DIR / "feature-flags.json",
+    ROOT / "fixtures" / "expected" / "fixture-manifest.json",
 )
 
 CANONICAL_STEMS = (
@@ -46,6 +47,7 @@ CANONICAL_STEMS = (
     "resource-limits",
     "network-exposure",
     "feature-flags",
+    "fixture-manifest",
 )
 
 VERSION_RE = re.compile(r"/v(\d+)$")
@@ -129,8 +131,11 @@ def validate_schema(document: dict, schema: dict, value: object, path: str) -> l
 
     expected = schema.get("type")
     observation = _json_type(value)
-    type_matches = observation == expected or (expected == "number" and observation == "integer")
-    if isinstance(expected, str) and not type_matches:
+    allowed_types = expected if isinstance(expected, list) else [expected]
+    type_matches = observation in allowed_types or (
+        "number" in allowed_types and observation == "integer"
+    )
+    if isinstance(expected, str | list) and not type_matches:
         failures.append(f"{path}: expected type {expected!r}, got {observation!r}")
         return failures
 

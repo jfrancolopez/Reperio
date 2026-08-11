@@ -99,6 +99,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-008 — Build the synthetic fixture framework `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-004, RPR-005.
 - **Deliver:** reproducible scripts/manifests for tiny safe disk/filesystem fixtures containing allocated, deleted, hidden, Unicode, duplicate, malformed, encrypted-test, and browser-test artifacts.
 - **Acceptance:** fixtures contain no real personal information or live passwords; expected results are machine-readable and hash-pinned.
