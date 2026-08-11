@@ -159,6 +159,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-015 — Prove scratch/destination physical separation `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-013, RPR-014.
 - **Deliver:** resolver that maps any local state/scratch/export path to backing physical disks and compares them to source ancestry.
 - **Acceptance:** scan/export start refuses same-disk destinations, including a different partition, LVM logical volume, bind mount, or symlinked path.

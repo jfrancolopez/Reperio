@@ -24,3 +24,5 @@ verification, SMART where supported, and launching the fixed scanner container.
   container-storage, and swap ancestry by default for `RPR-013`.
 - **Storage inspection:** `hostd.storage_inspection` reports source-related
   mounts, holders, device-mapper, and mdraid facts for `RPR-014`.
+- **Destination separation:** `hostd.destination_separation` proves local
+  scratch/export paths do not share the source ancestry for `RPR-015`.
