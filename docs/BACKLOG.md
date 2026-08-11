@@ -210,6 +210,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-021 — Create the initial SQLite schema `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-003, RPR-007.
 - **Deliver:** normalized tables and constraints for sources, cases, volumes, entries, contents, findings, evidence, jobs, events, review actions, artifacts, derivatives, exports, and audit references.
 - **Acceptance:** foreign keys are on, WAL is configured, timestamps and enums have canonical representation, and paths are never primary identifiers.
