@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/network-exposure/v1",
+  "title": "Reperio network exposure",
+  "description": "Local-network UI reachability. Network is disabled unless a specific provider or destination requires it. A network-enabled provider/destination worker never receives arbitrary paths or a source device.",
+  "type": "object",
+  "required": ["schema_version", "network_enabled", "bind_address", "port", "allowed_subnets"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "network_enabled": { "type": "boolean" },
+    "bind_address": { "type": "string", "minLength": 1 },
+    "port": { "type": "integer", "minimum": 0, "maximum": 65535 },
+    "allowed_subnets": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    }
+  }
+}

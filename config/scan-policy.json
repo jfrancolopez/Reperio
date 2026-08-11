@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "carving_enabled": true,
+  "trash_reconstruction": true,
+  "score_threshold": 0.35,
+  "keep_partial_output": true,
+  "stage_budget_sectors": 262144
+}

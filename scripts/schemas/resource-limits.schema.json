@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/resource-limits/v1",
+  "title": "Reperio resource limits",
+  "description": "Bounded CPU/memory/PID/scratch/time/output limits applied to every sandboxed tool and worker. Negative or empty values are rejected so a host cannot overcommit a parser beyond policy.",
+  "type": "object",
+  "required": ["schema_version", "defaults", "profiles"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "defaults": { "$ref": "#/$defs/limits" },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/limits" },
+      "propertyNames": { "pattern": "^[a-z0-9_]+$" }
+    }
+  },
+  "$defs": {
+    "limits": {
+      "type": "object",
+      "required": ["cpu_quota_percent", "memory_limit_mib", "pids_limit", "scratch_limit_mib", "time_seconds", "output_limit_bytes"],
+      "additionalProperties": false,
+      "properties": {
+        "cpu_quota_percent": { "type": "number", "minimum": 1, "maximum": 100 },
+        "memory_limit_mib": { "type": "integer", "minimum": 1 },
+        "pids_limit": { "type": "integer", "minimum": 1 },
+        "scratch_limit_mib": { "type": "integer", "minimum": 1 },
+        "time_seconds": { "type": "integer", "minimum": 1 },
+        "output_limit_bytes": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

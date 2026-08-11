@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/scan-policy/v1",
+  "title": "Reperio scan policy",
+  "description": "One deep-scan mode with policy knobs for carving, trash reconstruction, score thresholds, and partial-output retention. No category is deprioritized; suppression requires explainable system/cache evidence.",
+  "type": "object",
+  "required": ["schema_version", "carving_enabled", "trash_reconstruction", "score_threshold", "keep_partial_output"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "carving_enabled": { "type": "boolean" },
+    "trash_reconstruction": { "type": "boolean" },
+    "score_threshold": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "keep_partial_output": { "type": "boolean" },
+    "stage_budget_sectors": { "type": "integer", "minimum": 1 }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "storage": {
+    "state": "/var/lib/reperio",
+    "scratch": "/var/lib/reperio/scratch"
+  },
+  "auth": {
+    "enabled": false
+  },
+  "locale": {
+    "ui_language": "en"
+  },
+  "ai_providers": [],
+  "destinations": []
+}

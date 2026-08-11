@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "defaults": {
+    "cpu_quota_percent": 100,
+    "memory_limit_mib": 512,
+    "pids_limit": 128,
+    "scratch_limit_mib": 1024,
+    "time_seconds": 3600,
+    "output_limit_bytes": 268435456
+  },
+  "profiles": {
+    "parser": {
+      "cpu_quota_percent": 100,
+      "memory_limit_mib": 1024,
+      "pids_limit": 128,
+      "scratch_limit_mib": 4096,
+      "time_seconds": 7200,
+      "output_limit_bytes": 536870912
+    }
+  }
+}

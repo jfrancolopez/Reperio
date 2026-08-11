@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/tool-availability/v1",
+  "title": "Reperio tool availability",
+  "description": "Availability matrix of third-party scanning/preview tools. Every entry pins an immutable version and a sandbox resource profile; disabling a tool removes its capabilities cleanly.",
+  "type": "object",
+  "required": ["schema_version", "tools"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "tools": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tool" },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "required": ["id", "kind", "version", "license", "source", "resource_profile", "enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["parser", "carver", "previewer", "ocr", "export"] },
+        "version": { "type": "string", "minLength": 1 },
+        "license": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "resource_profile": { "type": "string", "minLength": 1 },
+        "enabled": { "type": "boolean" }
+      }
+    }
+  }
+}

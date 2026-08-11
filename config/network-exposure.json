@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "network_enabled": false,
+  "bind_address": "127.0.0.1",
+  "port": 8787,
+  "allowed_subnets": []
+}

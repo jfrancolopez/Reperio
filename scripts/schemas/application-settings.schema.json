@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/application-settings/v1",
+  "title": "Reperio application settings",
+  "description": "Core operator settings: storage locations, authentication, locale, AI provider order, and export destinations. Secrets are never inline; every secret-capable field is a SecretReference. Versioned by the version in this $id and the document schema_version.",
+  "type": "object",
+  "required": ["schema_version", "storage", "auth", "locale", "ai_providers", "destinations"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "storage": {
+      "type": "object",
+      "required": ["state", "scratch"],
+      "additionalProperties": false,
+      "properties": {
+        "state": { "type": "string", "minLength": 1 },
+        "scratch": { "type": "string", "minLength": 1 }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "password": { "$ref": "#/$defs/secret_reference" }
+      }
+    },
+    "locale": {
+      "type": "object",
+      "required": ["ui_language"],
+      "additionalProperties": false,
+      "properties": {
+        "ui_language": { "enum": ["en", "es"] }
+      }
+    },
+    "ai_providers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ai_provider" },
+      "uniqueItems": true
+    },
+    "destinations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/destination" },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "secret_reference": {
+      "type": "object",
+      "required": ["kind", "ref", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "secret_reference" },
+        "ref": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
+      }
+    },
+    "ai_provider": {
+      "type": "object",
+      "required": ["name", "provider", "model", "mode", "api_key"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "provider": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "mode": { "enum": ["local", "remote"] },
+        "api_key": { "$ref": "#/$defs/secret_reference" },
+        "base_url": { "type": "string" }
+      }
+    },
+    "destination": {
+      "type": "object",
+      "required": ["name", "kind", "target"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["local", "sftp", "s3", "webdav"] },
+        "target": { "type": "string", "minLength": 1 },
+        "credentials": { "$ref": "#/$defs/secret_reference" },
+        "verify_writes": { "type": "boolean" }
+      }
+    }
+  }
+}

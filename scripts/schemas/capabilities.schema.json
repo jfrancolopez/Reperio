@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/capabilities/v1",
+  "title": "Reperio capabilities manifest",
+  "description": "What the host reports and the product advertises. A capability binds a product feature family to a concrete tool, an optional network requirement, and a resource profile. Unsupported hardware disables a capability cleanly; no capability is advertised without a passing fixture/hardware matrix.",
+  "type": "object",
+  "required": ["schema_version", "capabilities"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "capabilities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/capability" },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "required": ["id", "family", "tool_id", "resource_profile", "network_required", "enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "family": { "type": "string", "minLength": 1 },
+        "tool_id": { "type": "string", "minLength": 1 },
+        "resource_profile": { "type": "string", "minLength": 1 },
+        "network_required": { "type": "boolean" },
+        "enabled": { "type": "boolean" }
+      }
+    }
+  }
+}

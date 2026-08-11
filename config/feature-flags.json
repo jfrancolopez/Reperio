@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "ai_enabled": false,
+  "local_models": false,
+  "cloud_ai": false,
+  "notifications": false,
+  "experimental": false
+}

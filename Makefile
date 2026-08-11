@@ -4,7 +4,7 @@ PYTHON ?= python3
 
 .PHONY: help validate secret-scan workflow-lint versions \
 	dev-install format format-check lint type-check unit-test \
-	frontend-test schema-check docs-check quality
+	frontend-test schema-check docs-check config-check quality
 
 help:
 	@echo "Reperio repository commands"
@@ -20,6 +20,7 @@ help:
 	@echo "  make unit-test      Run unit tests with pytest"
 	@echo "  make frontend-test  Run the frontend placeholder gate"
 	@echo "  make schema-check   Run JSON and schema/policy compatibility checks"
+	@echo "  make config-check   Run configuration contract and combination checks"
 	@echo "  make docs-check     Run documentation link and backlog checks"
 	@echo "  make quality        Aggregate quality target (all of the above)"
 
@@ -59,7 +60,10 @@ frontend-test:
 schema-check:
 	$(PYTHON) scripts/schema-check.py
 
+config-check:
+	$(PYTHON) scripts/config_validator.py
+
 docs-check:
 	$(PYTHON) scripts/docs-check.py
 
-quality: format-check lint type-check unit-test frontend-test schema-check docs-check
+quality: format-check lint type-check unit-test frontend-test schema-check docs-check config-check

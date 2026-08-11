@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "capabilities": [
+    {
+      "id": "filesystem_allocated",
+      "family": "filesystem",
+      "tool_id": "tsk_fls",
+      "resource_profile": "parser",
+      "network_required": false,
+      "enabled": true
+    },
+    {
+      "id": "unallocated_carving",
+      "family": "carving",
+      "tool_id": "photorec",
+      "resource_profile": "parser",
+      "network_required": false,
+      "enabled": true
+    },
+    {
+      "id": "signature_hexdump",
+      "family": "signatures",
+      "tool_id": "xxd_hexdump",
+      "resource_profile": "parser",
+      "network_required": false,
+      "enabled": true
+    }
+  ]
+}

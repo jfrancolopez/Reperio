@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/feature-flags/v1",
+  "title": "Reperio feature flags",
+  "description": "Runtime feature gates. Every capability is deterministic without AI; these flags only enable optional enhancement paths. Exposure is separate from availability: flags assert availability, network-exposure config controls reachability.",
+  "type": "object",
+  "required": ["schema_version", "ai_enabled", "local_models", "cloud_ai", "notifications", "experimental"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "ai_enabled": { "type": "boolean" },
+    "local_models": { "type": "boolean" },
+    "cloud_ai": { "type": "boolean" },
+    "notifications": { "type": "boolean" },
+    "experimental": { "type": "boolean" }
+  }
+}

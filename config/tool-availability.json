@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "tools": [
+    {
+      "id": "tsk_fls",
+      "kind": "parser",
+      "version": "4.12.1",
+      "license": "Apache-2.0",
+      "source": "https://www.sleuthkit.org/",
+      "resource_profile": "parser",
+      "enabled": true
+    },
+    {
+      "id": "photorec",
+      "kind": "carver",
+      "version": "7.1",
+      "license": "GPL-2.0-only",
+      "source": "https://www.cgsecurity.org/testdisk/",
+      "resource_profile": "parser",
+      "enabled": true
+    },
+    {
+      "id": "xxd_hexdump",
+      "kind": "parser",
+      "version": "system",
+      "license": "BSD-3-Clause",
+      "source": "https://www.vim.org/",
+      "resource_profile": "parser",
+      "enabled": true
+    }
+  ]
+}

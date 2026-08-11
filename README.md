@@ -118,6 +118,7 @@ Start with [agent onboarding](docs/AGENT_START_HERE.md), use the [task packet te
 | [Contributing](CONTRIBUTING.md) | Branch, validation, pull-request, dependency, and completion-report process. |
 | [GitHub setup](docs/GITHUB_SETUP.md) | One-time ruleset and repository-security settings needed after the first push. |
 | [Pre-push audit](docs/REPOSITORY_AUDIT.md) | Point-in-time repository findings, implemented controls, and remaining manual actions. |
+| [Configuration contract](docs/CONFIGURATION.md) | Versioned configuration/capability schemas, secret-reference rule, combination rules, and environment overrides. |
 | [Security policy](SECURITY.md) | Private vulnerability reporting and current support boundaries. |
 
 ## Delivery sequence

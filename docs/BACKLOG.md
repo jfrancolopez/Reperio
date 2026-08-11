@@ -91,6 +91,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-007 — Define configuration and capability schemas `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-004.
 - **Deliver:** versioned schemas for application settings, scan policy, capabilities, tool availability, resource limits, network exposure, and feature flags; environment overrides are documented.
 - **Acceptance:** unknown keys and invalid combinations produce actionable errors; secrets are references rather than inline values.
