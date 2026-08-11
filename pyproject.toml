@@ -10,6 +10,16 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Reperio contributors" }]
+dependencies = [
+  "annotated-types==0.8.0",
+  "anyio==4.14.2",
+  "fastapi==0.115.8",
+  "idna==3.18",
+  "pydantic==2.13.4",
+  "pydantic-core==2.46.4",
+  "starlette==0.45.3",
+  "typing-inspection==0.4.3",
+]
 
 [project.optional-dependencies]
 # Developer-quality toolchain, pinned and tracked in docs/dependency-registry.json.

@@ -257,6 +257,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-027 — Scaffold the versioned FastAPI service `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-007, RPR-021, RPR-022.
 - **Deliver:** `/api/v1`, request IDs, structured errors, OpenAPI generation, size/time limits, health/readiness, and static-UI serving boundary.
 - **Acceptance:** no debug trace or secret reaches clients by default; OpenAPI is checked into/generated in CI for compatibility review.

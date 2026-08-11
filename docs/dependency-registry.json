@@ -43,6 +43,86 @@
       "notes": "Static type checker declared in pyproject.toml dev extra (RPR-005)."
     },
     {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/annotated-types/0.8.0/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Pinned FastAPI/Pydantic runtime dependency for RPR-027."
+    },
+    {
+      "name": "anyio",
+      "version": "4.14.2",
+      "license": "MIT",
+      "source": "https://pypi.org/project/anyio/4.14.2/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Pinned Starlette runtime dependency for async request handling in RPR-027."
+    },
+    {
+      "name": "fastapi",
+      "version": "0.115.8",
+      "license": "MIT",
+      "source": "https://pypi.org/project/fastapi/0.115.8/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Runtime control-plane API framework for the versioned REST service scaffold (RPR-027). It never receives source-device handles."
+    },
+    {
+      "name": "idna",
+      "version": "3.18",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/idna/3.18/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Pinned AnyIO runtime dependency for RPR-027."
+    },
+    {
+      "name": "pydantic",
+      "version": "2.13.4",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pydantic/2.13.4/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Pinned FastAPI validation dependency for RPR-027."
+    },
+    {
+      "name": "pydantic-core",
+      "version": "2.46.4",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pydantic-core/2.46.4/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Pinned Pydantic runtime dependency for RPR-027."
+    },
+    {
+      "name": "starlette",
+      "version": "0.45.3",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/starlette/0.45.3/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Pinned FastAPI ASGI/runtime dependency for RPR-027."
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.3",
+      "license": "MIT",
+      "source": "https://pypi.org/project/typing-inspection/0.4.3/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Pinned Pydantic runtime dependency for RPR-027."
+    },
+    {
       "name": "python:3.12-slim (docker base image)",
       "version": "sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
       "license": "Python-2.0",
