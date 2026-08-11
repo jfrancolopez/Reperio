@@ -218,6 +218,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-022 — Establish numbered database migrations `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-021.
 - **Deliver:** forward migration runner, schema-version table, transaction behavior, backup-before-upgrade hook, and compatibility policy.
 - **Acceptance:** fresh and existing databases reach the same schema; failed migration rolls back and does not start workers.

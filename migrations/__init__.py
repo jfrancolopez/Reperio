@@ -1,8 +1,7 @@
-"""Numbered schema migration placeholder package.
+"""Numbered schema migrations.
 
 Package ownership: forward migration runner, schema-version table, and
-compatibility policy (later RPR-022). No migration executes in this skeleton
-task.
+compatibility policy.
 """
 
 from __future__ import annotations

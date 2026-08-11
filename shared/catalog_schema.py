@@ -40,7 +40,14 @@ def create_initial_schema(connection: sqlite3.Connection) -> None:
 
     configure_connection(connection)
     with connection:
-        connection.executescript(_SCHEMA_SQL)
+        for statement in initial_schema_statements():
+            connection.execute(statement)
+
+
+def initial_schema_statements() -> tuple[str, ...]:
+    """Return executable statements for the initial schema migration."""
+
+    return tuple(statement.strip() for statement in _SCHEMA_SQL.split(";") if statement.strip())
 
 
 def _timestamp_check(column: str) -> str:

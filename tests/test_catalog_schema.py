@@ -3,6 +3,7 @@ from __future__ import annotations
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 from shared import catalog_schema
@@ -16,36 +17,41 @@ class CatalogSchemaTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "catalog.sqlite3"
             connection = catalog_schema.connect_catalog(db_path)
-            catalog_schema.create_initial_schema(connection)
+            try:
+                catalog_schema.create_initial_schema(connection)
 
-            tables = {
-                row[0]
-                for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
-            }
+                tables = {
+                    row[0]
+                    for row in connection.execute(
+                        "SELECT name FROM sqlite_master WHERE type = 'table'"
+                    )
+                }
 
-            self.assertEqual(1, connection.execute("PRAGMA foreign_keys").fetchone()[0])
-            self.assertEqual("wal", connection.execute("PRAGMA journal_mode").fetchone()[0])
-            self.assertTrue(
-                {
-                    "sources",
-                    "scan_cases",
-                    "volumes",
-                    "entries",
-                    "contents",
-                    "findings",
-                    "evidence",
-                    "jobs",
-                    "events",
-                    "review_actions",
-                    "artifacts",
-                    "derivatives",
-                    "exports",
-                    "audit_references",
-                }.issubset(tables)
-            )
+                self.assertEqual(1, connection.execute("PRAGMA foreign_keys").fetchone()[0])
+                self.assertEqual("wal", connection.execute("PRAGMA journal_mode").fetchone()[0])
+                self.assertTrue(
+                    {
+                        "sources",
+                        "scan_cases",
+                        "volumes",
+                        "entries",
+                        "contents",
+                        "findings",
+                        "evidence",
+                        "jobs",
+                        "events",
+                        "review_actions",
+                        "artifacts",
+                        "derivatives",
+                        "exports",
+                        "audit_references",
+                    }.issubset(tables)
+                )
+            finally:
+                connection.close()
 
     def test_constraints_reject_bad_foreign_keys_enums_timestamps_and_json(self) -> None:
-        with self._connection() as connection:
+        with closing(self._connection()) as connection:
             with self.assertRaises(sqlite3.IntegrityError):
                 connection.execute(
                     """
@@ -65,7 +71,7 @@ class CatalogSchemaTests(unittest.TestCase):
                 self._insert_case(connection, case_id="case_bad_time", created_at="2026-08-11")
 
     def test_path_bytes_round_trip_unicode_and_null_without_being_identifier(self) -> None:
-        with self._connection() as connection:
+        with closing(self._connection()) as connection:
             self._insert_source(connection)
             self._insert_case(connection)
             path_bytes = "photos/été\x00raw.jpg".encode()
@@ -108,16 +114,20 @@ class CatalogSchemaTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "catalog.sqlite3"
             writer = catalog_schema.connect_catalog(db_path)
-            catalog_schema.create_initial_schema(writer)
             reader = catalog_schema.connect_catalog(db_path)
+            try:
+                catalog_schema.create_initial_schema(writer)
 
-            writer.execute("BEGIN IMMEDIATE")
-            self._insert_source(writer, source_id="source_pending")
+                writer.execute("BEGIN IMMEDIATE")
+                self._insert_source(writer, source_id="source_pending")
 
-            self.assertEqual(0, reader.execute("SELECT COUNT(*) FROM sources").fetchone()[0])
+                self.assertEqual(0, reader.execute("SELECT COUNT(*) FROM sources").fetchone()[0])
 
-            writer.execute("COMMIT")
-            self.assertEqual(1, reader.execute("SELECT COUNT(*) FROM sources").fetchone()[0])
+                writer.execute("COMMIT")
+                self.assertEqual(1, reader.execute("SELECT COUNT(*) FROM sources").fetchone()[0])
+            finally:
+                reader.close()
+                writer.close()
 
     def _connection(self) -> sqlite3.Connection:
         connection = sqlite3.connect(":memory:")
