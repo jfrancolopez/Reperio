@@ -157,6 +157,24 @@ CREATE TABLE IF NOT EXISTS jobs (
     updated_at TEXT NOT NULL CHECK ({_timestamp_check("updated_at")})
 ) STRICT;
 
+CREATE TABLE IF NOT EXISTS checkpoints (
+    checkpoint_id TEXT PRIMARY KEY,
+    job_id TEXT NOT NULL REFERENCES jobs(job_id) ON DELETE CASCADE,
+    case_id TEXT REFERENCES scan_cases(case_id) ON DELETE CASCADE,
+    source_fingerprint TEXT NOT NULL CHECK (length(source_fingerprint) = 64),
+    stage TEXT NOT NULL,
+    checkpoint_version INTEGER NOT NULL CHECK (checkpoint_version > 0),
+    tool_name TEXT NOT NULL,
+    tool_version TEXT NOT NULL,
+    cursor_json TEXT NOT NULL CHECK (json_valid(cursor_json)),
+    counters_json TEXT NOT NULL CHECK (json_valid(counters_json)),
+    blob BLOB NOT NULL,
+    integrity_sha256 TEXT NOT NULL CHECK (length(integrity_sha256) = 64),
+    supersedes_checkpoint_id TEXT REFERENCES checkpoints(checkpoint_id) ON DELETE RESTRICT,
+    superseded_by_checkpoint_id TEXT REFERENCES checkpoints(checkpoint_id) ON DELETE RESTRICT,
+    created_at TEXT NOT NULL CHECK ({_timestamp_check("created_at")})
+) STRICT;
+
 CREATE TABLE IF NOT EXISTS events (
     event_id TEXT PRIMARY KEY,
     case_id TEXT REFERENCES scan_cases(case_id) ON DELETE CASCADE,
@@ -224,5 +242,6 @@ CREATE INDEX IF NOT EXISTS idx_contents_source ON contents(source_id);
 CREATE INDEX IF NOT EXISTS idx_findings_case ON findings(case_id);
 CREATE INDEX IF NOT EXISTS idx_evidence_finding ON evidence(finding_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_state ON jobs(state, lease_expires_at);
+CREATE INDEX IF NOT EXISTS idx_checkpoints_latest ON checkpoints(job_id, stage, created_at);
 CREATE INDEX IF NOT EXISTS idx_events_unpublished ON events(created_at) WHERE published_at IS NULL;
 """

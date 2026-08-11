@@ -16,8 +16,8 @@ class MigrationRunnerTests(unittest.TestCase):
 
             result = runner.migrate_catalog(db_path)
 
-            self.assertEqual(catalog_schema.INITIAL_SCHEMA_VERSION, result.current_version)
-            self.assertEqual((1,), result.applied_versions)
+            self.assertEqual(runner.CURRENT_SCHEMA_VERSION, result.current_version)
+            self.assertEqual((1, 2, 3), result.applied_versions)
             self.assertIsNone(result.backup_path)
             self.assertTrue(result.workers_allowed)
             self.assertTrue(runner.ready_for_workers(db_path))
@@ -33,8 +33,8 @@ class MigrationRunnerTests(unittest.TestCase):
 
             result = runner.migrate_catalog(db_path, backup_dir=backup_dir)
 
-            self.assertEqual(catalog_schema.INITIAL_SCHEMA_VERSION, result.current_version)
-            self.assertEqual((1,), result.applied_versions)
+            self.assertEqual(runner.CURRENT_SCHEMA_VERSION, result.current_version)
+            self.assertEqual((1, 2, 3), result.applied_versions)
             self.assertIsNotNone(result.backup_path)
             assert result.backup_path is not None
             self.assertTrue(result.backup_path.exists())
@@ -51,7 +51,7 @@ class MigrationRunnerTests(unittest.TestCase):
                 self.assertEqual(0, runner.current_schema_version(backup))
             finally:
                 backup.close()
-            self.assertEqual(1, _version_rows(db_path))
+            self.assertEqual(runner.CURRENT_SCHEMA_VERSION, _version_rows(db_path))
 
     def test_failed_migration_rolls_back_and_workers_are_not_ready(self) -> None:
         def fail_after_ddl(connection: sqlite3.Connection) -> None:

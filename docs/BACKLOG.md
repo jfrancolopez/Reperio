@@ -242,6 +242,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-025 — Add versioned checkpoint storage `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-023, RPR-024.
 - **Deliver:** atomic checkpoint blobs/JSON with tool version, source fingerprint, cursor, counters, integrity hash, and supersession history.
 - **Acceptance:** corrupt, wrong-device, wrong-tool-version, or unsupported checkpoint is rejected with a clear restart-stage option.

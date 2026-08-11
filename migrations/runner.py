@@ -9,7 +9,7 @@ from pathlib import Path
 
 from shared import catalog_schema
 
-CURRENT_SCHEMA_VERSION = catalog_schema.INITIAL_SCHEMA_VERSION
+CURRENT_SCHEMA_VERSION = 3
 
 
 class MigrationError(RuntimeError):
@@ -101,7 +101,40 @@ def _apply_initial_schema(connection: sqlite3.Connection) -> None:
         connection.execute(statement)
 
 
-DEFAULT_MIGRATIONS = (Migration(1, "initial_catalog_schema", _apply_initial_schema),)
+def _add_retry_after_column(connection: sqlite3.Connection) -> None:
+    if not _column_exists(connection, "jobs", "retry_after_at"):
+        connection.execute(
+            """
+            ALTER TABLE jobs ADD COLUMN
+            retry_after_at TEXT CHECK (
+                retry_after_at IS NULL OR (
+                    length(retry_after_at) = 20
+                    AND substr(retry_after_at, 5, 1) = '-'
+                    AND substr(retry_after_at, 8, 1) = '-'
+                    AND substr(retry_after_at, 11, 1) = 'T'
+                    AND substr(retry_after_at, 14, 1) = ':'
+                    AND substr(retry_after_at, 17, 1) = ':'
+                    AND substr(retry_after_at, 20, 1) = 'Z'
+                )
+            )
+            """
+        )
+
+
+def _add_checkpoints_table(connection: sqlite3.Connection) -> None:
+    if not _table_exists(connection, "checkpoints"):
+        for statement in catalog_schema.initial_schema_statements():
+            if "CREATE TABLE IF NOT EXISTS checkpoints" in statement:
+                connection.execute(statement)
+            if "idx_checkpoints_latest" in statement:
+                connection.execute(statement)
+
+
+DEFAULT_MIGRATIONS = (
+    Migration(1, "initial_catalog_schema", _apply_initial_schema),
+    Migration(2, "job_retry_after", _add_retry_after_column),
+    Migration(3, "versioned_checkpoints", _add_checkpoints_table),
+)
 
 
 def _validate_migration_sequence(migrations: Sequence[Migration]) -> None:
@@ -156,6 +189,19 @@ def _ensure_version_table(connection: sqlite3.Connection) -> None:
         ) STRICT
         """
     )
+
+
+def _table_exists(connection: sqlite3.Connection, table: str) -> bool:
+    return (
+        connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", (table,)
+        ).fetchone()
+        is not None
+    )
+
+
+def _column_exists(connection: sqlite3.Connection, table: str, column: str) -> bool:
+    return any(row[1] == column for row in connection.execute(f"PRAGMA table_info({table})"))
 
 
 def _backup_database(

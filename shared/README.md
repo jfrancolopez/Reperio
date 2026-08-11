@@ -11,3 +11,4 @@ Owner: cross-package contracts, versioned schemas, and placeholder helpers.
   migrations and schema-version tracking start in `RPR-022`.
 - Contains `shared.job_state`, the durable job state machine plus leases,
   retries, and idempotency for `RPR-023`–`RPR-024`.
+- Contains `shared.checkpoints`, versioned checkpoint storage for `RPR-025`.
