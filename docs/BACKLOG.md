@@ -111,6 +111,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-009 — Define the host-controller protocol `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-002, RPR-003, RPR-007.
 - **Deliver:** authenticated/versioned Unix-socket request and response schemas for device listing, safety inspection, read-only preparation, scanner launch/status/stop, and reconnect.
 - **Acceptance:** no generic command execution, path passthrough, mount, write, repair, or arbitrary container arguments exist in the protocol.

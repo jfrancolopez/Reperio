@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/hostd-protocol/v1",
+  "title": "Reperio host-controller Unix-socket protocol",
+  "description": "RPR-009 contract for the authenticated, versioned, allowlisted hostd protocol. The protocol contains no generic command, path passthrough, mount, write, repair, arbitrary ioctl, or caller-supplied container arguments.",
+  "type": "object",
+  "required": ["schema_version", "request", "response"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "request": { "$ref": "#/$defs/request" },
+    "response": { "$ref": "#/$defs/response" }
+  },
+  "$defs": {
+    "opaque_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*_[A-Za-z0-9_-]{16,128}$"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "auth": {
+      "type": "object",
+      "required": ["kind", "principal"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "unix_peer_credentials" },
+        "principal": { "const": "reperio-api" }
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": ["schema_version", "request_id", "auth", "method", "params"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": 1 },
+        "request_id": { "$ref": "#/$defs/request_id" },
+        "auth": { "$ref": "#/$defs/auth" },
+        "method": {
+          "enum": [
+            "list_devices",
+            "inspect_safety",
+            "prepare_read_only",
+            "launch_scanner",
+            "scanner_status",
+            "stop_scanner",
+            "reconnect"
+          ]
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source_id": { "$ref": "#/$defs/opaque_id" },
+            "observed_generation": { "type": "integer", "minimum": 0 },
+            "safety_inspection_id": { "$ref": "#/$defs/opaque_id" },
+            "operator_confirmation_token": { "$ref": "#/$defs/opaque_id" },
+            "readonly_preparation_id": { "$ref": "#/$defs/opaque_id" },
+            "scan_case_id": { "$ref": "#/$defs/opaque_id" },
+            "scratch_separation_id": { "$ref": "#/$defs/opaque_id" },
+            "scanner_session_id": { "$ref": "#/$defs/opaque_id" },
+            "resource_profile": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9 ._:-]{0,127}$"
+            }
+          }
+        }
+      }
+    },
+    "response": {
+      "type": "object",
+      "required": ["schema_version", "request_id", "ok"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": 1 },
+        "request_id": { "$ref": "#/$defs/request_id" },
+        "ok": { "type": "boolean" },
+        "result": { "type": "object" },
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "enum": [
+                "bad_request",
+                "unauthorized",
+                "not_found",
+                "stale_source",
+                "safety_blocked",
+                "read_only_failed",
+                "scanner_unavailable",
+                "internal_error"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          }
+        }
+      }
+    }
+  }
+}
