@@ -182,6 +182,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-018 — Create append-only host safety audit `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-009, RPR-016.
 - **Deliver:** local append-only records for device resolution, system-disk decision, mount/holder checks, destination separation, read-only verification, and exact scanner sandbox profile.
 - **Acceptance:** log rotation preserves ordering; values are redacted and cannot include credentials or sampled bytes.

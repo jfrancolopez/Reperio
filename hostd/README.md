@@ -28,3 +28,5 @@ verification, SMART where supported, and launching the fixed scanner container.
   scratch/export paths do not share the source ancestry for `RPR-015`.
 - **Read-only preparation:** `hostd.read_only` sets and verifies kernel
   read-only state for whole disks and children for `RPR-016`.
+- **Safety audit:** `hostd.safety_audit` appends redacted, hash-chained safety
+  records and verifies ordering/tamper evidence for `RPR-018`.
