@@ -14,3 +14,5 @@ verification, SMART where supported, and launching the fixed scanner container.
 - **Boundary:** no parsing, AI, preview, export, shell, or generic ioctl surface.
 - **Protocol:** `hostd.protocol` validates the versioned Unix-socket envelopes;
   see `docs/HOSTD_PROTOCOL.md`.
+- **Enumeration:** `hostd.block_devices` reads sanitized sysfs-shaped block
+  facts for `RPR-010`; stable identity and safety decisions are later tasks.

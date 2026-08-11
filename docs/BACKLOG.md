@@ -119,6 +119,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-010 — Enumerate Linux block devices `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-009.
 - **Deliver:** host implementation using udev/sysfs/`lsblk`-equivalent data to list whole disks and child partitions with sanitized facts.
 - **Acceptance:** loop, USB, SATA, NVMe, SD/card readers, optical, floppy, device-mapper, and partition relationships are represented; empty readers and transient/media-change events do not crash listing.
