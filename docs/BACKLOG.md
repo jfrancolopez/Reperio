@@ -59,6 +59,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-003 — Record core architecture ADRs `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-002.
 - **Deliver:** ADRs for Linux-first host control, no source mounts, SQLite durable jobs, single source per instance, scratch/content store, tool sandboxes, and optional AI.
 - **Acceptance:** each ADR includes context, decision, alternatives, consequences, and reversal conditions; diagrams agree with the master plan.
