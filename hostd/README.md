@@ -20,3 +20,5 @@ verification, SMART where supported, and launching the fixed scanner container.
   `/dev/disk/by-id` and immutable facts for `RPR-011`.
 - **Fingerprinting:** `hostd.fingerprint` computes bounded sampled-sector hashes
   with `O_RDONLY` access for `RPR-012`; sampled bytes are never returned.
+- **System disk denial:** `hostd.system_disks` refuses active root, boot, state,
+  container-storage, and swap ancestry by default for `RPR-013`.

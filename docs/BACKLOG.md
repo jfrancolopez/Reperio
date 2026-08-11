@@ -143,6 +143,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-013 — Deny active system disks by default `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-010, RPR-011.
 - **Deliver:** detection of disks backing `/`, `/boot`, Reperio state, container storage, swap, and active critical mounts.
 - **Acceptance:** default launch refuses those disks and lists reasons; override is a separate explicit policy with tests and a persistent warning.
