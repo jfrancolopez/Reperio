@@ -104,6 +104,49 @@ jobs:
 
         self.assertTrue(any("through env" in failure for failure in failures))
 
+    def test_rejects_artifact_upload_without_retention_limit(self) -> None:
+        workflow = """name: upload-no-retention
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/upload-artifact@1111111111111111111111111111111111111111
+        with:
+          name: report
+          path: report.json
+"""
+
+        failures = self.check_workflow(workflow)
+
+        self.assertTrue(any("retention-days" in failure for failure in failures))
+
+    def test_accepts_artifact_upload_with_retention_limit(self) -> None:
+        workflow = """name: upload-with-retention
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/upload-artifact@1111111111111111111111111111111111111111
+        with:
+          name: report
+          path: report.json
+          retention-days: 30
+"""
+
+        failures = self.check_workflow(workflow)
+
+        self.assertEqual([], failures)
+
     def check_workflow(self, content: str) -> list[str]:
         workflow_directory = self.work / "workflows"
         workflow_directory.mkdir()

@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/dependency-license-policy/v1",
+  "title": "Reperio dependency license policy",
+  "description": "Canonical schema for scripts/dependency-license-policy.json. The policy schema_version must equal the version embedded in this document's $id.",
+  "type": "object",
+  "required": ["schema_version", "project_license", "allowed", "separate_process_allowed"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "project_license": { "type": "string" },
+    "allowed": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "separate_process_allowed": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

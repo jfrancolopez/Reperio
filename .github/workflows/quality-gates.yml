@@ -52,10 +52,26 @@ jobs:
         run: python3 scripts/frontend-test.py
       - name: Schema check
         run: python3 scripts/schema-check.py
+      - name: Deliberately broken schema fixture must fail the gate
+        run: ./scripts/expect-gate-failure.sh "does not match" -- python3 scripts/schema-check.py --registry scripts/tests/fixtures/dependency-registry_broken.json
       - name: Docs check
         run: python3 scripts/docs-check.py
       - name: Aggregate quality target
         run: make quality
+
+  container-smoke:
+    name: container-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build control-plane smoke image (unprivileged)
+        run: docker build --pull -t reperio:control-plane-smoke -f packaging/container/control-plane.Dockerfile .
+      - name: Run control-plane health smoke
+        run: docker run --rm reperio:control-plane-smoke python -m api
 
   secret-scan:
     name: secret-scan

@@ -306,6 +306,11 @@ def check_workflows() -> list[str]:
             if not re.search(r"@[0-9a-f]{40}$", action):
                 failures.append(f"{rel}: action must be pinned to a full commit SHA: {action}")
 
+        if re.search(r"actions/upload-artifact@", content) and not re.search(
+            r"retention-days:", content
+        ):
+            failures.append(f"{rel}: artifact uploads must set retention-days")
+
         lines = content.splitlines()
         for index, line in enumerate(lines):
             match = re.match(r"^(\s*)(?:-\s+)?run:\s*(.*)$", line)

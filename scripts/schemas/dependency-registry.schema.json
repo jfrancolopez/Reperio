@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/dependency-registry/v1",
+  "title": "Reperio dependency registry",
+  "description": "Canonical schema for docs/dependency-registry.json. The registry schema_version must equal the version embedded in this document's $id.",
+  "type": "object",
+  "required": ["schema_version", "policy_document", "dependencies"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "policy_document": { "type": "string" },
+    "dependencies": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/dependency" }
+    }
+  },
+  "$defs": {
+    "dependency": {
+      "type": "object",
+      "required": ["name", "version", "license", "source", "architecture", "linkage"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "license": { "type": "string" },
+        "source": { "type": "string", "format": "uri" },
+        "architecture": { "type": "array", "items": { "type": "string" } },
+        "linkage": { "enum": ["linked", "separate_process"] }
+      }
+    }
+  }
+}

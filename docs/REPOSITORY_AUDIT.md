@@ -40,8 +40,9 @@ This is a point-in-time audit, not a permanent status page. Use `git status`, th
 - JSON and shell scripts have valid syntax.
 - The dependency license gate (`scripts/check_dependency_licenses.py`) validates the dependency registry against the Apache-2.0 license policy, including the missing-metadata and reciprocal-license rejection fixtures.
 - Workflows use safe triggers, read-only permissions, immutable Action SHAs, bounded jobs, and no direct GitHub-context expression inside shell commands.
+- Every versioned JSON document matches its pinned JSON Schema and version in `scripts/schemas/`, and the schema gate rejects the deliberately broken fixture (`scripts/tests/fixtures/dependency-registry_broken.json`).
 
-These checks are repository guardrails, not proof that future application code is correct. `RPR-005` established the pinned quality commands (format/lint/type-check/unit/frontend/schema/docs checks and their aggregate target) and CI now runs them on every push. `RPR-006` remains partially open for the schema failing-fixture and container smoke gates.
+These checks are repository guardrails, not proof that future application code is correct. `RPR-005` established the pinned quality commands (format/lint/type-check/unit/frontend/schema/docs checks and their aggregate target) and CI now runs them on every push. `RPR-006` added the versioned-schema compatibility gate (`scripts/check_schema_compat.py`), a CI step that proves a deliberately broken schema fixture is rejected, an unprivileged container build-and-run smoke test (`packaging/container/control-plane.Dockerfile`, base image pinned by digest), and the artifact-retention policy below. No artifacts or state are uploaded today; any future upload step must set `retention-days` (default 30) and stay inside least-privilege CI with no credentials, raw devices, or privileged containers.
 
 ## Remaining controls and recurring checks
 
@@ -49,6 +50,6 @@ These checks are repository guardrails, not proof that future application code i
 2. After every push, confirm `repository-policy` and `secret-scan` pass for the exact commit before starting another task. Correct failures with a new commit rather than rewriting history.
 3. Apply and periodically verify [the GitHub repository setup checklist](GITHUB_SETUP.md), especially force-push/deletion protection.
 4. Keep the dependency registry complete and current; every new dependency must pass the license gate and the intake checklist before it is committed.
-5. Add application linters, tests, schema compatibility, license metadata, container smoke tests, and artifact retention as the RPR-004–006 scaffold is implemented.
+5. Keep the versioned schemas in `scripts/schemas/` current; a new registry/policy version requires migrating the schema and updating both real documents and the rejection fixtures.
 
 No secret scanner can guarantee that a credential is harmless. If a real secret is ever committed, rotate or revoke it immediately before considering history cleanup.

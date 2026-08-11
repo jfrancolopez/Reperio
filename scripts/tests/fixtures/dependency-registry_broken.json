@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "policy_document": "docs/DEPENDENCY_INTAKE.md",
+  "dependencies": [
+    {
+      "name": "future-additive-package",
+      "version": "1.0.0",
+      "license": "MIT",
+      "source": "https://example.invalid/x",
+      "architecture": ["amd64"],
+      "linkage": "linked"
+    }
+  ]
+}

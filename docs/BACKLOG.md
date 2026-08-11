@@ -83,6 +83,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-006 — Create continuous integration baseline `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-005.
 - **Deliver:** unprivileged pull-request CI for backend/frontend tests, schema compatibility, dependency license metadata, secret scanning, and container build smoke tests.
 - **Acceptance:** least-privilege CI has no production credentials, raw devices, or privileged containers; artifacts have retention limits.

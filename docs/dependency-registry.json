@@ -41,6 +41,16 @@
       "linkage": "linked",
       "sandbox": "no",
       "notes": "Static type checker declared in pyproject.toml dev extra (RPR-005)."
+    },
+    {
+      "name": "python:3.12-slim (docker base image)",
+      "version": "sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+      "license": "Python-2.0",
+      "source": "https://hub.docker.com/_/python/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "no",
+      "notes": "Immutable OCI index digest used by packaging/container/control-plane.Dockerfile (RPR-006 build-smoke placeholder, not a release artifact). Full SBOM and Debian-layer license review deferred to RPR-147."
     }
   ]
 }
