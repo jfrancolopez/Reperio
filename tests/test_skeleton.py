@@ -11,6 +11,7 @@ sys.path.insert(0, str(REPOSITORY_ROOT))
 sys.path.insert(0, str(REPOSITORY_ROOT / "scripts"))
 
 import check_skeleton as skeleton  # noqa: E402
+
 import shared.placeholder  # noqa: E402
 
 

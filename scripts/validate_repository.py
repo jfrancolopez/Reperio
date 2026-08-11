@@ -13,7 +13,6 @@ from collections import Counter
 from pathlib import Path
 from urllib.parse import unquote
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MAX_REPOSITORY_FILE_BYTES = 5 * 1024 * 1024
 EXPECTED_BACKLOG_IDS = {f"RPR-{number:03d}" for number in range(1, 192)}
@@ -154,7 +153,9 @@ def check_repository_paths(files: list[Path]) -> list[str]:
             and not name.endswith(".template")
         ):
             failures.append(f"{rel}: environment/secret file must not be committed")
-        if name in private_names or name.startswith(("id_rsa_", "id_dsa_", "id_ecdsa_", "id_ed25519_")):
+        if name in private_names or name.startswith(
+            ("id_rsa_", "id_dsa_", "id_ecdsa_", "id_ed25519_")
+        ):
             failures.append(f"{rel}: credential file must not be committed")
         if suffix in FORBIDDEN_SECRET_SUFFIXES:
             failures.append(f"{rel}: private key or keystore file must not be committed")
@@ -264,7 +265,7 @@ def workflow_job_blocks(content: str) -> list[tuple[str, str]]:
     except StopIteration:
         return []
     blocks = []
-    current_name = None
+    current_name: str | None = None
     current_lines: list[str] = []
     for line in lines[jobs_index + 1 :]:
         match = re.match(r"^  ([A-Za-z0-9_-]+):\s*$", line)
@@ -291,7 +292,9 @@ def check_workflows() -> list[str]:
         rel = relative(path)
         if re.search(r"^\s*(pull_request_target|workflow_run):", content, flags=re.MULTILINE):
             failures.append(f"{rel}: privileged untrusted-code trigger is prohibited")
-        if not re.search(r"^permissions:\s*\n(?:  [^\n]+\n)*?  contents: read\s*$", content, flags=re.MULTILINE):
+        if not re.search(
+            r"^permissions:\s*\n(?:  [^\n]+\n)*?  contents: read\s*$", content, flags=re.MULTILINE
+        ):
             failures.append(f"{rel}: top-level permissions must include contents: read")
         if re.search(r"^\s+[A-Za-z-]+:\s*write\s*$", content, flags=re.MULTILINE):
             failures.append(f"{rel}: write permissions require an explicit policy exception")
@@ -319,7 +322,9 @@ def check_workflows() -> list[str]:
                         break
                     run_lines.append(following)
             if "${{" in "\n".join(run_lines):
-                failures.append(f"{rel}:{index + 1}: pass GitHub context through env, not run interpolation")
+                failures.append(
+                    f"{rel}:{index + 1}: pass GitHub context through env, not run interpolation"
+                )
 
         blocks = workflow_job_blocks(content)
         if not blocks:

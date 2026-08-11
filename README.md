@@ -90,8 +90,11 @@ Git `main` is the implementation source of truth. The current owner workflow use
 Task packets are coding-agent and LLM vendor/model agnostic. Codex, OpenCode, or another capable agent must be able to work from the same checked-in contracts, fixtures, commands, and acceptance evidence without private context from a previous model.
 
 ```sh
-make validate
-make versions     # reports every package version from one command
+make dev-install   # one-time: install pinned developer quality tools
+make validate      # dependency-free repository policy gate
+make quality       # aggregate quality target: format-check, lint, type-check,
+                   #   unit-test, frontend-test, schema-check, docs-check
+make versions      # reports every package version from one command
 ```
 
 Package layout (`RPR-004` scaffold): `hostd/`, `api/`, `scanner/`, `worker/`,

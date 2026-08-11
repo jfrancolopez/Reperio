@@ -41,7 +41,7 @@ This is a point-in-time audit, not a permanent status page. Use `git status`, th
 - The dependency license gate (`scripts/check_dependency_licenses.py`) validates the dependency registry against the Apache-2.0 license policy, including the missing-metadata and reciprocal-license rejection fixtures.
 - Workflows use safe triggers, read-only permissions, immutable Action SHAs, bounded jobs, and no direct GitHub-context expression inside shell commands.
 
-These checks are repository guardrails, not proof that future application code is correct. `RPR-005` and `RPR-006` remain open until the scaffolded backend/frontend/schema/container test suites and their deliberate failure fixtures exist.
+These checks are repository guardrails, not proof that future application code is correct. `RPR-005` established the pinned quality commands (format/lint/type-check/unit/frontend/schema/docs checks and their aggregate target) and CI now runs them on every push. `RPR-006` remains partially open for the schema failing-fixture and container smoke gates.
 
 ## Remaining controls and recurring checks
 

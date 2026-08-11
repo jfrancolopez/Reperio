@@ -35,9 +35,7 @@ def load_json(path: Path) -> dict:
     return data
 
 
-def validate_registry(
-    registry: dict, policy: dict, relative_root: Path = ROOT
-) -> list[str]:
+def validate_registry(registry: dict, policy: dict, relative_root: Path = ROOT) -> list[str]:
     failures: list[str] = []
 
     registry_version = registry.get("schema_version")
@@ -119,7 +117,7 @@ def validate_registry(
     return failures
 
 
-def _entry_label(entry, index: int) -> str:
+def _entry_label(entry: object, index: int) -> str:
     if isinstance(entry, dict) and isinstance(entry.get("name"), str):
         return f"dependency {entry['name']!r}"
     return f"dependency at index {index}"

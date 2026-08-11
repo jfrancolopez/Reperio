@@ -29,6 +29,34 @@ jobs:
       - name: Lint GitHub Actions workflows
         run: ./scripts/lint-workflows.sh
 
+  quality-checks:
+    name: quality-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned developer quality tools
+        run: python3 -m pip install --no-cache-dir -e ".[dev]"
+      - name: Formatting check
+        run: python3 -m ruff format --check .
+      - name: Lint
+        run: python3 -m ruff check .
+      - name: Type check
+        run: python3 -m mypy .
+      - name: Unit tests
+        run: python3 -m pytest
+      - name: Frontend test
+        run: python3 scripts/frontend-test.py
+      - name: Schema check
+        run: python3 scripts/schema-check.py
+      - name: Docs check
+        run: python3 scripts/docs-check.py
+      - name: Aggregate quality target
+        run: make quality
+
   secret-scan:
     name: secret-scan
     runs-on: ubuntu-latest

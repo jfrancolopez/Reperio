@@ -75,6 +75,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-005 — Establish developer quality commands `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-004.
 - **Deliver:** pinned formatting, lint, type-check, unit-test, frontend-test, schema-check, and docs-check commands with a single aggregate target.
 - **Acceptance:** commands work on Linux `amd64`; no command rewrites user files except the explicit formatter.

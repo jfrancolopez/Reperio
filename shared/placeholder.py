@@ -16,9 +16,7 @@ def placeholder_health(
 ) -> dict[str, str | bool | None]:
     """Return a placeholder health record, refusing any device argument."""
     if device is not None:
-        raise ValueError(
-            f"{component} placeholder refuses any device handle: {device!r}"
-        )
+        raise ValueError(f"{component} placeholder refuses any device handle: {device!r}")
     return {
         "component": component,
         "version": version,
