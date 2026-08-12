@@ -305,6 +305,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-033 — Define scanner/control-plane message contracts `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-007, RPR-019, RPR-023.
 - **Deliver:** versioned JSON-lines or equivalent protocol for hello/capabilities, stage start, batch findings, progress, checkpoint, warning, error, pause, and completion.
 - **Acceptance:** batches are bounded, replay/idempotency is defined, malformed worker output cannot inject logs or SQL.
