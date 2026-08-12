@@ -361,6 +361,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-040 — Extract allocated file content read-only `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-037–039.
 - **Deliver:** bounded streaming extraction from TSK object/attribute to scratch with size, SHA-256, sparse handling, and I/O error status.
 - **Acceptance:** zero-length, huge, partial, and metadata-only entries are explicit; extraction never blocks catalog entry creation.

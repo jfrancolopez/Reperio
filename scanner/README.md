@@ -26,3 +26,6 @@ read-only and emits normalized findings to the catalog.
 - **Entry normalization:** `scanner.entry_normalization` preserves raw path
   bytes and canonical display metadata for hostile filesystem entries in
   `RPR-038` without resolving paths on the host.
+- **Content extraction:** `scanner.content_extraction` streams allocated file
+  extents read-only into the scratch store with explicit complete, skipped,
+  resumed, and partial statuses for `RPR-040`.
