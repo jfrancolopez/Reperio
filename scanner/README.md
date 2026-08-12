@@ -23,3 +23,6 @@ read-only and emits normalized findings to the catalog.
 - **Filesystem enumeration:** `scanner.filesystem_enumeration` identifies
   supported TSK volumes with `fsstat` and streams bounded `fls` entry batches
   from direct byte offsets for `RPR-037`; it never mounts source media.
+- **Entry normalization:** `scanner.entry_normalization` preserves raw path
+  bytes and canonical display metadata for hostile filesystem entries in
+  `RPR-038` without resolving paths on the host.

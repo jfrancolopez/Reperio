@@ -345,6 +345,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-038 — Normalize filesystem entries and paths `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-021, RPR-037.
 - **Deliver:** canonical model for raw/display path bytes, Unicode, parent relationships, type, attributes, owner IDs, sizes, allocation state, raw timestamps, timezone state, and extents.
 - **Acceptance:** duplicate names, invalid Unicode, alternate streams, orphan parents, and path traversal strings are representable without filesystem use.
