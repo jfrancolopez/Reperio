@@ -414,6 +414,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-047 — Preserve and validate PhotoRec resume state `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-025, RPR-045, RPR-046.
 - **Deliver:** durable `photorec.ses` handling, source/tool/config binding, backup, resume invocation, and progress normalization.
 - **Acceptance:** wrong disk/config/version cannot reuse a session; successful interruption resumes beyond the last durable position when supported.

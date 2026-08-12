@@ -38,3 +38,6 @@ read-only and emits normalized findings to the catalog.
 - **PhotoRec carving:** `scanner.photorec_carving` builds scripted, allowlisted
   PhotoRec searches into scratch quarantine and normalizes logs/timeouts for
   `RPR-046` without exposing interactive repair features.
+- **PhotoRec resume:** `scanner.photorec_resume` backs up and validates
+  `photorec.ses` state against source/tool/config bindings before any resume
+  invocation for `RPR-047`.
