@@ -353,6 +353,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-039 — Build the content-addressed scratch store `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-015, RPR-021, RPR-038.
 - **Deliver:** atomic extracted-object writes, SHA-256 naming/metadata, quotas, reference counts, partial-file cleanup, and never-source validation.
 - **Acceptance:** identical bytes share storage while retaining all provenance; no caller supplies final filesystem paths; completed recovered objects are never automatically deleted, and cleanup is limited to proven-incomplete owned temporary files.

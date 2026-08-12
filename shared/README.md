@@ -13,3 +13,6 @@ Owner: cross-package contracts, versioned schemas, and placeholder helpers.
   retries, and idempotency for `RPR-023`–`RPR-024`.
 - Contains `shared.checkpoints`, versioned checkpoint storage for `RPR-025`.
 - Contains `shared.secret_store`, encrypted host secret references for `RPR-031`.
+- Contains `shared.scratch_store`, content-addressed scratch storage with
+  never-source validation, atomic object writes, quotas, and incomplete-file
+  cleanup for `RPR-039`.
