@@ -329,6 +329,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-036 — Integrate partition discovery `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-033, RPR-035.
 - **Deliver:** TSK-backed GPT/MBR/extended/Apple/BSD partition reader with normalized offsets, lengths, labels/types, allocation status, and warnings.
 - **Acceptance:** no TestDisk repair/write command is exposed; overlapping/invalid entries remain reportable without crashing.

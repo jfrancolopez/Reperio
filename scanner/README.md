@@ -17,3 +17,6 @@ read-only and emits normalized findings to the catalog.
 - **Source validation:** `scanner.source_validation` independently verifies the
   selected source is still block-special, read-only, and fingerprint-matched for
   `RPR-035` before parser stages run.
+- **Partition discovery:** `scanner.partition_discovery` wraps bounded `mmls`
+  output from The Sleuth Kit into normalized read-only partition extents for
+  `RPR-036`; no repair/write command surface is exposed.
