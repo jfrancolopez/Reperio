@@ -430,6 +430,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-049 — Detect lost-volume and corruption candidates `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-036, RPR-046.
 - **Deliver:** read-only signature scan for plausible lost partitions/filesystems and a confidence model that can schedule bounded parser/carving attempts without modifying tables.
 - **Acceptance:** candidates are clearly separate from current partition entries; overlaps and false positives are visible.

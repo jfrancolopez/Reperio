@@ -44,3 +44,6 @@ read-only and emits normalized findings to the catalog.
 - **Carved ingestion:** `scanner.carved_ingestion` watches stable PhotoRec
   quarantine files, stores completed bytes in scratch, and records carved
   provenance for `RPR-048` without ingesting growing files.
+- **Lost-volume candidates:** `scanner.lost_volume_candidates` scans read-only
+  samples for filesystem/encrypted-volume signatures, separates them from
+  current partitions, and emits bounded parser/carving attempts for `RPR-049`.
