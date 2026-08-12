@@ -35,3 +35,6 @@ read-only and emits normalized findings to the catalog.
 - **Lifecycle:** `scanner.lifecycle` coordinates cooperative pause, safe stop,
   source-reconnect-aware restart, and UI-visible pause acknowledgements for
   `RPR-045`.
+- **PhotoRec carving:** `scanner.photorec_carving` builds scripted, allowlisted
+  PhotoRec searches into scratch quarantine and normalizes logs/timeouts for
+  `RPR-046` without exposing interactive repair features.

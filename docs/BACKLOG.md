@@ -406,6 +406,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-046 — Integrate PhotoRec scripted carving `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-019, RPR-035, RPR-039, RPR-044.
 - **Deliver:** pinned PhotoRec CLI adapter for whole unallocated/selected ranges, configured signatures, separate scratch destination, log parsing, and resource limits.
 - **Acceptance:** source is read-only; recovered output never shares source; interactive repair features are absent.
