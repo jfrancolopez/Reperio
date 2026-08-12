@@ -20,3 +20,6 @@ operate only on copies/derivatives in scratch storage.
 - **Interest scoring:** `worker.interest_scoring` combines deterministic path,
   owner, type, state, application, and noise-rule signals into independent
   versioned interest/noise scores for `RPR-053`.
+- **Core categories:** `worker.core_categories` assigns versioned, explainable
+  multi-label finding categories for `RPR-054` without hiding any category from
+  All Findings.

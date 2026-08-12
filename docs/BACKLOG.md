@@ -474,6 +474,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-054 — Assign core categories `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-050, RPR-053.
 - **Deliver:** multi-label taxonomy for media, documents, archives, messages/email, browser, backups/mobile, wallets/vaults/keys, software/code/databases, deleted/carved, corrupted, unknown, and system/noise.
 - **Acceptance:** one finding may occupy several relevant tabs; category evidence is queryable and explainable; every category remains reachable in All Findings and no category is silently excluded because of an implementation-priority label.
