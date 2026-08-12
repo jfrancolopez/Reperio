@@ -313,6 +313,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-034 — Implement the deep-stage scheduler `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-023–025, RPR-033.
 - **Deliver:** dependency graph and conservative I/O concurrency for validation, volumes, enumeration, artifacts, enrichment, carving, and finalization.
 - **Acceptance:** there is one product scan mode; stage parallelism never starts carving before destination/safety checks and is configurable by capability.

@@ -12,3 +12,5 @@ read-only and emits normalized findings to the catalog.
   scratch storage.
 - **Protocol:** `scanner.messages` defines the bounded versioned JSON-lines
   contract emitted by scanner workers.
+- **Scheduler:** `scanner.scheduler` defines the single deep-scan stage graph and
+  conservative I/O planning contract for `RPR-034`.
