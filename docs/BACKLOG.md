@@ -450,6 +450,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-051 — Discover OS installations and user profiles `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-038.
 - **Deliver:** deterministic Windows installation/user/profile locator first, with normalized artifact ownership and well-known directory evidence.
 - **Acceptance:** multiple installations and renamed/moved profiles are supported; SIDs and display names remain distinct.
