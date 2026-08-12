@@ -29,3 +29,6 @@ read-only and emits normalized findings to the catalog.
 - **Content extraction:** `scanner.content_extraction` streams allocated file
   extents read-only into the scratch store with explicit complete, skipped,
   resumed, and partial statuses for `RPR-040`.
+- **Read-error handling:** `scanner.read_errors` normalizes EIO, timeout, and
+  short-read ranges into bounded gaps, counters, retries, warnings, and pause
+  recommendations for `RPR-044`; no repair command is exposed.

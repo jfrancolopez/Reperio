@@ -390,6 +390,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-044 — Add bad-sector and I/O-error handling `[P0, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-033, RPR-040.
 - **Deliver:** normalized read-error ranges, retry/backoff policy, temperature/error threshold hooks, skip-with-gap behavior, counters, and operator-visible warnings.
 - **Acceptance:** infinite retry is impossible; a damaged range does not discard already cataloged results; no automatic repair command runs.

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 from scanner.entry_normalization import Extent, NormalizedEntry
+from scanner.read_errors import ReadCounters, ReadPolicy, ResilientReader
 from shared.scratch_store import ScratchObject, ScratchStore
 
 CHUNK_SIZE = 1024 * 1024
@@ -31,6 +32,7 @@ class ExtractionResult:
     warnings: tuple[str, ...] = ()
     error_code: str | None = None
     checkpoint: Mapping[str, Any] | None = None
+    read_counters: ReadCounters | None = None
 
 
 class ExtentReader(Protocol):
@@ -44,6 +46,7 @@ def extract_allocated_content(
     scratch: ScratchStore,
     max_size_bytes: int,
     resume_checkpoint: Mapping[str, Any] | None = None,
+    read_policy: ReadPolicy | None = None,
 ) -> ExtractionResult:
     """Stream allocated content to scratch without blocking catalog entry creation."""
 
@@ -77,7 +80,11 @@ def extract_allocated_content(
     start_extent = int((resume_checkpoint or {}).get("extent_index", 0))
     if start_extent < 0 or start_extent >= len(entry.extents):
         start_extent = 0
-    chunks = _read_chunks(entry.extents[start_extent:], reader=reader)
+    resilient_reader = (
+        ResilientReader(reader, policy=read_policy) if read_policy is not None else None
+    )
+    selected_reader = resilient_reader or reader
+    chunks = _read_chunks(entry.extents[start_extent:], reader=selected_reader)
     try:
         scratch_object = scratch.put_bytes(
             chunks,
@@ -94,14 +101,17 @@ def extract_allocated_content(
             warnings=("io_error",),
             error_code=error.__class__.__name__,
             checkpoint={"entry_id": entry.entry_id, "extent_index": start_extent},
+            read_counters=resilient_reader.counters if resilient_reader is not None else None,
         )
+    read_warnings = _read_warnings(resilient_reader)
     return ExtractionResult(
         entry.entry_id,
         "complete" if start_extent == 0 else "resumed",
         scratch_object.size_bytes,
         scratch_object.sha256,
         scratch_object,
-        warnings=_sparse_warnings(entry.extents),
+        warnings=(*_sparse_warnings(entry.extents), *read_warnings),
+        read_counters=resilient_reader.counters if resilient_reader is not None else None,
     )
 
 
@@ -161,6 +171,12 @@ def _sparse_warnings(extents: tuple[Extent, ...]) -> tuple[str, ...]:
     if any(extent.sparse for extent in extents):
         return ("sparse_zero_filled",)
     return ()
+
+
+def _read_warnings(reader: ResilientReader | None) -> tuple[str, ...]:
+    if reader is None:
+        return ()
+    return tuple(str(warning["code"]) for warning in reader.warnings())
 
 
 def _provenance(entry: NormalizedEntry) -> dict[str, str]:
