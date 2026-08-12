@@ -9,3 +9,6 @@ operate only on copies/derivatives in scratch storage.
 - **Health check:** `python -m worker` (refuses any `--device` argument).
 - **Boundary:** never receives a source-device handle; runs sandboxed with
   bounded resources; network disabled unless the configured provider requires it.
+- **Content signatures:** `worker.content_signature` provides deterministic,
+  bounded MIME/signature detection with extension-mismatch evidence for
+  `RPR-050`; extension alone never selects a dangerous parser.

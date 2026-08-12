@@ -442,6 +442,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-050 — Implement content-signature and MIME detection `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-039, RPR-040.
 - **Deliver:** libmagic/Magika-evaluation adapter with extension comparison, confidence, mismatch evidence, and bounded sample reads.
 - **Acceptance:** extension alone never controls a dangerous parser; unknown and conflicting results remain explicit.
