@@ -15,3 +15,5 @@ operate only on copies/derivatives in scratch storage.
 - **Windows profiles:** `worker.windows_profiles` locates Windows installations
   and user profile roots from normalized path evidence for `RPR-051`, keeping
   SIDs and display names distinct.
+- **Windows noise rules:** `worker.windows_noise_rules` applies versioned,
+  reversible Windows OS/cache/package noise visibility rules for `RPR-052`.

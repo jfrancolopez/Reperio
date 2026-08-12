@@ -458,6 +458,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-052 — Create versioned Windows noise rules `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-050, RPR-051.
 - **Deliver:** data-driven rules for OS components, WinSxS, drivers, DLLs, fonts, icons/wallpapers, update caches, browser caches, temp, package stores, and application-generated assets.
 - **Acceptance:** rules lower default visibility but never delete or permanently hide; each match has a human-readable reason and override.
