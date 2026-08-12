@@ -482,6 +482,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-055 — Inventory installed software and utilities `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-051, RPR-054.
 - **Deliver:** Windows uninstall registry, application directories, package evidence, portable app signatures, version/publisher/install-time provenance, and related user-data links.
 - **Acceptance:** inventory is evidence-based, not execution; duplicates across architecture/users collapse with provenance.

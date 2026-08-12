@@ -23,3 +23,6 @@ operate only on copies/derivatives in scratch storage.
 - **Core categories:** `worker.core_categories` assigns versioned, explainable
   multi-label finding categories for `RPR-054` without hiding any category from
   All Findings.
+- **Software inventory:** `worker.software_inventory` builds evidence-only
+  Windows application and utility inventory records for `RPR-055` from inert
+  normalized paths and metadata; it never executes recovered binaries.
