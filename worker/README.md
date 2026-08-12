@@ -17,3 +17,6 @@ operate only on copies/derivatives in scratch storage.
   SIDs and display names distinct.
 - **Windows noise rules:** `worker.windows_noise_rules` applies versioned,
   reversible Windows OS/cache/package noise visibility rules for `RPR-052`.
+- **Interest scoring:** `worker.interest_scoring` combines deterministic path,
+  owner, type, state, application, and noise-rule signals into independent
+  versioned interest/noise scores for `RPR-053`.

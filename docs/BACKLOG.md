@@ -466,6 +466,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-053 — Build deterministic interest/noise scoring `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-050–052.
 - **Deliver:** pure versioned scoring engine combining path, owner, type, metadata, state, application, and rule signals into independent scores/evidence/confidence.
 - **Acceptance:** same inputs/version produce same output; no AI result is required; score thresholds are configuration, not hard deletion; no user-data category is deprioritized solely by its category label, while OS/cache noise requires explainable path/application evidence.
