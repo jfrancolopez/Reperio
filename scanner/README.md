@@ -20,3 +20,6 @@ read-only and emits normalized findings to the catalog.
 - **Partition discovery:** `scanner.partition_discovery` wraps bounded `mmls`
   output from The Sleuth Kit into normalized read-only partition extents for
   `RPR-036`; no repair/write command surface is exposed.
+- **Filesystem enumeration:** `scanner.filesystem_enumeration` identifies
+  supported TSK volumes with `fsstat` and streams bounded `fls` entry batches
+  from direct byte offsets for `RPR-037`; it never mounts source media.

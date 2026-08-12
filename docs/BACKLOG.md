@@ -337,6 +337,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-037 — Wrap The Sleuth Kit filesystem enumeration `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-036.
 - **Deliver:** pinned TSK adapter that identifies supported filesystems and streams batches of entries with stable volume/object/parent IDs.
 - **Acceptance:** adapter uses direct block offsets, never mounts; tool stderr/exit/progress are normalized and bounded.
