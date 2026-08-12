@@ -32,3 +32,6 @@ read-only and emits normalized findings to the catalog.
 - **Read-error handling:** `scanner.read_errors` normalizes EIO, timeout, and
   short-read ranges into bounded gaps, counters, retries, warnings, and pause
   recommendations for `RPR-044`; no repair command is exposed.
+- **Lifecycle:** `scanner.lifecycle` coordinates cooperative pause, safe stop,
+  source-reconnect-aware restart, and UI-visible pause acknowledgements for
+  `RPR-045`.

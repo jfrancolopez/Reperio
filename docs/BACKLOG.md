@@ -398,6 +398,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-045 — Implement pause, safe stop, and restart `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-025, RPR-033, RPR-034, RPR-044.
 - **Deliver:** cooperative stage pause, subprocess signal/timeout policy, atomic checkpoint, safe stop, restart, and UI-visible reason.
 - **Acceptance:** already committed batches survive; unsafe force-kill occurs only after timeout and preserves last good checkpoint.
