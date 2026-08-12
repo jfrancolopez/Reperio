@@ -14,3 +14,6 @@ read-only and emits normalized findings to the catalog.
   contract emitted by scanner workers.
 - **Scheduler:** `scanner.scheduler` defines the single deep-scan stage graph and
   conservative I/O planning contract for `RPR-034`.
+- **Source validation:** `scanner.source_validation` independently verifies the
+  selected source is still block-special, read-only, and fingerprint-matched for
+  `RPR-035` before parser stages run.

@@ -321,6 +321,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-035 — Implement source validation inside scanner `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-012, RPR-016, RPR-033.
 - **Deliver:** scanner independently verifies device is block-special, opens only `O_RDONLY`, checks read-only flag/fingerprint/size/sectors, and reports capabilities.
 - **Acceptance:** mismatch exits before parsers run; source path cannot be replaced with a regular writable file or symlink.
