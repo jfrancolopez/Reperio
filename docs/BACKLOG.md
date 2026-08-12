@@ -422,6 +422,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-048 — Ingest carved output progressively `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-039, RPR-046.
 - **Deliver:** watch stable completed files, hash/store, create carved provenance with sector/range where available, and queue classification/enrichment before carving ends.
 - **Acceptance:** partially-written output is not ingested as complete; duplicate bytes link instead of vanishing.

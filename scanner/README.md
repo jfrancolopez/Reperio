@@ -41,3 +41,6 @@ read-only and emits normalized findings to the catalog.
 - **PhotoRec resume:** `scanner.photorec_resume` backs up and validates
   `photorec.ses` state against source/tool/config bindings before any resume
   invocation for `RPR-047`.
+- **Carved ingestion:** `scanner.carved_ingestion` watches stable PhotoRec
+  quarantine files, stores completed bytes in scratch, and records carved
+  provenance for `RPR-048` without ingesting growing files.
