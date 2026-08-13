@@ -29,3 +29,6 @@ operate only on copies/derivatives in scratch storage.
 - **Backup locators:** `worker.backup_locators` inventories Windows Backup,
   File History, VM/disk images, phone backups, sync roots, and generic backup
   artifacts for `RPR-056`; nested scheduling is explicit and bounded.
+- **Mobile backups:** `worker.mobile_backups` detects iTunes/Finder iOS backup
+  folders and Android backup layouts for `RPR-057` using inert path/manifest
+  metadata; encrypted and unsupported backups remain visible.

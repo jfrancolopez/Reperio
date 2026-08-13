@@ -498,6 +498,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-057 — Locate iTunes/Finder and Android backup layouts `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-056.
 - **Deliver:** detect hashed iOS backup folders/Manifest data, encryption state, device facts, and common Android backup/extraction layouts.
 - **Acceptance:** detection succeeds before optional iLEAPP/ALEAPP integration; unsupported/encrypted backups remain visible.
