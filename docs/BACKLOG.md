@@ -490,6 +490,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-056 — Locate backups, virtual machines, and sync roots `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-038, RPR-051, RPR-054.
 - **Deliver:** locators for Windows Backup, File History, common disk/VM images, phone backup software, OneDrive/Dropbox-like roots, and generic backup catalogs/archives.
 - **Acceptance:** nested disks/backups are inventoried and scheduled only by explicit bounded policy; recursion loops are impossible.

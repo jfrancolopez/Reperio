@@ -26,3 +26,6 @@ operate only on copies/derivatives in scratch storage.
 - **Software inventory:** `worker.software_inventory` builds evidence-only
   Windows application and utility inventory records for `RPR-055` from inert
   normalized paths and metadata; it never executes recovered binaries.
+- **Backup locators:** `worker.backup_locators` inventories Windows Backup,
+  File History, VM/disk images, phone backups, sync roots, and generic backup
+  artifacts for `RPR-056`; nested scheduling is explicit and bounded.
