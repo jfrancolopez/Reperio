@@ -506,6 +506,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-058 — Locate wallets, vaults, keys, and certificates `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-050, RPR-051, RPR-054.
 - **Deliver:** a versioned, extensible locator registry for Bitcoin Core legacy/descriptor wallet directories, `wallet.dat` and backups; Electrum and validated Bitcoin-family layouts; Ethereum/Web3 Secret Storage JSON keystores; validated browser-extension vault evidence; BIP32/BIP39-style recovery-material and private-key export indicators; hardware-wallet companion/backups; password vaults; SSH/GPG keys; certificates; and later chain-specific plugins. Apply it to normalized allocated, Trash/Recycle Bin, deleted, carved, browser-profile, application-data, archive, backup, attachment, document, image, and OCR findings as those ingestion stages become available.
 - **Acceptance:** each result carries exact evidence, confidence, source/recovery state, sensitivity, and related application/profile data; weak filename or generic “wallet” text alone is low confidence; locator hooks work for later deleted/carved/OCR ingestion without schema redesign; seeds, private keys, decrypted values, and passwords never enter logs, notifications, remote AI/model requests, or general search text; detection never claims value/balance, executes wallet software, contacts a network, signs data, or broadcasts a transaction.

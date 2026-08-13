@@ -32,3 +32,6 @@ operate only on copies/derivatives in scratch storage.
 - **Mobile backups:** `worker.mobile_backups` detects iTunes/Finder iOS backup
   folders and Android backup layouts for `RPR-057` using inert path/manifest
   metadata; encrypted and unsupported backups remain visible.
+- **Sensitive locators:** `worker.sensitive_locators` detects wallets, vaults,
+  keys, certificates, browser vault evidence, and recovery-material indicators
+  for `RPR-058` without logging secret values or performing network actions.
