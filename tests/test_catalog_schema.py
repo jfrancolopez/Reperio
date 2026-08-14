@@ -43,12 +43,79 @@ class CatalogSchemaTests(unittest.TestCase):
                         "review_actions",
                         "artifacts",
                         "derivatives",
+                        "browser_artifacts",
                         "exports",
                         "audit_references",
                     }.issubset(tables)
                 )
             finally:
                 connection.close()
+
+    def test_browser_artifact_table_rejects_invalid_kind_confidence_and_json(self) -> None:
+        with closing(self._connection()) as connection:
+            self._insert_source(connection)
+            self._insert_case(connection)
+
+            connection.execute(
+                """
+                INSERT INTO browser_artifacts
+                (browser_artifact_id, case_id, profile_id, artifact_kind, browser_family,
+                 raw_provenance_json, artifact_json, recovery_confidence, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "browser_1",
+                    "case_1",
+                    "profile_1",
+                    "visit",
+                    "chromium",
+                    '{"entry_id":"entry_1"}',
+                    '{"url":"https://example.test"}',
+                    1.0,
+                    NOW,
+                ),
+            )
+
+            with self.assertRaises(sqlite3.IntegrityError):
+                connection.execute(
+                    """
+                    INSERT INTO browser_artifacts
+                    (browser_artifact_id, case_id, profile_id, artifact_kind, browser_family,
+                     raw_provenance_json, artifact_json, recovery_confidence, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        "browser_bad_kind",
+                        "case_1",
+                        "profile_1",
+                        "cookie_value",
+                        "chromium",
+                        "{}",
+                        "{}",
+                        0.5,
+                        NOW,
+                    ),
+                )
+            with self.assertRaises(sqlite3.IntegrityError):
+                connection.execute(
+                    """
+                    INSERT INTO browser_artifacts
+                    (browser_artifact_id, case_id, profile_id, artifact_kind, browser_family,
+                     raw_provenance_json, artifact_json, recovery_confidence, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        "browser_bad_confidence",
+                        "case_1",
+                        "profile_1",
+                        "visit",
+                        "chromium",
+                        "{}",
+                        "{}",
+                        1.5,
+                        NOW,
+                    ),
+                )
 
     def test_constraints_reject_bad_foreign_keys_enums_timestamps_and_json(self) -> None:
         with closing(self._connection()) as connection:

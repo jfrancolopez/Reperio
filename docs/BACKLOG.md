@@ -533,6 +533,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-060 — Define browser artifact schemas `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-021, RPR-051.
 - **Deliver:** normalized browser profile, visit, download, bookmark, search, session/tab, cookie metadata, cache, and extension schemas with raw provenance and recovery confidence.
 - **Acceptance:** raw timestamp/value and normalized UTC/display timezone coexist; reusable session tokens are excluded from default schemas.

@@ -215,6 +215,21 @@ CREATE TABLE IF NOT EXISTS derivatives (
     created_at TEXT NOT NULL CHECK ({_timestamp_check("created_at")})
 ) STRICT;
 
+CREATE TABLE IF NOT EXISTS browser_artifacts (
+    browser_artifact_id TEXT PRIMARY KEY,
+    case_id TEXT NOT NULL REFERENCES scan_cases(case_id) ON DELETE CASCADE,
+    entry_id TEXT REFERENCES entries(entry_id) ON DELETE SET NULL,
+    content_id TEXT REFERENCES contents(content_id) ON DELETE SET NULL,
+    profile_id TEXT NOT NULL,
+    artifact_kind TEXT NOT NULL CHECK (artifact_kind IN ('profile', 'visit', 'download', 'bookmark', 'search', 'session_tab', 'cookie_metadata', 'cache_entry', 'extension')),
+    browser_family TEXT NOT NULL CHECK (browser_family IN ('chromium', 'firefox', 'legacy_ie_edge', 'safari', 'unknown')),
+    raw_provenance_json TEXT NOT NULL CHECK (json_valid(raw_provenance_json)),
+    artifact_json TEXT NOT NULL CHECK (json_valid(artifact_json)),
+    recovery_confidence REAL NOT NULL CHECK (recovery_confidence >= 0.0 AND recovery_confidence <= 1.0),
+    first_observed_at TEXT CHECK (first_observed_at IS NULL OR ({_timestamp_check("first_observed_at")})),
+    created_at TEXT NOT NULL CHECK ({_timestamp_check("created_at")})
+) STRICT;
+
 CREATE TABLE IF NOT EXISTS exports (
     export_id TEXT PRIMARY KEY,
     case_id TEXT NOT NULL REFERENCES scan_cases(case_id) ON DELETE CASCADE,
@@ -249,4 +264,6 @@ CREATE INDEX IF NOT EXISTS idx_checkpoints_latest ON checkpoints(job_id, stage, 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_events_case_sequence ON events(case_id, sequence) WHERE case_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_events_case_created ON events(case_id, created_at, event_id);
 CREATE INDEX IF NOT EXISTS idx_events_unpublished ON events(created_at) WHERE published_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_browser_artifacts_case_kind ON browser_artifacts(case_id, artifact_kind, browser_family);
+CREATE INDEX IF NOT EXISTS idx_browser_artifacts_profile ON browser_artifacts(case_id, profile_id, artifact_kind);
 """

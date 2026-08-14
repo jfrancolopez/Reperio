@@ -9,7 +9,7 @@ from pathlib import Path
 
 from shared import catalog_schema
 
-CURRENT_SCHEMA_VERSION = 5
+CURRENT_SCHEMA_VERSION = 6
 
 
 class MigrationError(RuntimeError):
@@ -187,12 +187,23 @@ def _create_findings_tables_and_indexes(connection: sqlite3.Connection) -> None:
             connection.execute(statement)
 
 
+def _add_browser_artifacts_table(connection: sqlite3.Connection) -> None:
+    if _table_exists(connection, "browser_artifacts"):
+        return
+    for statement in catalog_schema.initial_schema_statements():
+        if "CREATE TABLE IF NOT EXISTS browser_artifacts" in statement:
+            connection.execute(statement)
+        if "idx_browser_artifacts_" in statement:
+            connection.execute(statement)
+
+
 DEFAULT_MIGRATIONS = (
     Migration(1, "initial_catalog_schema", _apply_initial_schema),
     Migration(2, "job_retry_after", _add_retry_after_column),
     Migration(3, "versioned_checkpoints", _add_checkpoints_table),
     Migration(4, "event_outbox_sequences", _add_event_sequences),
     Migration(5, "finding_query_indexes", _add_finding_query_indexes),
+    Migration(6, "browser_artifact_schemas", _add_browser_artifacts_table),
 )
 
 
