@@ -610,6 +610,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-070 — Build the generic parser sandbox runner `[P0, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-019, RPR-031, RPR-039.
 - **Deliver:** fixed tool profiles, copy-only input, no network/capabilities/root, read-only root, per-job scratch, CPU/memory/PID/time/output/nesting limits, structured stdout, and cleanup.
 - **Acceptance:** tools cannot access source device, control-plane DB, other jobs, host secrets, or arbitrary network; profile arguments are allowlisted.
