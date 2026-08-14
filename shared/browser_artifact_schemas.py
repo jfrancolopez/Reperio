@@ -95,7 +95,14 @@ def _required_fields(kind: str) -> tuple[str, ...]:
 
 
 def _optional_fields(kind: str) -> tuple[str, ...]:
-    timestamp_notes = ("display_timezone", "parser_version", "warnings")
+    timestamp_notes = (
+        "display_timezone",
+        "parser_version",
+        "warnings",
+        "url_normalization",
+        "source_url_normalization",
+        "visit_collapse_key",
+    )
     if kind == "profile":
         return (*timestamp_notes, "browser_version", "os_user_id")
     if kind == "download":

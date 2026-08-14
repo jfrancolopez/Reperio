@@ -581,6 +581,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-066 — Normalize URLs, domains, and browser time `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-060, RPR-062, RPR-063.
 - **Deliver:** canonical URL display/search fields, IDN safety, domain/eTLD grouping, query/fragment policy, raw/UTC/local timestamps, visit-collapse logic, and timezone notes.
 - **Acceptance:** original URL is preserved; normalization cannot turn different origins into one misleading record.

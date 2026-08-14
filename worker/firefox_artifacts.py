@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from shared.browser_artifact_schemas import validate_browser_artifact
+from shared.browser_normalization import normalize_browser_record
 from worker.browser_profiles import BrowserProfile
 
 PARSER_VERSION = "firefox-artifacts-v1"
@@ -390,7 +391,7 @@ def _record(
         "parser_version": PARSER_VERSION,
     }
     record.update(fields)
-    return record
+    return normalize_browser_record(record)
 
 
 def _firefox_time(value: object) -> dict[str, object]:

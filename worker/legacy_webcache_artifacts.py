@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from shared.browser_artifact_schemas import validate_browser_artifact
+from shared.browser_normalization import normalize_browser_record
 from worker import parser_sandbox
 from worker.browser_profiles import BrowserProfile
 
@@ -130,7 +131,7 @@ def _normalize_record(
                 "stored_time": _timestamp(raw.get("stored_time") or raw.get("timestamp")),
             }
         )
-    return common
+    return normalize_browser_record(common)
 
 
 def _base_record(

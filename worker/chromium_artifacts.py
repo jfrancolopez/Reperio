@@ -13,6 +13,7 @@ from typing import Any
 from urllib.parse import quote
 
 from shared.browser_artifact_schemas import validate_browser_artifact
+from shared.browser_normalization import normalize_browser_record
 from worker.browser_profiles import BrowserProfile
 
 PARSER_VERSION = "chromium-artifacts-v1"
@@ -355,7 +356,7 @@ def _record(
         "parser_version": PARSER_VERSION,
         **fields,
     }
-    return record
+    return normalize_browser_record(record)
 
 
 def _open_sqlite(path: Path, root: Path, label: str) -> sqlite3.Connection | None:
