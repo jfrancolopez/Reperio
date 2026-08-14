@@ -550,6 +550,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-062 — Parse Chromium-family artifacts `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-039, RPR-060, RPR-061, RPR-070.
 - **Deliver:** read-only copied SQLite/JSON parsers for visits, typed counts, transitions/referrers, downloads, bookmarks, search terms, sessions/tabs, cache metadata, and extensions.
 - **Acceptance:** schema-version differences degrade per field/table rather than losing the whole profile; provenance includes row/table/parser version.
