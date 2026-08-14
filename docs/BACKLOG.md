@@ -566,6 +566,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-064 — Parse legacy IE and Edge WebCache `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-060, RPR-061, RPR-070.
 - **Deliver:** isolated parser adapter for WebCache/ESE and favorites/download evidence with parser-version provenance.
 - **Acceptance:** unsupported/corrupt databases produce an artifact record and warning; tool failures do not block other browsers.

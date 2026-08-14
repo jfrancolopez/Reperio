@@ -73,6 +73,13 @@ PROFILES = {
         max_stdout_bytes=256 * 1024,
         timeout_seconds=60,
     ),
+    "legacy-webcache": ParserProfile(
+        name="legacy-webcache",
+        tool="legacy-webcache",
+        args=("--input", "/work/input", "--output", "/work/output", "--json-lines"),
+        max_stdout_bytes=256 * 1024,
+        timeout_seconds=60,
+    ),
 }
 
 
