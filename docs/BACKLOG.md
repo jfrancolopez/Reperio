@@ -541,6 +541,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-061 — Locate all Windows browser profiles `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-051, RPR-060.
 - **Deliver:** locators for Chrome, Edge, Brave, Opera, Vivaldi, Chromium, Firefox, Tor Browser, portable variants, multiple users, and multiple profiles.
 - **Acceptance:** profile facts include owning OS user, browser/version evidence, path/object IDs, and companion files.
