@@ -122,9 +122,7 @@ def normalize_entry(
         display_path=display_path,
         raw_name_bytes=raw_name_bytes,
         display_name=display_name,
-        entry_type="deleted"
-        if not entry.allocated and entry.entry_type == "file"
-        else entry.entry_type,
+        entry_type=_normalized_entry_type(entry.entry_type, allocated=entry.allocated),
         attributes=tuple(dict.fromkeys(attributes)),
         owner_id=owner_id,
         size_bytes=size_bytes,
@@ -183,6 +181,14 @@ def _alternate_stream(display_name: str) -> str | None:
     if base and stream:
         return stream
     return None
+
+
+def _normalized_entry_type(entry_type: str, *, allocated: bool) -> str:
+    if allocated:
+        return entry_type
+    if entry_type in {"file", "directory", "symlink", "unknown"}:
+        return "deleted"
+    return entry_type
 
 
 def _has_traversal_segment(path_bytes: bytes) -> bool:

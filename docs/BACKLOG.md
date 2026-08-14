@@ -382,6 +382,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-042 — Ingest filesystem-deleted and orphan entries `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-037–040.
 - **Deliver:** deleted/orphan enumeration, content extraction where extents remain available, recovery health, and original-name/timestamp provenance.
 - **Acceptance:** allocated and deleted records cannot be conflated; overwritten/partial extraction is labeled, not silently accepted.
