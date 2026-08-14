@@ -590,6 +590,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-067 — Add browser query and aggregation API `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-027, RPR-060, RPR-066.
 - **Deliver:** cursor queries and facets by user/browser/profile/type/domain/date, histogram, summary counts, and links to related file findings.
 - **Acceptance:** filters are composable and stable during ingest; source row/provenance is retrievable.

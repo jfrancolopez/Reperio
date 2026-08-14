@@ -72,6 +72,20 @@ class FindingQueryParams(BaseModel):
     include_system_noise: bool = False
 
 
+class BrowserArtifactQueryParams(BaseModel):
+    case_id: str | None = None
+    browser_family: str | None = None
+    profile_id: str | None = None
+    artifact_kind: str | None = None
+    domain: str | None = None
+    os_user_id: str | None = None
+    date_from: str | None = None
+    date_to: str | None = None
+    q: str | None = None
+    cursor: str | None = None
+    limit: int = Field(default=100, ge=1, le=500)
+
+
 class ReviewActionRequest(BaseModel):
     finding_ids: list[str] = Field(default_factory=list)
     saved_query: FindingQueryParams | None = None
@@ -397,6 +411,80 @@ def create_app(
             connection.close()
         return {"finding": finding, "evidence": evidence, "provenance": evidence}
 
+    @app.get("/api/v1/browser-artifacts", tags=["browser"])
+    async def list_browser_artifacts(
+        case_id: str | None = None,
+        browser_family: str | None = None,
+        profile_id: str | None = None,
+        artifact_kind: str | None = None,
+        domain: str | None = None,
+        os_user_id: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        q: str | None = None,
+        cursor: str | None = None,
+        limit: int = Query(default=100, ge=1, le=500),
+    ) -> dict[str, Any]:
+        params = BrowserArtifactQueryParams(
+            case_id=case_id,
+            browser_family=browser_family,
+            profile_id=profile_id,
+            artifact_kind=artifact_kind,
+            domain=domain,
+            os_user_id=os_user_id,
+            date_from=date_from,
+            date_to=date_to,
+            q=q,
+            cursor=cursor,
+            limit=limit,
+        )
+        connection = _open_ready_catalog(app.state.catalog_path)
+        try:
+            return _query_browser_artifacts(connection, params)
+        finally:
+            connection.close()
+
+    @app.get("/api/v1/browser-artifacts/facets", tags=["browser"])
+    async def browser_artifact_facets(case_id: str | None = None) -> dict[str, Any]:
+        connection = _open_ready_catalog(app.state.catalog_path)
+        try:
+            return {"case_id": case_id, "facets": _browser_artifact_facets(connection, case_id)}
+        finally:
+            connection.close()
+
+    @app.get("/api/v1/browser-artifacts/summary", tags=["browser"])
+    async def browser_artifact_summary(case_id: str | None = None) -> dict[str, Any]:
+        connection = _open_ready_catalog(app.state.catalog_path)
+        try:
+            return {"case_id": case_id, "summary": _browser_artifact_summary(connection, case_id)}
+        finally:
+            connection.close()
+
+    @app.get("/api/v1/browser-artifacts/histogram", tags=["browser"])
+    async def browser_artifact_histogram(case_id: str | None = None) -> dict[str, Any]:
+        connection = _open_ready_catalog(app.state.catalog_path)
+        try:
+            return {
+                "case_id": case_id,
+                "histogram": _browser_artifact_histogram(connection, case_id),
+            }
+        finally:
+            connection.close()
+
+    @app.get("/api/v1/browser-artifacts/{browser_artifact_id}", tags=["browser"])
+    async def browser_artifact_detail(browser_artifact_id: str) -> dict[str, Any]:
+        connection = _open_ready_catalog(app.state.catalog_path)
+        try:
+            artifact = _get_browser_artifact(connection, browser_artifact_id)
+            related_findings = _browser_related_findings(connection, artifact["content_id"])
+        finally:
+            connection.close()
+        return {
+            "artifact": artifact,
+            "provenance": artifact["raw_provenance"],
+            "related_findings": related_findings,
+        }
+
     @post_json(app, "/api/v1/findings/review/dismiss", tags=["findings"])
     async def dismiss_findings(body: ReviewActionRequest) -> dict[str, Any]:
         return _apply_review_action(app, body, action="dismiss", target_status="dismissed")
@@ -604,6 +692,202 @@ def _finding_where(params: FindingQueryParams) -> tuple[list[str], list[Any]]:
     return where, values
 
 
+def _query_browser_artifacts(
+    connection: sqlite3.Connection, params: BrowserArtifactQueryParams
+) -> dict[str, Any]:
+    where, values = _browser_artifact_where(params)
+    cursor_created, cursor_id = _decode_browser_cursor(params.cursor)
+    if cursor_created is not None and cursor_id is not None:
+        where.append("(created_at > ? OR (created_at = ? AND browser_artifact_id > ?))")
+        values.extend([cursor_created, cursor_created, cursor_id])
+    rows = connection.execute(
+        f"""
+        SELECT browser_artifact_id, case_id, entry_id, content_id, profile_id,
+               artifact_kind, browser_family, raw_provenance_json, artifact_json,
+               recovery_confidence, first_observed_at, created_at
+        FROM browser_artifacts
+        WHERE {" AND ".join(where)}
+        ORDER BY created_at, browser_artifact_id
+        LIMIT ?
+        """,
+        (*values, params.limit + 1),
+    ).fetchall()
+    artifacts = [_browser_artifact_from_row(row) for row in rows[: params.limit]]
+    next_cursor = None
+    if len(rows) > params.limit and artifacts:
+        next_cursor = _encode_browser_cursor(
+            artifacts[-1]["created_at"], artifacts[-1]["browser_artifact_id"]
+        )
+    return {"artifacts": artifacts, "next_cursor": next_cursor}
+
+
+def _browser_artifact_where(params: BrowserArtifactQueryParams) -> tuple[list[str], list[Any]]:
+    where = ["1 = 1"]
+    values: list[Any] = []
+    for column in ("case_id", "browser_family", "profile_id", "artifact_kind"):
+        value = getattr(params, column)
+        if value is not None:
+            where.append(f"{column} = ?")
+            values.append(value)
+    if params.domain is not None:
+        where.append(
+            """
+            (
+                json_extract(artifact_json, '$.url_normalization.registrable_domain') = ?
+                OR json_extract(artifact_json, '$.source_url_normalization.registrable_domain') = ?
+            )
+            """
+        )
+        values.extend([params.domain, params.domain])
+    if params.os_user_id is not None:
+        where.append(
+            """
+            (
+                json_extract(artifact_json, '$.os_user_id') = ?
+                OR json_extract(artifact_json, '$.raw_provenance.os_user_id') = ?
+            )
+            """
+        )
+        values.extend([params.os_user_id, params.os_user_id])
+    if params.date_from is not None:
+        where.append("COALESCE(first_observed_at, created_at) >= ?")
+        values.append(params.date_from)
+    if params.date_to is not None:
+        where.append("COALESCE(first_observed_at, created_at) <= ?")
+        values.append(params.date_to)
+    if params.q:
+        like = f"%{_escape_like(params.q)}%"
+        where.append(
+            """
+            (
+                json_extract(artifact_json, '$.url') LIKE ? ESCAPE '\\'
+                OR json_extract(artifact_json, '$.source_url') LIKE ? ESCAPE '\\'
+                OR json_extract(artifact_json, '$.title') LIKE ? ESCAPE '\\'
+                OR json_extract(artifact_json, '$.query') LIKE ? ESCAPE '\\'
+            )
+            """
+        )
+        values.extend([like, like, like, like])
+    return where, values
+
+
+def _browser_artifact_facets(
+    connection: sqlite3.Connection, case_id: str | None
+) -> dict[str, list[dict[str, Any]]]:
+    facets: dict[str, list[dict[str, Any]]] = {}
+    where = "WHERE case_id = ?" if case_id is not None else ""
+    values: tuple[str, ...] = (case_id,) if case_id is not None else ()
+    for column in ("browser_family", "profile_id", "artifact_kind"):
+        rows = connection.execute(
+            f"SELECT {column}, COUNT(*) FROM browser_artifacts {where} GROUP BY {column} ORDER BY {column}",
+            values,
+        ).fetchall()
+        facets[column] = [{"value": row[0], "count": row[1]} for row in rows]
+    rows = connection.execute(
+        f"""
+        SELECT domain, COUNT(*) FROM (
+            SELECT COALESCE(
+                json_extract(artifact_json, '$.url_normalization.registrable_domain'),
+                json_extract(artifact_json, '$.source_url_normalization.registrable_domain')
+            ) AS domain
+            FROM browser_artifacts {where}
+        ) WHERE domain IS NOT NULL AND domain != '' GROUP BY domain ORDER BY domain
+        """,
+        values,
+    ).fetchall()
+    facets["domain"] = [{"value": row[0], "count": row[1]} for row in rows]
+    return facets
+
+
+def _browser_artifact_summary(
+    connection: sqlite3.Connection, case_id: str | None
+) -> dict[str, Any]:
+    where = "WHERE case_id = ?" if case_id is not None else ""
+    values: tuple[str, ...] = (case_id,) if case_id is not None else ()
+    total = connection.execute(
+        f"SELECT COUNT(*) FROM browser_artifacts {where}", values
+    ).fetchone()[0]
+    first_last = connection.execute(
+        f"SELECT MIN(first_observed_at), MAX(first_observed_at) FROM browser_artifacts {where}",
+        values,
+    ).fetchone()
+    return {
+        "total": total,
+        "first_observed_at": first_last[0],
+        "last_observed_at": first_last[1],
+    }
+
+
+def _browser_artifact_histogram(
+    connection: sqlite3.Connection, case_id: str | None
+) -> list[dict[str, Any]]:
+    where = "WHERE case_id = ?" if case_id is not None else ""
+    values: tuple[str, ...] = (case_id,) if case_id is not None else ()
+    rows = connection.execute(
+        f"""
+        SELECT substr(COALESCE(first_observed_at, created_at), 1, 10) AS day, COUNT(*)
+        FROM browser_artifacts {where}
+        GROUP BY day
+        ORDER BY day
+        """,
+        values,
+    ).fetchall()
+    return [{"date": row[0], "count": row[1]} for row in rows]
+
+
+def _get_browser_artifact(
+    connection: sqlite3.Connection, browser_artifact_id: str
+) -> dict[str, Any]:
+    row = connection.execute(
+        """
+        SELECT browser_artifact_id, case_id, entry_id, content_id, profile_id,
+               artifact_kind, browser_family, raw_provenance_json, artifact_json,
+               recovery_confidence, first_observed_at, created_at
+        FROM browser_artifacts
+        WHERE browser_artifact_id = ?
+        """,
+        (browser_artifact_id,),
+    ).fetchone()
+    if row is None:
+        raise StarletteHTTPException(status_code=404)
+    return _browser_artifact_from_row(row)
+
+
+def _browser_related_findings(
+    connection: sqlite3.Connection, content_id: str | None
+) -> list[dict[str, Any]]:
+    if content_id is None:
+        return []
+    rows = connection.execute(
+        """
+        SELECT finding_id, case_id, entry_id, content_id, finding_type, severity,
+               title, summary, status, confidence, created_at
+        FROM findings
+        WHERE content_id = ?
+        ORDER BY created_at, finding_id
+        """,
+        (content_id,),
+    ).fetchall()
+    return [_finding_from_row(row) for row in rows]
+
+
+def _browser_artifact_from_row(row: sqlite3.Row | tuple[Any, ...]) -> dict[str, Any]:
+    return {
+        "browser_artifact_id": row[0],
+        "case_id": row[1],
+        "entry_id": row[2],
+        "content_id": row[3],
+        "profile_id": row[4],
+        "artifact_kind": row[5],
+        "browser_family": row[6],
+        "raw_provenance": json.loads(row[7]),
+        "artifact": json.loads(row[8]),
+        "recovery_confidence": row[9],
+        "first_observed_at": row[10],
+        "created_at": row[11],
+    }
+
+
 def _apply_review_action(
     app: FastAPI, body: ReviewActionRequest, *, action: str, target_status: str
 ) -> dict[str, Any]:
@@ -804,6 +1088,29 @@ def _decode_finding_cursor(cursor: str | None) -> tuple[str | None, str | None]:
     if not isinstance(created_at, str) or not isinstance(finding_id, str):
         raise StarletteHTTPException(status_code=400)
     return created_at, finding_id
+
+
+def _encode_browser_cursor(created_at: str, browser_artifact_id: str) -> str:
+    raw = json.dumps(
+        {"created_at": created_at, "browser_artifact_id": browser_artifact_id},
+        separators=(",", ":"),
+    )
+    return base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
+
+
+def _decode_browser_cursor(cursor: str | None) -> tuple[str | None, str | None]:
+    if cursor is None:
+        return None, None
+    try:
+        padded = cursor + "=" * (-len(cursor) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(padded.encode()).decode())
+    except (ValueError, json.JSONDecodeError):
+        raise StarletteHTTPException(status_code=400) from None
+    created_at = payload.get("created_at")
+    browser_artifact_id = payload.get("browser_artifact_id")
+    if not isinstance(created_at, str) or not isinstance(browser_artifact_id, str):
+        raise StarletteHTTPException(status_code=400)
+    return created_at, browser_artifact_id
 
 
 def _escape_like(value: str) -> str:
