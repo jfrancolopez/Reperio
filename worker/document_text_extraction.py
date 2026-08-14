@@ -12,6 +12,8 @@ from worker import content_signature, parser_sandbox
 PARSER_VERSION = "tika-json-adapter-v1"
 TIKA_PROFILE = "tika-json"
 DEFAULT_MAX_TEXT_CHARS = 100_000
+MAX_METADATA_FIELDS = 128
+MAX_METADATA_VALUE_CHARS = 4096
 SUPPORTED_MIME_TYPES = frozenset(
     {
         "application/pdf",
@@ -56,8 +58,12 @@ def extract_document_text(
 
     if max_text_chars <= 0:
         raise DocumentExtractionError("invalid_text_limit", "text limit must be positive")
+    copied = copied_document_path.resolve()
+    scratch = job_scratch.resolve()
+    if not _under(copied, scratch):
+        raise DocumentExtractionError("input_not_copied", "document input must be a scratch copy")
     signature = content_signature.detect_content_signature(
-        copied_document_path,
+        copied,
         original_name=original_name,
     )
     warnings = list(signature.evidence)
@@ -70,8 +76,8 @@ def extract_document_text(
 
     spec = parser_sandbox.build_parser_sandbox(
         profile_name=TIKA_PROFILE,
-        copied_input=copied_document_path,
-        job_scratch=job_scratch,
+        copied_input=copied,
+        job_scratch=scratch,
         resource_profile=resource_profile,
     )
     parsed = parser_sandbox.run_parser_sandbox(spec, runtime)
@@ -125,4 +131,17 @@ def _strings(value: object) -> tuple[str, ...]:
 def _metadata(value: object) -> dict[str, str]:
     if not isinstance(value, Mapping):
         return {}
-    return {str(key): str(item) for key, item in sorted(value.items())}
+    result: dict[str, str] = {}
+    for key, item in sorted(value.items()):
+        if len(result) >= MAX_METADATA_FIELDS:
+            break
+        result[str(key)[:256]] = str(item)[:MAX_METADATA_VALUE_CHARS]
+    return result
+
+
+def _under(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True

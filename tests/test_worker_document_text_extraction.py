@@ -124,7 +124,7 @@ class WorkerDocumentTextExtractionTests(unittest.TestCase):
         ):
             outside = Path(source_tmp) / "file.pdf"
             outside.write_bytes(b"%PDF-1.7")
-            with self.assertRaises(parser_sandbox.ParserSandboxError) as captured:
+            with self.assertRaises(document_text_extraction.DocumentExtractionError) as captured:
                 document_text_extraction.extract_document_text(
                     copied_document_path=outside,
                     job_scratch=Path(scratch_tmp),

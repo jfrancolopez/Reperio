@@ -162,6 +162,10 @@ def _looks_email(sample: bytes) -> bool:
 def _looks_text(sample: bytes) -> bool:
     if len(sample) < 4 or b"\0" in sample:
         return False
+    try:
+        sample.decode("utf-8")
+    except UnicodeDecodeError:
+        return False
     control = sum(1 for byte in sample if byte < 32 and byte not in {9, 10, 12, 13})
     return control <= max(1, len(sample) // 100)
 
