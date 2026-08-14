@@ -558,6 +558,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-063 — Parse Firefox-family artifacts `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-039, RPR-060, RPR-061, RPR-070.
 - **Deliver:** places/history, visits, bookmarks, downloads, searches, session restore, cache metadata, and extension facts from copied profile artifacts.
 - **Acceptance:** container/private-context identifiers and timestamp units are normalized without overstating private-history recovery.

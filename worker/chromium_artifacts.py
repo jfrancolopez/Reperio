@@ -71,11 +71,8 @@ def _parse_history(
     connection = _open_sqlite(history, root, "History")
     if connection is None:
         return ChromiumParseResult((), ("malformed_artifact:History",))
-    with connection:
-        try:
-            warnings = list(_missing_tables(connection, ("urls", "visits", "downloads")))
-        except sqlite3.DatabaseError:
-            return ChromiumParseResult((), ("malformed_artifact:History",))
+    try:
+        warnings = list(_missing_tables(connection, ("urls", "visits", "downloads")))
         records: list[dict[str, Any]] = []
         if "missing_table:urls" not in warnings and "missing_table:visits" not in warnings:
             records.extend(_visit_records(profile, connection, entry_ids))
@@ -83,6 +80,10 @@ def _parse_history(
         if "missing_table:downloads" not in warnings:
             records.extend(_download_records(profile, connection, entry_ids))
         return ChromiumParseResult(tuple(records), tuple(warnings))
+    except sqlite3.DatabaseError:
+        return ChromiumParseResult((), ("malformed_artifact:History",))
+    finally:
+        connection.close()
 
 
 def _visit_records(
@@ -361,6 +362,7 @@ def _open_sqlite(path: Path, root: Path, label: str) -> sqlite3.Connection | Non
     resolved = path.resolve()
     if not _under(resolved, root):
         raise ValueError(f"{label} must be under copied profile directory")
+    connection: sqlite3.Connection | None = None
     try:
         connection = sqlite3.connect(
             f"file:{quote(resolved.as_posix())}?mode=ro&immutable=1",
@@ -369,6 +371,8 @@ def _open_sqlite(path: Path, root: Path, label: str) -> sqlite3.Connection | Non
         connection.row_factory = sqlite3.Row
         connection.execute("SELECT 1").fetchone()
     except sqlite3.DatabaseError:
+        if connection is not None:
+            connection.close()
         return None
     return connection
 
