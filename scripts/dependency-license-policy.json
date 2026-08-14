@@ -16,6 +16,7 @@
   ],
   "separate_process_allowed": [
     "AGPL-3.0-only",
+    "GPL-2.0-or-later",
     "GPL-2.0-only",
     "GPL-3.0-only"
   ]

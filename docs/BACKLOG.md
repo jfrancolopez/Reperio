@@ -175,6 +175,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-017 — Add read-only disk-health inspection `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-010.
 - **Deliver:** sandboxed `smartctl` adapter that parses JSON where supported and normalizes health, temperature, reallocated/pending/uncorrectable sectors, NVMe warnings, and bridge limitations.
 - **Acceptance:** health failure warns and can require acknowledgment but never starts a SMART self-test or writes device settings.

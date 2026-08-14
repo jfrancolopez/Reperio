@@ -153,6 +153,16 @@
       "notes": "Pinned Pydantic runtime dependency for RPR-027."
     },
     {
+      "name": "smartmontools smartctl",
+      "version": "7.4",
+      "license": "GPL-2.0-or-later",
+      "source": "https://www.smartmontools.org/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "separate_process",
+      "sandbox": "hostd-fixed-command",
+      "notes": "RPR-017 invokes smartctl as a fixed read-only JSON inspection command for disk health. The adapter forbids self-tests and device-setting flags, accepts only sanitized kernel names, normalizes fixture-backed output, and never receives arbitrary source paths or network access. Release packaging must provide the pinned distro/source package and corresponding notices/source offer."
+    },
+    {
       "name": "python:3.12-slim (docker base image)",
       "version": "sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
       "license": "Python-2.0",
