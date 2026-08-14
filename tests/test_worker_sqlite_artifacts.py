@@ -55,6 +55,7 @@ class WorkerSqliteArtifactsTests(unittest.TestCase):
         if copied_connection is not None:
             copied_connection.close()
         self.assertIn("sqlite_wal_present:History", warnings)
+        self.assertIn("sqlite_shm_missing:History", warnings)
 
     def test_uncheckpointed_wal_rows_are_visible_from_copied_companion(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

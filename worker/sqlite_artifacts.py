@@ -48,6 +48,8 @@ def copied_sqlite_bundle(database_path: Path, root: Path, label: str) -> CopiedS
     warnings: list[str] = []
     if wal is not None:
         warnings.append(f"sqlite_wal_present:{label}")
+        if shm is None:
+            warnings.append(f"sqlite_shm_missing:{label}")
     if shm is not None:
         warnings.append(f"sqlite_shm_present:{label}")
     return CopiedSqliteBundle(resolved, label, wal, shm, tuple(warnings))
