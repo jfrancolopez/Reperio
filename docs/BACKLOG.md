@@ -650,6 +650,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-074 — Generate safe full-screen media derivatives `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-070, RPR-072, RPR-073.
 - **Deliver:** larger image preview, bounded video transcode/keyframes, audio waveform/preview, derivative provenance, and HTTP range support for derivatives only.
 - **Acceptance:** the browser never receives source executable/active formats inline; failures fall back to metadata/download-only.
