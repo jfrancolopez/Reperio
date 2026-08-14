@@ -12,6 +12,7 @@ EXTENSION_MIME = {
     ".exe": "application/x-msdownload",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
     ".pdf": "application/pdf",
     ".png": "image/png",
     ".heic": "image/heic",
@@ -115,6 +116,8 @@ def _magic(sample: bytes) -> tuple[str, str, float]:
         return "pdf", "application/pdf", 0.98
     if sample.startswith(b"\x89PNG\r\n\x1a\n"):
         return "png", "image/png", 0.98
+    if sample.startswith((b"GIF87a", b"GIF89a")):
+        return "gif", "image/gif", 0.95
     if sample.startswith((b"II*\x00", b"MM\x00*")):
         return "tiff", "image/tiff", 0.95
     if sample.startswith(b"RAW\x00"):

@@ -642,6 +642,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-073 — Generate tiered image thumbnails `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-039, RPR-070, RPR-072.
 - **Deliver:** libvips-based embedded/small/large derivative jobs, content-hash cache, aspect ratio, orientation/color handling, and priority-on-open.
 - **Acceptance:** enumeration never waits for thumbnails; decompression bombs and huge dimensions are limited; output is a safe format.

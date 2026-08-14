@@ -94,6 +94,13 @@ PROFILES = {
         max_stdout_bytes=512 * 1024,
         timeout_seconds=60,
     ),
+    "libvips-thumbnail-json": ParserProfile(
+        name="libvips-thumbnail-json",
+        tool="libvips-thumbnail",
+        args=("--input", "/work/input", "--output", "/work/output", "--json-lines"),
+        max_stdout_bytes=512 * 1024,
+        timeout_seconds=60,
+    ),
     "legacy-webcache": ParserProfile(
         name="legacy-webcache",
         tool="legacy-webcache",
