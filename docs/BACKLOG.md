@@ -390,6 +390,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-043 — Complete FAT32 and exFAT coverage `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-037–040.
 - **Deliver:** filesystem-specific normalization for long names, deleted entries, timestamps/timezone ambiguity, cluster chains, and volume labels.
 - **Acceptance:** limitations are visible per finding; malformed cluster loops are bounded.
