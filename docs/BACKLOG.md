@@ -299,6 +299,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-032 — Add diagnostics and safe state backup `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-022, RPR-027, RPR-031.
 - **Deliver:** redacted support bundle plus consistent backup/restore of catalog, checkpoints, settings, and optional derivatives while workers are paused.
 - **Acceptance:** source content and secrets are excluded by default; restore validates version/integrity and cannot select/start a disk.
