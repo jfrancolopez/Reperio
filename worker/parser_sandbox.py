@@ -73,6 +73,13 @@ PROFILES = {
         max_stdout_bytes=256 * 1024,
         timeout_seconds=60,
     ),
+    "tika-json": ParserProfile(
+        name="tika-json",
+        tool="apache-tika",
+        args=("--input", "/work/input", "--output", "/work/output", "--json-lines"),
+        max_stdout_bytes=512 * 1024,
+        timeout_seconds=90,
+    ),
     "legacy-webcache": ParserProfile(
         name="legacy-webcache",
         tool="legacy-webcache",

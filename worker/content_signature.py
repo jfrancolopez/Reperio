@@ -16,6 +16,11 @@ EXTENSION_MIME = {
     ".png": "image/png",
     ".zip": "application/zip",
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ".rtf": "application/rtf",
+    ".txt": "text/plain",
+    ".eml": "message/rfc822",
 }
 
 
@@ -109,7 +114,25 @@ def _magic(sample: bytes) -> tuple[str, str, float]:
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 0.92,
             )
+        if b"xl/" in sample[:SAMPLE_BYTES]:
+            return (
+                "xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                0.92,
+            )
+        if b"ppt/" in sample[:SAMPLE_BYTES]:
+            return (
+                "pptx",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                0.92,
+            )
         return "zip", "application/zip", 0.9
+    if sample.startswith(b"{\\rtf"):
+        return "rtf", "application/rtf", 0.9
+    if _looks_email(sample):
+        return "email", "message/rfc822", 0.86
+    if _looks_text(sample):
+        return "text", "text/plain", 0.8
     if _looks_random(sample):
         return "random", "application/octet-stream", 0.4
     return "unknown", "application/octet-stream", 0.2
@@ -129,6 +152,18 @@ def _looks_random(sample: bytes) -> bool:
     unique = len(set(sample))
     zeros = sample.count(0)
     return unique > 200 and zeros < len(sample) // 100
+
+
+def _looks_email(sample: bytes) -> bool:
+    header = sample[:1024].lower()
+    return b"from:" in header and b"\nsubject:" in header
+
+
+def _looks_text(sample: bytes) -> bool:
+    if len(sample) < 4 or b"\0" in sample:
+        return False
+    control = sum(1 for byte in sample if byte < 32 and byte not in {9, 10, 12, 13})
+    return control <= max(1, len(sample) // 100)
 
 
 def sparse_sample(path: Path, *, sample_limit: int = SAMPLE_BYTES) -> bytes:

@@ -625,6 +625,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-071 — Integrate Apache Tika `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-050, RPR-070.
 - **Deliver:** pinned sandbox adapter for type, metadata, and text from supported copied documents, with parser chain, truncation, and errors.
 - **Acceptance:** extraction is bounded and does not render/execute macros or embedded active content; nested extraction follows limits.
