@@ -1,6 +1,17 @@
 {
   "components": {
     "schemas": {
+      "CaseActionRequest": {
+        "properties": {
+          "reason": {
+            "default": "operator request",
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "title": "CaseActionRequest",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -12,6 +23,69 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "SourcePreviewRequest": {
+        "properties": {
+          "observed_generation": {
+            "minimum": 0.0,
+            "title": "Observed Generation",
+            "type": "integer"
+          },
+          "scan_policy": {
+            "additionalProperties": true,
+            "title": "Scan Policy",
+            "type": "object"
+          }
+        },
+        "required": [
+          "observed_generation"
+        ],
+        "title": "SourcePreviewRequest",
+        "type": "object"
+      },
+      "StartScanRequest": {
+        "properties": {
+          "observed_generation": {
+            "minimum": 0.0,
+            "title": "Observed Generation",
+            "type": "integer"
+          },
+          "operator_confirmation_token": {
+            "title": "Operator Confirmation Token",
+            "type": "string"
+          },
+          "resource_profile": {
+            "default": "default",
+            "title": "Resource Profile",
+            "type": "string"
+          },
+          "safety_inspection_id": {
+            "title": "Safety Inspection Id",
+            "type": "string"
+          },
+          "scan_policy": {
+            "additionalProperties": true,
+            "title": "Scan Policy",
+            "type": "object"
+          },
+          "scratch_separation_id": {
+            "title": "Scratch Separation Id",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "observed_generation",
+          "safety_inspection_id",
+          "operator_confirmation_token",
+          "scratch_separation_id"
+        ],
+        "title": "StartScanRequest",
         "type": "object"
       },
       "ValidationError": {
@@ -224,6 +298,434 @@
         "summary": "Readiness",
         "tags": [
           "system"
+        ]
+      }
+    },
+    "/api/v1/scan-cases": {
+      "post": {
+        "operationId": "start_scan_api_v1_scan_cases_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Start Scan Api V1 Scan Cases Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Scan",
+        "tags": [
+          "scan-cases"
+        ]
+      }
+    },
+    "/api/v1/scan-cases/{case_id}": {
+      "get": {
+        "operationId": "scan_status_api_v1_scan_cases__case_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "title": "Case Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Scan Status Api V1 Scan Cases  Case Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Scan Status",
+        "tags": [
+          "scan-cases"
+        ]
+      }
+    },
+    "/api/v1/scan-cases/{case_id}/pause": {
+      "post": {
+        "operationId": "pause_scan_api_v1_scan_cases__case_id__pause_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "title": "Case Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaseActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Pause Scan Api V1 Scan Cases  Case Id  Pause Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pause Scan",
+        "tags": [
+          "scan-cases"
+        ]
+      }
+    },
+    "/api/v1/scan-cases/{case_id}/reconnect": {
+      "post": {
+        "operationId": "reconnect_scan_api_v1_scan_cases__case_id__reconnect_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "title": "Case Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourcePreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Reconnect Scan Api V1 Scan Cases  Case Id  Reconnect Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reconnect Scan",
+        "tags": [
+          "scan-cases"
+        ]
+      }
+    },
+    "/api/v1/scan-cases/{case_id}/resume": {
+      "post": {
+        "operationId": "resume_scan_api_v1_scan_cases__case_id__resume_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "title": "Case Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourcePreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Resume Scan Api V1 Scan Cases  Case Id  Resume Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resume Scan",
+        "tags": [
+          "scan-cases"
+        ]
+      }
+    },
+    "/api/v1/scan-cases/{case_id}/safe-stop": {
+      "post": {
+        "operationId": "safe_stop_scan_api_v1_scan_cases__case_id__safe_stop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "title": "Case Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaseActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Safe Stop Scan Api V1 Scan Cases  Case Id  Safe Stop Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Safe Stop Scan",
+        "tags": [
+          "scan-cases"
+        ]
+      }
+    },
+    "/api/v1/sources": {
+      "get": {
+        "operationId": "list_sources_api_v1_sources_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Sources Api V1 Sources Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Sources",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/{source_id}": {
+      "get": {
+        "operationId": "source_detail_api_v1_sources__source_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Source Detail Api V1 Sources  Source Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Source Detail",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/{source_id}/scan-preview": {
+      "post": {
+        "operationId": "scan_preview_api_v1_sources__source_id__scan_preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourcePreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Scan Preview Api V1 Sources  Source Id  Scan Preview Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Scan Preview",
+        "tags": [
+          "sources"
         ]
       }
     }

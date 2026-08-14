@@ -267,6 +267,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-028 — Add source and scan-case endpoints `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-009, RPR-027.
 - **Deliver:** device list/detail, source confirmation token, scan configuration preview, start, status, pause/resume/safe-stop, and reconnect endpoints.
 - **Acceptance:** start requires recent safety facts and an exact-device confirmation; one active source per instance is enforced.
