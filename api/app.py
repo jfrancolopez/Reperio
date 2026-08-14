@@ -72,6 +72,17 @@ class FindingQueryParams(BaseModel):
     include_system_noise: bool = False
 
 
+class ReviewActionRequest(BaseModel):
+    finding_ids: list[str] = Field(default_factory=list)
+    saved_query: FindingQueryParams | None = None
+    actor: str = "operator"
+    note: str | None = None
+
+
+class ReviewUndoRequest(BaseModel):
+    actor: str = "operator"
+
+
 def create_app(
     *,
     catalog_path: Path | None = None,
@@ -93,6 +104,7 @@ def create_app(
     app.state.catalog_path = catalog_path
     app.state.hostd_client = hostd_client or UnavailableHostdClient()
     app.state.source_confirmations = {}
+    app.state.review_actions_enabled = True
     app.state.migration_in_progress = migration_in_progress
 
     @app.middleware("http")
@@ -385,6 +397,24 @@ def create_app(
             connection.close()
         return {"finding": finding, "evidence": evidence, "provenance": evidence}
 
+    @post_json(app, "/api/v1/findings/review/dismiss", tags=["findings"])
+    async def dismiss_findings(body: ReviewActionRequest) -> dict[str, Any]:
+        return _apply_review_action(app, body, action="dismiss", target_status="dismissed")
+
+    @post_json(app, "/api/v1/findings/review/restore", tags=["findings"])
+    async def restore_findings(body: ReviewActionRequest) -> dict[str, Any]:
+        return _apply_review_action(app, body, action="restore", target_status="new")
+
+    @post_json(app, "/api/v1/review-actions/{review_action_id}/undo", tags=["findings"])
+    async def undo_review_action(review_action_id: str, body: ReviewUndoRequest) -> dict[str, Any]:
+        if not app.state.review_actions_enabled:
+            raise StarletteHTTPException(status_code=403)
+        connection = _open_ready_catalog(app.state.catalog_path)
+        try:
+            return _undo_review_action(connection, review_action_id, actor=body.actor)
+        finally:
+            connection.close()
+
     if static_dir is not None and static_dir.exists():
         app.mount("/", StaticFiles(directory=static_dir, html=True), name="static-ui")
 
@@ -572,6 +602,120 @@ def _finding_where(params: FindingQueryParams) -> tuple[list[str], list[Any]]:
             """
         )
     return where, values
+
+
+def _apply_review_action(
+    app: FastAPI, body: ReviewActionRequest, *, action: str, target_status: str
+) -> dict[str, Any]:
+    if not app.state.review_actions_enabled:
+        raise StarletteHTTPException(status_code=403)
+    connection = _open_ready_catalog(app.state.catalog_path)
+    try:
+        finding_ids = _review_target_ids(connection, body)
+        group_id = f"review_{uuid.uuid4().hex[:24]}"
+        changed: list[str] = []
+        with connection:
+            for index, finding in enumerate(_findings_for_update(connection, finding_ids)):
+                finding_id = finding["finding_id"]
+                previous_status = finding["status"]
+                if previous_status != target_status:
+                    connection.execute(
+                        "UPDATE findings SET status = ? WHERE finding_id = ?",
+                        (target_status, finding_id),
+                    )
+                    changed.append(finding_id)
+                note = {
+                    "group_id": group_id,
+                    "operator_note": body.note,
+                    "previous_status": previous_status,
+                    "target_status": target_status,
+                    "undone": False,
+                }
+                connection.execute(
+                    f"""
+                    INSERT INTO review_actions
+                    (review_action_id, finding_id, action, actor, note, created_at)
+                    VALUES (?, ?, ?, ?, ?, {NOW_SQL})
+                    """,
+                    (
+                        group_id if index == 0 else f"{group_id}_{index}",
+                        finding_id,
+                        action,
+                        body.actor,
+                        json.dumps(note, sort_keys=True),
+                    ),
+                )
+    finally:
+        connection.close()
+    return {"review_action_id": group_id, "matched_count": len(finding_ids), "changed_ids": changed}
+
+
+def _review_target_ids(connection: sqlite3.Connection, body: ReviewActionRequest) -> list[str]:
+    explicit = list(dict.fromkeys(body.finding_ids))
+    if explicit and body.saved_query is not None:
+        raise StarletteHTTPException(status_code=400)
+    if explicit:
+        return explicit
+    if body.saved_query is None:
+        raise StarletteHTTPException(status_code=400)
+    where, values = _finding_where(body.saved_query)
+    rows = connection.execute(
+        f"SELECT finding_id FROM findings WHERE {' AND '.join(where)} ORDER BY created_at, finding_id",
+        values,
+    ).fetchall()
+    return [str(row[0]) for row in rows]
+
+
+def _findings_for_update(
+    connection: sqlite3.Connection, finding_ids: list[str]
+) -> list[dict[str, Any]]:
+    if not finding_ids:
+        return []
+    placeholders = ",".join("?" for _ in finding_ids)
+    rows = connection.execute(
+        f"SELECT finding_id, status FROM findings WHERE finding_id IN ({placeholders}) ORDER BY finding_id",
+        finding_ids,
+    ).fetchall()
+    found = {str(row[0]) for row in rows}
+    if found != set(finding_ids):
+        raise StarletteHTTPException(status_code=404)
+    return [{"finding_id": row[0], "status": row[1]} for row in rows]
+
+
+def _undo_review_action(
+    connection: sqlite3.Connection, review_action_id: str, *, actor: str
+) -> dict[str, Any]:
+    rows = connection.execute(
+        """
+        SELECT review_action_id, finding_id, note
+        FROM review_actions
+        WHERE review_action_id = ? OR note LIKE ?
+        ORDER BY review_action_id
+        """,
+        (review_action_id, f'%"group_id": "{review_action_id}"%'),
+    ).fetchall()
+    if not rows:
+        raise StarletteHTTPException(status_code=404)
+    notes = [(row[0], row[1], json.loads(row[2] or "{}")) for row in rows]
+    if all(note.get("undone") is True for _, _, note in notes):
+        return {"review_action_id": review_action_id, "undone": False, "already_undone": True}
+    restored: list[str] = []
+    with connection:
+        for row_id, finding_id, note in notes:
+            previous_status = note.get("previous_status")
+            if isinstance(previous_status, str):
+                connection.execute(
+                    "UPDATE findings SET status = ? WHERE finding_id = ?",
+                    (previous_status, finding_id),
+                )
+                restored.append(str(finding_id))
+            note["undone"] = True
+            note["undo_actor"] = actor
+            connection.execute(
+                "UPDATE review_actions SET note = ? WHERE review_action_id = ?",
+                (json.dumps(note, sort_keys=True), row_id),
+            )
+    return {"review_action_id": review_action_id, "undone": True, "restored_ids": restored}
 
 
 def _get_finding(connection: sqlite3.Connection, finding_id: str) -> dict[str, Any]:

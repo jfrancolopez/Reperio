@@ -12,6 +12,90 @@
         "title": "CaseActionRequest",
         "type": "object"
       },
+      "FindingQueryParams": {
+        "properties": {
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id"
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cursor"
+          },
+          "finding_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finding Type"
+          },
+          "include_system_noise": {
+            "default": false,
+            "title": "Include System Noise",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 100,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "q": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "title": "FindingQueryParams",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -23,6 +107,56 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "ReviewActionRequest": {
+        "properties": {
+          "actor": {
+            "default": "operator",
+            "title": "Actor",
+            "type": "string"
+          },
+          "finding_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Finding Ids",
+            "type": "array"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "saved_query": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FindingQueryParams"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ReviewActionRequest",
+        "type": "object"
+      },
+      "ReviewUndoRequest": {
+        "properties": {
+          "actor": {
+            "default": "operator",
+            "title": "Actor",
+            "type": "string"
+          }
+        },
+        "title": "ReviewUndoRequest",
         "type": "object"
       },
       "SourcePreviewRequest": {
@@ -461,6 +595,92 @@
         ]
       }
     },
+    "/api/v1/findings/review/dismiss": {
+      "post": {
+        "operationId": "dismiss_findings_api_v1_findings_review_dismiss_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Dismiss Findings Api V1 Findings Review Dismiss Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dismiss Findings",
+        "tags": [
+          "findings"
+        ]
+      }
+    },
+    "/api/v1/findings/review/restore": {
+      "post": {
+        "operationId": "restore_findings_api_v1_findings_review_restore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Restore Findings Api V1 Findings Review Restore Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Findings",
+        "tags": [
+          "findings"
+        ]
+      }
+    },
     "/api/v1/findings/{finding_id}": {
       "get": {
         "operationId": "finding_detail_api_v1_findings__finding_id__get",
@@ -546,6 +766,60 @@
         "summary": "Readiness",
         "tags": [
           "system"
+        ]
+      }
+    },
+    "/api/v1/review-actions/{review_action_id}/undo": {
+      "post": {
+        "operationId": "undo_review_action_api_v1_review_actions__review_action_id__undo_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_action_id",
+            "required": true,
+            "schema": {
+              "title": "Review Action Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewUndoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Undo Review Action Api V1 Review Actions  Review Action Id  Undo Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Undo Review Action",
+        "tags": [
+          "findings"
         ]
       }
     },

@@ -283,6 +283,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-030 — Implement dismiss, restore, and undo `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-021, RPR-029.
 - **Deliver:** reversible event-based review state for individual IDs, explicit ID sets, and saved-query snapshots.
 - **Acceptance:** no content or finding row is deleted; undo restores exact prior state; new findings are not accidentally affected by an old query snapshot.
