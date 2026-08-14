@@ -14,6 +14,14 @@ EXTENSION_MIME = {
     ".jpeg": "image/jpeg",
     ".pdf": "application/pdf",
     ".png": "image/png",
+    ".heic": "image/heic",
+    ".tif": "image/tiff",
+    ".tiff": "image/tiff",
+    ".raw": "image/x-dcraw",
+    ".mp4": "video/mp4",
+    ".mov": "video/quicktime",
+    ".mp3": "audio/mpeg",
+    ".wav": "audio/wav",
     ".zip": "application/zip",
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -107,6 +115,21 @@ def _magic(sample: bytes) -> tuple[str, str, float]:
         return "pdf", "application/pdf", 0.98
     if sample.startswith(b"\x89PNG\r\n\x1a\n"):
         return "png", "image/png", 0.98
+    if sample.startswith((b"II*\x00", b"MM\x00*")):
+        return "tiff", "image/tiff", 0.95
+    if sample.startswith(b"RAW\x00"):
+        return "raw", "image/x-dcraw", 0.8
+    if len(sample) >= 12 and sample[4:8] == b"ftyp":
+        brand = sample[8:12]
+        if brand in {b"heic", b"heix", b"hevc", b"hevx"}:
+            return "heic", "image/heic", 0.92
+        if brand == b"qt  ":
+            return "quicktime", "video/quicktime", 0.92
+        return "mp4", "video/mp4", 0.9
+    if sample.startswith(b"ID3") or sample[:2] in {b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"}:
+        return "mp3", "audio/mpeg", 0.9
+    if sample.startswith(b"RIFF") and sample[8:12] == b"WAVE":
+        return "wav", "audio/wav", 0.92
     if sample.startswith(b"PK\x03\x04"):
         if b"word/" in sample[:SAMPLE_BYTES]:
             return (

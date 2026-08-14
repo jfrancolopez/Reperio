@@ -633,6 +633,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-072 — Integrate ExifTool and ffprobe `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-070.
 - **Deliver:** normalized image/audio/video metadata, dimensions/duration/codecs, creation/device/location/editor tags, raw values, and warnings.
 - **Acceptance:** read-only flags are fixed; metadata never directly becomes HTML; oversized/recursive metadata is bounded.
