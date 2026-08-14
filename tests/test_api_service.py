@@ -116,7 +116,10 @@ class AsgiResponse:
         self.status_code = status_code
         self.headers = headers
         self.body = body
-        self.json: dict[str, Any] = json.loads(body.decode())
+        try:
+            self.json: dict[str, Any] = json.loads(body.decode())
+        except json.JSONDecodeError:
+            self.json = {}
 
 
 async def asgi_request(

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from shared import catalog_schema
 
-CURRENT_SCHEMA_VERSION = 3
+CURRENT_SCHEMA_VERSION = 4
 
 
 class MigrationError(RuntimeError):
@@ -130,10 +130,46 @@ def _add_checkpoints_table(connection: sqlite3.Connection) -> None:
                 connection.execute(statement)
 
 
+def _add_event_sequences(connection: sqlite3.Connection) -> None:
+    if not _table_exists(connection, "events"):
+        _create_events_table_and_indexes(connection)
+        return
+    if _column_exists(connection, "events", "sequence"):
+        return
+    connection.execute("ALTER TABLE events RENAME TO events_v3")
+    _create_events_table_and_indexes(connection)
+    connection.execute(
+        """
+        INSERT INTO events
+        (event_id, case_id, sequence, job_id, event_type, payload_json, published_at, created_at)
+        SELECT event_id, case_id,
+               ROW_NUMBER() OVER (
+                   PARTITION BY COALESCE(case_id, event_id)
+                   ORDER BY created_at, event_id
+               ),
+               job_id, event_type, payload_json, published_at, created_at
+        FROM events_v3
+        ORDER BY created_at, event_id
+        """
+    )
+    connection.execute("DROP TABLE events_v3")
+
+
+def _create_events_table_and_indexes(connection: sqlite3.Connection) -> None:
+    for statement in catalog_schema.initial_schema_statements():
+        if "CREATE TABLE IF NOT EXISTS events" in statement:
+            connection.execute(statement)
+        if "idx_events_case_sequence" in statement or "idx_events_case_created" in statement:
+            connection.execute(statement)
+        if "idx_events_unpublished" in statement:
+            connection.execute(statement)
+
+
 DEFAULT_MIGRATIONS = (
     Migration(1, "initial_catalog_schema", _apply_initial_schema),
     Migration(2, "job_retry_after", _add_retry_after_column),
     Migration(3, "versioned_checkpoints", _add_checkpoints_table),
+    Migration(4, "event_outbox_sequences", _add_event_sequences),
 )
 
 

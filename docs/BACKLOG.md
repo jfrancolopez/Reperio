@@ -251,6 +251,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-026 — Implement event outbox and SSE `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-021, RPR-023.
 - **Deliver:** transactional outbox, ordered per-case sequence, retention/compaction, SSE endpoint, last-event resume, and polling fallback contract.
 - **Acceptance:** job state and its event cannot diverge; reconnect receives missed events once without requiring all findings in the stream.

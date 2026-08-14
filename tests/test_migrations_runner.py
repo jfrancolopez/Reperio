@@ -17,7 +17,7 @@ class MigrationRunnerTests(unittest.TestCase):
             result = runner.migrate_catalog(db_path)
 
             self.assertEqual(runner.CURRENT_SCHEMA_VERSION, result.current_version)
-            self.assertEqual((1, 2, 3), result.applied_versions)
+            self.assertEqual((1, 2, 3, 4), result.applied_versions)
             self.assertIsNone(result.backup_path)
             self.assertTrue(result.workers_allowed)
             self.assertTrue(runner.ready_for_workers(db_path))
@@ -34,7 +34,7 @@ class MigrationRunnerTests(unittest.TestCase):
             result = runner.migrate_catalog(db_path, backup_dir=backup_dir)
 
             self.assertEqual(runner.CURRENT_SCHEMA_VERSION, result.current_version)
-            self.assertEqual((1, 2, 3), result.applied_versions)
+            self.assertEqual((1, 2, 3, 4), result.applied_versions)
             self.assertIsNotNone(result.backup_path)
             assert result.backup_path is not None
             self.assertTrue(result.backup_path.exists())

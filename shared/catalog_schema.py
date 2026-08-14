@@ -178,6 +178,7 @@ CREATE TABLE IF NOT EXISTS checkpoints (
 CREATE TABLE IF NOT EXISTS events (
     event_id TEXT PRIMARY KEY,
     case_id TEXT REFERENCES scan_cases(case_id) ON DELETE CASCADE,
+    sequence INTEGER NOT NULL CHECK (sequence > 0),
     job_id TEXT REFERENCES jobs(job_id) ON DELETE SET NULL,
     event_type TEXT NOT NULL,
     payload_json TEXT NOT NULL CHECK (json_valid(payload_json)),
@@ -243,5 +244,7 @@ CREATE INDEX IF NOT EXISTS idx_findings_case ON findings(case_id);
 CREATE INDEX IF NOT EXISTS idx_evidence_finding ON evidence(finding_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_state ON jobs(state, lease_expires_at);
 CREATE INDEX IF NOT EXISTS idx_checkpoints_latest ON checkpoints(job_id, stage, created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_events_case_sequence ON events(case_id, sequence) WHERE case_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_events_case_created ON events(case_id, created_at, event_id);
 CREATE INDEX IF NOT EXISTS idx_events_unpublished ON events(created_at) WHERE published_at IS NULL;
 """
