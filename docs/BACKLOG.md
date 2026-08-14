@@ -605,6 +605,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-069 — Cross-validate browser parsers `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-062–065.
 - **Deliver:** comparison harness against pinned Plaso/Hindsight or another approved parser for synthetic profiles; mismatch report and supported-version matrix.
 - **Acceptance:** critical visit/download timestamps and URLs have documented validation; discrepancies remain visible rather than silently choosing a tool.
