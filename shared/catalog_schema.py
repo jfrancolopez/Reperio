@@ -241,6 +241,8 @@ CREATE INDEX IF NOT EXISTS idx_entries_case ON entries(case_id);
 CREATE INDEX IF NOT EXISTS idx_entries_content ON entries(content_id);
 CREATE INDEX IF NOT EXISTS idx_contents_source ON contents(source_id);
 CREATE INDEX IF NOT EXISTS idx_findings_case ON findings(case_id);
+CREATE INDEX IF NOT EXISTS idx_findings_query ON findings(case_id, created_at, finding_id);
+CREATE INDEX IF NOT EXISTS idx_findings_filters ON findings(finding_type, severity, status);
 CREATE INDEX IF NOT EXISTS idx_evidence_finding ON evidence(finding_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_state ON jobs(state, lease_expires_at);
 CREATE INDEX IF NOT EXISTS idx_checkpoints_latest ON checkpoints(job_id, stage, created_at);

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from shared import catalog_schema
 
-CURRENT_SCHEMA_VERSION = 4
+CURRENT_SCHEMA_VERSION = 5
 
 
 class MigrationError(RuntimeError):
@@ -165,11 +165,34 @@ def _create_events_table_and_indexes(connection: sqlite3.Connection) -> None:
             connection.execute(statement)
 
 
+def _add_finding_query_indexes(connection: sqlite3.Connection) -> None:
+    if not _table_exists(connection, "findings") or not _table_exists(connection, "evidence"):
+        _create_findings_tables_and_indexes(connection)
+        return
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_findings_query ON findings(case_id, created_at, finding_id)"
+    )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_findings_filters ON findings(finding_type, severity, status)"
+    )
+
+
+def _create_findings_tables_and_indexes(connection: sqlite3.Connection) -> None:
+    for statement in catalog_schema.initial_schema_statements():
+        if "CREATE TABLE IF NOT EXISTS findings" in statement:
+            connection.execute(statement)
+        if "CREATE TABLE IF NOT EXISTS evidence" in statement:
+            connection.execute(statement)
+        if "idx_findings_" in statement or "idx_evidence_finding" in statement:
+            connection.execute(statement)
+
+
 DEFAULT_MIGRATIONS = (
     Migration(1, "initial_catalog_schema", _apply_initial_schema),
     Migration(2, "job_retry_after", _add_retry_after_column),
     Migration(3, "versioned_checkpoints", _add_checkpoints_table),
     Migration(4, "event_outbox_sequences", _add_event_sequences),
+    Migration(5, "finding_query_indexes", _add_finding_query_indexes),
 )
 
 

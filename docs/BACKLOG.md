@@ -275,6 +275,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-029 — Add finding query endpoints `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-021, RPR-027.
 - **Deliver:** cursor pagination, stable sort, compound filters, category/count facets, system-noise toggle, content/provenance detail, and FTS placeholder.
 - **Acceptance:** query plans remain indexed; cursors do not skip/duplicate rows during concurrent ingest.

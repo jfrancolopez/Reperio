@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import hashlib
 import json
 import sqlite3
@@ -58,6 +59,17 @@ class StartScanRequest(BaseModel):
 
 class CaseActionRequest(BaseModel):
     reason: str = "operator request"
+
+
+class FindingQueryParams(BaseModel):
+    case_id: str | None = None
+    finding_type: str | None = None
+    severity: str | None = None
+    status: str | None = None
+    q: str | None = None
+    cursor: str | None = None
+    limit: int = Field(default=100, ge=1, le=500)
+    include_system_noise: bool = False
 
 
 def create_app(
@@ -328,6 +340,51 @@ def create_app(
 
         return StreamingResponse(body(), media_type="text/event-stream")
 
+    @app.get("/api/v1/findings", tags=["findings"])
+    async def list_findings(
+        case_id: str | None = None,
+        finding_type: str | None = None,
+        severity: str | None = None,
+        status: str | None = None,
+        q: str | None = None,
+        cursor: str | None = None,
+        limit: int = Query(default=100, ge=1, le=500),
+        include_system_noise: bool = False,
+    ) -> dict[str, Any]:
+        params = FindingQueryParams(
+            case_id=case_id,
+            finding_type=finding_type,
+            severity=severity,
+            status=status,
+            q=q,
+            cursor=cursor,
+            limit=limit,
+            include_system_noise=include_system_noise,
+        )
+        connection = _open_ready_catalog(app.state.catalog_path)
+        try:
+            return _query_findings(connection, params)
+        finally:
+            connection.close()
+
+    @app.get("/api/v1/findings/facets", tags=["findings"])
+    async def finding_facets(case_id: str | None = None) -> dict[str, Any]:
+        connection = _open_ready_catalog(app.state.catalog_path)
+        try:
+            return {"case_id": case_id, "facets": _finding_facets(connection, case_id)}
+        finally:
+            connection.close()
+
+    @app.get("/api/v1/findings/{finding_id}", tags=["findings"])
+    async def finding_detail(finding_id: str) -> dict[str, Any]:
+        connection = _open_ready_catalog(app.state.catalog_path)
+        try:
+            finding = _get_finding(connection, finding_id)
+            evidence = _finding_evidence(connection, finding_id)
+        finally:
+            connection.close()
+        return {"finding": finding, "evidence": evidence, "provenance": evidence}
+
     if static_dir is not None and static_dir.exists():
         app.mount("/", StaticFiles(directory=static_dir, html=True), name="static-ui")
 
@@ -463,6 +520,150 @@ def _stop_or_reconnect_case(app: FastAPI, case_id: str, reason: str, state: str)
 
 def _synthetic_fingerprint(source_id: str) -> str:
     return hashlib.sha256(source_id.encode()).hexdigest()
+
+
+def _query_findings(connection: sqlite3.Connection, params: FindingQueryParams) -> dict[str, Any]:
+    where, values = _finding_where(params)
+    cursor_created, cursor_id = _decode_finding_cursor(params.cursor)
+    if cursor_created is not None and cursor_id is not None:
+        where.append("(created_at > ? OR (created_at = ? AND finding_id > ?))")
+        values.extend([cursor_created, cursor_created, cursor_id])
+    sql = f"""
+        SELECT finding_id, case_id, entry_id, content_id, finding_type, severity,
+               title, summary, status, confidence, created_at
+        FROM findings
+        WHERE {" AND ".join(where)}
+        ORDER BY created_at, finding_id
+        LIMIT ?
+    """
+    rows = connection.execute(sql, (*values, params.limit + 1)).fetchall()
+    findings = [_finding_from_row(row) for row in rows[: params.limit]]
+    next_cursor = None
+    if len(rows) > params.limit and findings:
+        next_cursor = _encode_finding_cursor(findings[-1]["created_at"], findings[-1]["finding_id"])
+    return {
+        "findings": findings,
+        "next_cursor": next_cursor,
+        "fts": {"enabled": False, "q": params.q},
+    }
+
+
+def _finding_where(params: FindingQueryParams) -> tuple[list[str], list[Any]]:
+    where = ["1 = 1"]
+    values: list[Any] = []
+    for column in ("case_id", "finding_type", "severity", "status"):
+        value = getattr(params, column)
+        if value is not None:
+            where.append(f"{column} = ?")
+            values.append(value)
+    if params.q:
+        where.append("(title LIKE ? ESCAPE '\\' OR summary LIKE ? ESCAPE '\\')")
+        like = f"%{_escape_like(params.q)}%"
+        values.extend([like, like])
+    if not params.include_system_noise:
+        where.append(
+            """
+            NOT EXISTS (
+                SELECT 1 FROM evidence
+                WHERE evidence.finding_id = findings.finding_id
+                  AND evidence.evidence_kind = 'metadata'
+                  AND json_extract(evidence.data_json, '$.system_noise') = 1
+            )
+            """
+        )
+    return where, values
+
+
+def _get_finding(connection: sqlite3.Connection, finding_id: str) -> dict[str, Any]:
+    row = connection.execute(
+        """
+        SELECT finding_id, case_id, entry_id, content_id, finding_type, severity,
+               title, summary, status, confidence, created_at
+        FROM findings
+        WHERE finding_id = ?
+        """,
+        (finding_id,),
+    ).fetchone()
+    if row is None:
+        raise StarletteHTTPException(status_code=404)
+    return _finding_from_row(row)
+
+
+def _finding_evidence(connection: sqlite3.Connection, finding_id: str) -> list[dict[str, Any]]:
+    rows = connection.execute(
+        """
+        SELECT evidence_id, evidence_kind, content_id, data_json, created_at
+        FROM evidence
+        WHERE finding_id = ?
+        ORDER BY created_at, evidence_id
+        """,
+        (finding_id,),
+    ).fetchall()
+    return [
+        {
+            "evidence_id": row[0],
+            "evidence_kind": row[1],
+            "content_id": row[2],
+            "data": json.loads(row[3]),
+            "created_at": row[4],
+        }
+        for row in rows
+    ]
+
+
+def _finding_facets(
+    connection: sqlite3.Connection, case_id: str | None
+) -> dict[str, list[dict[str, Any]]]:
+    facets: dict[str, list[dict[str, Any]]] = {}
+    where = "WHERE case_id = ?" if case_id is not None else ""
+    values: tuple[str, ...] = (case_id,) if case_id is not None else ()
+    for column in ("finding_type", "severity", "status"):
+        rows = connection.execute(
+            f"SELECT {column}, COUNT(*) FROM findings {where} GROUP BY {column} ORDER BY {column}",
+            values,
+        ).fetchall()
+        facets[column] = [{"value": row[0], "count": row[1]} for row in rows]
+    return facets
+
+
+def _finding_from_row(row: sqlite3.Row | tuple[Any, ...]) -> dict[str, Any]:
+    return {
+        "finding_id": row[0],
+        "case_id": row[1],
+        "entry_id": row[2],
+        "content_id": row[3],
+        "finding_type": row[4],
+        "severity": row[5],
+        "title": row[6],
+        "summary": row[7],
+        "status": row[8],
+        "confidence": row[9],
+        "created_at": row[10],
+    }
+
+
+def _encode_finding_cursor(created_at: str, finding_id: str) -> str:
+    raw = json.dumps({"created_at": created_at, "finding_id": finding_id}, separators=(",", ":"))
+    return base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
+
+
+def _decode_finding_cursor(cursor: str | None) -> tuple[str | None, str | None]:
+    if cursor is None:
+        return None, None
+    try:
+        padded = cursor + "=" * (-len(cursor) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(padded.encode()).decode())
+    except (ValueError, json.JSONDecodeError):
+        raise StarletteHTTPException(status_code=400) from None
+    created_at = payload.get("created_at")
+    finding_id = payload.get("finding_id")
+    if not isinstance(created_at, str) or not isinstance(finding_id, str):
+        raise StarletteHTTPException(status_code=400)
+    return created_at, finding_id
+
+
+def _escape_like(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def _open_ready_catalog(catalog_path: Path | None) -> sqlite3.Connection:

@@ -130,6 +130,7 @@ async def asgi_request(
     body: bytes = b"",
     headers: dict[str, str] | None = None,
 ) -> AsgiResponse:
+    route_path, separator, query = path.partition("?")
     raw_headers = [
         (name.lower().encode("latin-1"), value.encode("latin-1"))
         for name, value in (headers or {}).items()
@@ -140,9 +141,9 @@ async def asgi_request(
         "http_version": "1.1",
         "method": method,
         "scheme": "http",
-        "path": path,
-        "raw_path": path.encode("ascii"),
-        "query_string": b"",
+        "path": route_path,
+        "raw_path": route_path.encode("ascii"),
+        "query_string": query.encode("ascii") if separator else b"",
         "headers": raw_headers,
         "client": ("127.0.0.1", 12345),
         "server": ("testserver", 80),
