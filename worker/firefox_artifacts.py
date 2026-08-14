@@ -14,6 +14,7 @@ from typing import Any
 from shared.browser_artifact_schemas import validate_browser_artifact
 from shared.browser_normalization import normalize_browser_record
 from worker.browser_profiles import BrowserProfile
+from worker.sqlite_artifacts import copied_sqlite_bundle, open_copied_sqlite_bundle
 
 PARSER_VERSION = "firefox-artifacts-v1"
 UNIX_EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
@@ -67,11 +68,14 @@ def _parse_places(
     places = root / "places.sqlite"
     if not places.exists():
         return FirefoxParseResult((), ("missing_artifact:places.sqlite",))
-    connection = _open_sqlite(places, root, "places.sqlite")
+    connection, sqlite_warnings = _open_sqlite(places, root, "places.sqlite")
     if connection is None:
-        return FirefoxParseResult((), ("malformed_artifact:places.sqlite",))
+        return FirefoxParseResult((), (*sqlite_warnings, "malformed_artifact:places.sqlite"))
     try:
-        warnings = list(_missing_tables(connection, ("moz_places", "moz_historyvisits")))
+        warnings = [
+            *sqlite_warnings,
+            *_missing_tables(connection, ("moz_places", "moz_historyvisits")),
+        ]
         records: list[dict[str, Any]] = []
         if (
             "missing_table:moz_places" not in warnings
@@ -335,22 +339,14 @@ def _selected_session_entry(tab: Mapping[str, Any]) -> Mapping[str, Any] | None:
     return entry if isinstance(entry, Mapping) else None
 
 
-def _open_sqlite(path: Path, root: Path, label: str) -> sqlite3.Connection | None:
-    resolved = path.resolve()
-    if not _under(resolved, root):
-        raise FirefoxArtifactError(
-            "artifact_escape", f"{label} must be under copied profile directory"
-        )
-    connection: sqlite3.Connection | None = None
+def _open_sqlite(
+    path: Path, root: Path, label: str
+) -> tuple[sqlite3.Connection | None, tuple[str, ...]]:
     try:
-        connection = sqlite3.connect(resolved.as_uri() + "?mode=ro&immutable=1", uri=True)
-        connection.row_factory = sqlite3.Row
-        connection.execute("SELECT 1").fetchone()
-    except sqlite3.DatabaseError:
-        if connection is not None:
-            connection.close()
-        return None
-    return connection
+        bundle = copied_sqlite_bundle(path, root, label)
+    except ValueError as error:
+        raise FirefoxArtifactError("artifact_escape", str(error)) from error
+    return open_copied_sqlite_bundle(bundle)
 
 
 def _load_json(path: Path, root: Path) -> Any | None:

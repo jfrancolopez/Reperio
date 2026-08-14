@@ -574,6 +574,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-065 — Include WAL/SHM and recoverable deleted SQLite rows `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-062, RPR-063.
 - **Deliver:** consistent copied DB+WAL+SHM handling and separately labeled validated freelist/unallocated-row recovery adapter.
 - **Acceptance:** carved rows require stronger validation and lower confidence; duplicates link to live rows.

@@ -10,11 +10,11 @@ from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote
 
 from shared.browser_artifact_schemas import validate_browser_artifact
 from shared.browser_normalization import normalize_browser_record
 from worker.browser_profiles import BrowserProfile
+from worker.sqlite_artifacts import copied_sqlite_bundle, open_copied_sqlite_bundle
 
 PARSER_VERSION = "chromium-artifacts-v1"
 CHROMIUM_EPOCH = datetime(1601, 1, 1, tzinfo=UTC)
@@ -69,11 +69,11 @@ def _parse_history(
     history = root / "History"
     if not history.exists():
         return ChromiumParseResult((), ("missing_artifact:History",))
-    connection = _open_sqlite(history, root, "History")
+    connection, sqlite_warnings = _open_sqlite(history, root, "History")
     if connection is None:
-        return ChromiumParseResult((), ("malformed_artifact:History",))
+        return ChromiumParseResult((), (*sqlite_warnings, "malformed_artifact:History"))
     try:
-        warnings = list(_missing_tables(connection, ("urls", "visits", "downloads")))
+        warnings = [*sqlite_warnings, *_missing_tables(connection, ("urls", "visits", "downloads"))]
         records: list[dict[str, Any]] = []
         if "missing_table:urls" not in warnings and "missing_table:visits" not in warnings:
             records.extend(_visit_records(profile, connection, entry_ids))
@@ -359,23 +359,10 @@ def _record(
     return normalize_browser_record(record)
 
 
-def _open_sqlite(path: Path, root: Path, label: str) -> sqlite3.Connection | None:
-    resolved = path.resolve()
-    if not _under(resolved, root):
-        raise ValueError(f"{label} must be under copied profile directory")
-    connection: sqlite3.Connection | None = None
-    try:
-        connection = sqlite3.connect(
-            f"file:{quote(resolved.as_posix())}?mode=ro&immutable=1",
-            uri=True,
-        )
-        connection.row_factory = sqlite3.Row
-        connection.execute("SELECT 1").fetchone()
-    except sqlite3.DatabaseError:
-        if connection is not None:
-            connection.close()
-        return None
-    return connection
+def _open_sqlite(
+    path: Path, root: Path, label: str
+) -> tuple[sqlite3.Connection | None, tuple[str, ...]]:
+    return open_copied_sqlite_bundle(copied_sqlite_bundle(path, root, label))
 
 
 def _load_json(path: Path, root: Path) -> Any | None:
