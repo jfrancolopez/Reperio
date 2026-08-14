@@ -523,6 +523,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-059 — Add exact and perceptual duplicate groups `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-039, RPR-054, RPR-072.
 - **Deliver:** exact SHA-256 groups plus image perceptual hashes and bounded video keyframe similarity, with canonical preview selection and all provenance retained.
 - **Acceptance:** deduplication never discards a finding or source path; similarity thresholds are visible/configurable.
