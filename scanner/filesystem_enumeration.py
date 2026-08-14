@@ -28,7 +28,7 @@ DENIED_ARGUMENT_FRAGMENTS = frozenset(
 )
 FLS_LINE = re.compile(
     r"^(?P<kind>[drlv-])/(?P<alloc>[*\-])\s+"
-    r"(?P<object_id>\d+(?:-\d+)?)\s*:\s*"
+    r"(?P<object_id>\d+(?:-\d+)*)\s*:\s*"
     r"(?P<name>.*)$"
 )
 

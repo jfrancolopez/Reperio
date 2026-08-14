@@ -374,6 +374,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-041 — Support NTFS-specific entries `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-037–040.
 - **Deliver:** alternate data streams, resident data, compressed/sparse flags, reparse points, hard links, MFT metadata, DOS names, hidden/system flags, and Recycle Bin linkage where available.
 - **Acceptance:** ADS are distinct findings with parent provenance; links are not followed on the host.
