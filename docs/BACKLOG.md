@@ -689,6 +689,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-079 — Add local audio/video transcription `[P2, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-070, RPR-072, RPR-074.
 - **Deliver:** optional local speech-to-text adapter with CPU-safe defaults, language/time segments/confidence, pause/resume chunks, and extracted audio derivative.
 - **Acceptance:** unsupported hardware disables capability cleanly; no cloud upload without configured provider policy.
