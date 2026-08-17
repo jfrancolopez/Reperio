@@ -725,6 +725,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-083 — Define model-provider and task contracts `[P1, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-007, RPR-031.
 - **Deliver:** capability discovery and structured request/result/error schemas for text, vision, embeddings, translation, classification, summarization, with time/size/privacy limits.
 - **Acceptance:** providers cannot request tools or paths; every result names provider/model/task/prompt/schema version and evidence references.
