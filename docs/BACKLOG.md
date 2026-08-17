@@ -713,6 +713,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-082 — Repair or regenerate only scratch copies `[P2, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-039, RPR-070, RPR-071–075.
 - **Deliver:** plugin contract for bounded copy repair (media remux, archive recovery attempt, PDF rebuild, image decode/re-encode), original-content linkage, and quality status.
 - **Acceptance:** repair tools receive only scratch copies; repaired outputs never replace originals and are labeled derived/possibly lossy.
