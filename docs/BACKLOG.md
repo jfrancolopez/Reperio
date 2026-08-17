@@ -705,6 +705,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-081 — Detect protected/encrypted artifacts `[P1, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-050, RPR-071, RPR-080.
 - **Deliver:** normalized protected status and format/version/KDF metadata for archives, PDFs, Office/OpenDocument, wallets/vaults/keys/backups, and whole-volume signatures where supported.
 - **Acceptance:** entropy alone is only weak evidence; compressed data is not mislabeled with high confidence.
