@@ -658,6 +658,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-075 — Render PDFs and documents safely `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-070, RPR-071.
 - **Deliver:** sandboxed PDF-to-image page rendering, first-page thumbnails, lazy additional pages, extracted-text alignment where feasible, and no active PDF delivery.
 - **Acceptance:** encrypted/corrupt/huge PDFs report status; page/time limits are configurable.
