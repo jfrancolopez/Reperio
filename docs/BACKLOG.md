@@ -674,6 +674,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-077 — Detect extracted-text language `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-071, RPR-076.
 - **Deliver:** local language identification with confidence, sample-size threshold, mixed-language support, and raw evidence.
 - **Acceptance:** unknown/short text is not force-labeled; detection does not require remote AI.
