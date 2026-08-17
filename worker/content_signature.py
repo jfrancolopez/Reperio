@@ -24,6 +24,10 @@ EXTENSION_MIME = {
     ".mp3": "audio/mpeg",
     ".wav": "audio/wav",
     ".zip": "application/zip",
+    ".7z": "application/x-7z-compressed",
+    ".rar": "application/vnd.rar",
+    ".tar": "application/x-tar",
+    ".gz": "application/gzip",
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -153,6 +157,14 @@ def _magic(sample: bytes) -> tuple[str, str, float]:
                 0.92,
             )
         return "zip", "application/zip", 0.9
+    if sample.startswith(b"7z\xbc\xaf\x27\x1c"):
+        return "7z", "application/x-7z-compressed", 0.95
+    if sample.startswith(b"Rar!\x1a\x07"):
+        return "rar", "application/vnd.rar", 0.95
+    if len(sample) > 262 and sample[257:262] == b"ustar":
+        return "tar", "application/x-tar", 0.9
+    if sample.startswith(b"\x1f\x8b"):
+        return "gzip", "application/gzip", 0.9
     if sample.startswith(b"{\\rtf"):
         return "rtf", "application/rtf", 0.9
     if _looks_email(sample):

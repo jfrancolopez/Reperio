@@ -697,6 +697,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-080 — Inspect archives safely `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-070.
 - **Deliver:** list archive members, encryption state, compression ratios, nested-depth plan, password need, and optional extraction to per-job scratch with traversal/symlink/bomb limits.
 - **Acceptance:** absolute paths, `..`, links, device nodes, extreme expansion/count/depth are refused; listing alone cannot escape sandbox.

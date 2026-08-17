@@ -129,6 +129,13 @@ PROFILES = {
         max_stdout_bytes=512 * 1024,
         timeout_seconds=120,
     ),
+    "archive-inspect-json": ParserProfile(
+        name="archive-inspect-json",
+        tool="archive-inspect",
+        args=("--input", "/work/input", "--output", "/work/output", "--json-lines"),
+        max_stdout_bytes=512 * 1024,
+        timeout_seconds=90,
+    ),
     "legacy-webcache": ParserProfile(
         name="legacy-webcache",
         tool="legacy-webcache",
