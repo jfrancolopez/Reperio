@@ -666,6 +666,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-076 — Add OCR for images and scanned PDFs `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-071, RPR-073, RPR-075.
 - **Deliver:** Tesseract/OCRmyPDF adapter on copies/derivatives, English+Spanish packs initially, page regions/text/confidence, and OCR need detection.
 - **Acceptance:** no output writes beside the source; existing text is preserved/separated; low-confidence OCR is labeled.

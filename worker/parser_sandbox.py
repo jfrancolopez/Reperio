@@ -115,6 +115,13 @@ PROFILES = {
         max_stdout_bytes=512 * 1024,
         timeout_seconds=120,
     ),
+    "ocr-json": ParserProfile(
+        name="ocr-json",
+        tool="tesseract-ocrmypdf",
+        args=("--input", "/work/input", "--output", "/work/output", "--json-lines"),
+        max_stdout_bytes=512 * 1024,
+        timeout_seconds=120,
+    ),
     "legacy-webcache": ParserProfile(
         name="legacy-webcache",
         tool="legacy-webcache",
