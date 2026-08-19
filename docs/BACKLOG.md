@@ -1486,6 +1486,7 @@ These tasks extend the same one-source, read-only pipeline to media that may hav
 
 ### RPR-186 — Normalize Recycle Bin and Trash across platforms `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-039, RPR-051, RPR-070.
 - **Deliver:** isolated parsers/locators for Windows `$Recycle.Bin` metadata/payload pairs, macOS user and volume Trash layouts, and freedesktop `files`/`info` Trash layouts; normalize platform/user, original path, deletion time, metadata/payload link, and present/deleted/carved recovery state.
 - **Acceptance:** “currently in trash” and “filesystem-deleted after trash was emptied” are separate states; missing metadata or payload remains visible; original paths are treated as untrusted data and never used as host output paths; recovered trash items appear in a dedicated filter/tab and normal categories.
