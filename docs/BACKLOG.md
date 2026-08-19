@@ -755,6 +755,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-087 — Create versioned AI task prompts and schemas `[P1, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-053, RPR-054, RPR-083.
 - **Deliver:** bounded tasks for classification, tags, summary, relevance explanation, translation, media description, and artifact hints; deterministic inputs cite extracted evidence.
 - **Acceptance:** prompts say models cannot delete/hide or infer certainty; outputs are schema-validated and confidence/evidence are required.
