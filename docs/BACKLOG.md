@@ -1005,6 +1005,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-119 — Build live-scan dashboard `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-026, RPR-028, RPR-113, RPR-117.
 - **Deliver:** stage list, current activity, credible progress, counters, warnings/errors, read-only/source facts, pause/resume/safe-stop, and live new-finding samples.
 - **Acceptance:** no misleading progress; control states follow job state; results links work before completion.
