@@ -837,6 +837,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-097 — Manage dictionaries, rules, masks, and combinations `[P1, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-031, RPR-095.
 - **Deliver:** settings inventory with source/license/hash/size/language, ordered strategies, rule/mask validation, estimated search space, enablement, and import limits.
 - **Acceptance:** no wordlist downloads occur without explicit admin action; arbitrary shell syntax is rejected.
