@@ -995,6 +995,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-118 — Build new-scan device wizard `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-028, RPR-116, RPR-117, RPR-178–180.
 - **Deliver:** source cards grouped by disk, flash/card, optical, floppy/legacy reader, with reader/media identity, model/serial/size/transport/geometry or sessions, mount/system/health, exact-source confirmation, scratch separation, safety checks, configuration summary, and start.
 - **Acceptance:** ambiguous or changed media cannot start; system disk/failed RO/same-disk destination blockers are clear; replacing a disc/floppy in the same reader requires fresh selection; no scan starts automatically.
