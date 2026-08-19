@@ -1318,6 +1318,7 @@ These IDs were added after the original milestone numbering. Schedule them by th
 
 ### RPR-160 — Parse Windows activity and user-interaction artifacts `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-039, RPR-051, RPR-070, RPR-186.
 - **Deliver:** isolated parsers for registry hives, LNK files, jump lists, recent documents, shell bags, Windows Timeline, prefetch, selected event logs, and links to normalized Recycle Bin evidence from RPR-186.
 - **Acceptance:** artifacts support classification and related-file links without claiming the timestamp proves a human action; parser/version/raw source are retained.
