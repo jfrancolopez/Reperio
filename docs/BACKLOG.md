@@ -917,6 +917,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-108 — Export while scanning continues `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-024, RPR-039, RPR-106, RPR-107.
 - **Deliver:** export queue accepts only content currently ready, waits/retries selected pending extraction, and never locks scanner catalog ingest for long operations.
 - **Acceptance:** completion accurately reports ready/exported/waiting/failed; dynamic saved-search export is separately explicit.
