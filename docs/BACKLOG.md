@@ -932,6 +932,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-111 — Define notification rules and event summaries `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-026, RPR-031.
 - **Deliver:** configurable start/progress/heartbeat/count/high-value-sensitive-count/health/disconnect/pause/failure/export/password-success/completion rules, throttling, quiet hours, and redacted templates.
 - **Acceptance:** no filenames, URLs, document text, thumbnails, wallet identifiers, recovery phrases, keys, or passwords by default; high-value/sensitive alerts contain counts and a local UI link only; delivery failure cannot affect job state.
