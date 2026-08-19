@@ -1013,6 +1013,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-120 — Build virtualized findings table `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-029, RPR-116, RPR-117.
 - **Deliver:** cursor pagination, stable sorting, columns for path/type/size/date/state/scores/confidence/category/export, row selection, and detail link.
 - **Acceptance:** handles million-row synthetic catalog without loading all rows; concurrent ingest does not jump selection.
