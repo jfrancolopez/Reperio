@@ -162,6 +162,7 @@ CREATE TABLE IF NOT EXISTS checkpoints (
     job_id TEXT NOT NULL REFERENCES jobs(job_id) ON DELETE CASCADE,
     case_id TEXT REFERENCES scan_cases(case_id) ON DELETE CASCADE,
     source_fingerprint TEXT NOT NULL CHECK (length(source_fingerprint) = 64),
+    medium_identity_json TEXT CHECK (medium_identity_json IS NULL OR json_valid(medium_identity_json)),
     stage TEXT NOT NULL,
     checkpoint_version INTEGER NOT NULL CHECK (checkpoint_version > 0),
     tool_name TEXT NOT NULL,
@@ -173,6 +174,33 @@ CREATE TABLE IF NOT EXISTS checkpoints (
     supersedes_checkpoint_id TEXT REFERENCES checkpoints(checkpoint_id) ON DELETE RESTRICT,
     superseded_by_checkpoint_id TEXT REFERENCES checkpoints(checkpoint_id) ON DELETE RESTRICT,
     created_at TEXT NOT NULL CHECK ({_timestamp_check("created_at")})
+) STRICT;
+
+CREATE TABLE IF NOT EXISTS source_devices (
+    device_id TEXT PRIMARY KEY,
+    reader_id TEXT NOT NULL UNIQUE,
+    device_type TEXT NOT NULL,
+    transport TEXT NOT NULL,
+    kernel_name TEXT NOT NULL,
+    read_only_verified INTEGER NOT NULL CHECK (read_only_verified IN (0, 1)),
+    created_at TEXT NOT NULL CHECK ({_timestamp_check("created_at")}),
+    updated_at TEXT NOT NULL CHECK ({_timestamp_check("updated_at")})
+) STRICT;
+
+CREATE TABLE IF NOT EXISTS source_media (
+    media_id TEXT PRIMARY KEY,
+    source_id TEXT NOT NULL REFERENCES sources(source_id) ON DELETE RESTRICT,
+    reader_id TEXT NOT NULL,
+    medium_identity_json TEXT NOT NULL CHECK (json_valid(medium_identity_json)),
+    fingerprint_sha256 TEXT CHECK (fingerprint_sha256 IS NULL OR length(fingerprint_sha256) = 64),
+    capacity_bytes INTEGER CHECK (capacity_bytes IS NULL OR capacity_bytes >= 0),
+    geometry_json TEXT CHECK (geometry_json IS NULL OR json_valid(geometry_json)),
+    toc_sessions_json TEXT CHECK (toc_sessions_json IS NULL OR json_valid(toc_sessions_json)),
+    media_change_generation INTEGER NOT NULL CHECK (media_change_generation >= 0),
+    status TEXT NOT NULL CHECK (status IN ('inserted', 'replaced', 'removed')),
+    inserted_at TEXT NOT NULL CHECK ({_timestamp_check("inserted_at")}),
+    replaced_at TEXT CHECK (replaced_at IS NULL OR ({_timestamp_check("replaced_at")})),
+    UNIQUE (source_id, media_change_generation)
 ) STRICT;
 
 CREATE TABLE IF NOT EXISTS events (
@@ -266,4 +294,8 @@ CREATE INDEX IF NOT EXISTS idx_events_case_created ON events(case_id, created_at
 CREATE INDEX IF NOT EXISTS idx_events_unpublished ON events(created_at) WHERE published_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_browser_artifacts_case_kind ON browser_artifacts(case_id, artifact_kind, browser_family);
 CREATE INDEX IF NOT EXISTS idx_browser_artifacts_profile ON browser_artifacts(case_id, profile_id, artifact_kind);
+CREATE INDEX IF NOT EXISTS idx_source_media_source ON source_media(source_id, media_change_generation);
+CREATE INDEX IF NOT EXISTS idx_source_media_reader ON source_media(reader_id, status);
+CREATE INDEX IF NOT EXISTS idx_source_media_fingerprint ON source_media(fingerprint_sha256) WHERE fingerprint_sha256 IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_source_devices_reader ON source_devices(reader_id);
 """

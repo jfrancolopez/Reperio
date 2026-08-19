@@ -9,7 +9,7 @@ from pathlib import Path
 
 from shared import catalog_schema
 
-CURRENT_SCHEMA_VERSION = 6
+CURRENT_SCHEMA_VERSION = 7
 
 
 class MigrationError(RuntimeError):
@@ -197,6 +197,27 @@ def _add_browser_artifacts_table(connection: sqlite3.Connection) -> None:
             connection.execute(statement)
 
 
+def _add_media_checkpoint_bindings(connection: sqlite3.Connection) -> None:
+    if not _column_exists(connection, "checkpoints", "medium_identity_json"):
+        connection.execute(
+            "ALTER TABLE checkpoints ADD COLUMN "
+            "medium_identity_json TEXT CHECK "
+            "(medium_identity_json IS NULL OR json_valid(medium_identity_json))"
+        )
+    if not _table_exists(connection, "source_devices"):
+        for statement in catalog_schema.initial_schema_statements():
+            if "CREATE TABLE IF NOT EXISTS source_devices" in statement:
+                connection.execute(statement)
+            if "idx_source_devices_reader" in statement:
+                connection.execute(statement)
+    if not _table_exists(connection, "source_media"):
+        for statement in catalog_schema.initial_schema_statements():
+            if "CREATE TABLE IF NOT EXISTS source_media" in statement:
+                connection.execute(statement)
+            if "idx_source_media_" in statement:
+                connection.execute(statement)
+
+
 DEFAULT_MIGRATIONS = (
     Migration(1, "initial_catalog_schema", _apply_initial_schema),
     Migration(2, "job_retry_after", _add_retry_after_column),
@@ -204,6 +225,7 @@ DEFAULT_MIGRATIONS = (
     Migration(4, "event_outbox_sequences", _add_event_sequences),
     Migration(5, "finding_query_indexes", _add_finding_query_indexes),
     Migration(6, "browser_artifact_schemas", _add_browser_artifacts_table),
+    Migration(7, "media_checkpoint_bindings", _add_media_checkpoint_bindings),
 )
 
 

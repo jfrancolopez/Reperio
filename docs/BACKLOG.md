@@ -1445,6 +1445,7 @@ These tasks extend the same one-source, read-only pipeline to media that may hav
 
 ### RPR-180 — Persist media, session, and replacement-aware checkpoints `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-021–025, RPR-178–179.
 - **Deliver:** catalog migrations for `source_devices`, inserted `source_media`, media-change generations, geometry, optical tracks/sessions, and replacement/disconnect events; checkpoint keys bind to full medium identity rather than reader path.
 - **Acceptance:** a scan can resume after reinserting the same verified medium; a changed fingerprint, geometry, TOC, session table, or capacity blocks resume and offers a new case; prior findings remain browsable when the source is absent.
