@@ -1,0 +1,82 @@
+/* Reperio design tokens (RPR-116).
+ * Source of truth: web/design-system/tokens.json. Every custom property here is
+ * derived deterministically from that file and validated by
+ * scripts/design-system-check.py. Do not add ad-hoc values.
+ */
+
+:root {
+  --rpr-font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --rpr-font-xs: 12px;
+  --rpr-font-sm: 14px;
+  --rpr-font-base: 16px;
+  --rpr-font-lg: 20px;
+  --rpr-font-xl: 28px;
+  --rpr-weight-regular: 400;
+  --rpr-weight-medium: 500;
+  --rpr-weight-bold: 700;
+  --rpr-space-xs: 4px;
+  --rpr-space-sm: 8px;
+  --rpr-space-md: 16px;
+  --rpr-space-lg: 24px;
+  --rpr-space-xl: 32px;
+  --rpr-radius-sm: 4px;
+  --rpr-radius-md: 8px;
+  --rpr-radius-lg: 12px;
+  --rpr-radius-pill: 9999px;
+  --rpr-bg: #f7f8fa;
+  --rpr-bg-dark: #111318;
+  --rpr-surface: #ffffff;
+  --rpr-surface-dark: #1b1e24;
+  --rpr-surface-raised: #ffffff;
+  --rpr-surface-raised-dark: #242832;
+  --rpr-border: #d5d9e0;
+  --rpr-border-dark: #3a3f4a;
+  --rpr-text-primary: #1a1c20;
+  --rpr-text-primary-dark: #e8eaed;
+  --rpr-text-secondary: #5b616e;
+  --rpr-text-secondary-dark: #a8adb8;
+  --rpr-action: #2f6fdb;
+  --rpr-action-dark: #7aa5f0;
+  --rpr-action-text: #ffffff;
+  --rpr-action-text-dark: #111318;
+  --rpr-danger: #c0392b;
+  --rpr-danger-dark: #f1948a;
+  --rpr-success: #1e8449;
+  --rpr-success-dark: #7fd6a0;
+  --rpr-warning: #8a5a00;
+  --rpr-warning-dark: #f0c674;
+  --rpr-focus-ring: #2f6fdb;
+  --rpr-focus-ring-dark: #7aa5f0;
+  --rpr-status-pending: #5b616e;
+  --rpr-status-pending-dark: #a8adb8;
+  --rpr-status-running: #2f6fdb;
+  --rpr-status-running-dark: #7aa5f0;
+  --rpr-status-completed: #1e8449;
+  --rpr-status-completed-dark: #7fd6a0;
+  --rpr-status-warning: #8a5a00;
+  --rpr-status-warning-dark: #f0c674;
+  --rpr-status-failed: #c0392b;
+  --rpr-status-failed-dark: #f1948a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rpr-bg: #111318;
+    --rpr-surface: #1b1e24;
+    --rpr-surface-raised: #242832;
+    --rpr-border: #3a3f4a;
+    --rpr-text-primary: #e8eaed;
+    --rpr-text-secondary: #a8adb8;
+    --rpr-action: #7aa5f0;
+    --rpr-action-text: #111318;
+    --rpr-danger: #f1948a;
+    --rpr-success: #7fd6a0;
+    --rpr-warning: #f0c674;
+    --rpr-focus-ring: #7aa5f0;
+    --rpr-status-pending: #a8adb8;
+    --rpr-status-running: #7aa5f0;
+    --rpr-status-completed: #7fd6a0;
+    --rpr-status-warning: #f0c674;
+    --rpr-status-failed: #f1948a;
+  }
+}

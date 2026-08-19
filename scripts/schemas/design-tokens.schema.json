@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reperio.example.invalid/schemas/design-tokens/v1",
+  "title": "Reperio design tokens",
+  "description": "RPR-116 versioned design-token contract. Colors are defined per theme (light/dark); every UI color, spacing, typography and radius must be referenced from this file. contrastPairs declare required WCAG AA foreground/background pairs and their minimum contrast ratio.",
+  "type": "object",
+  "required": ["schema_version", "colors", "typography", "spacing", "radii", "status", "contrastPairs"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "colors": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["light", "dark"],
+        "additionalProperties": false,
+        "properties": {
+          "light": { "$ref": "#/$defs/hexColor" },
+          "dark": { "$ref": "#/$defs/hexColor" }
+        }
+      }
+    },
+    "status": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["light", "dark"],
+        "additionalProperties": false,
+        "properties": {
+          "light": { "$ref": "#/$defs/hexColor" },
+          "dark": { "$ref": "#/$defs/hexColor" }
+        }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "required": ["font-family", "scale", "weights"],
+      "additionalProperties": false,
+      "properties": {
+        "font-family": {
+          "type": "object",
+          "required": ["value"],
+          "additionalProperties": false,
+          "properties": { "value": { "type": "string", "minLength": 1 } }
+        },
+        "scale": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "weights": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "spacing": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "radii": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "contrastPairs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["fg", "bg", "minRatio"],
+        "additionalProperties": false,
+        "properties": {
+          "fg": { "type": "string", "minLength": 1 },
+          "bg": { "type": "string", "minLength": 1 },
+          "minRatio": { "type": "number", "minimum": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hexColor": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    }
+  }
+}

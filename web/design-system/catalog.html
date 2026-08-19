@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reperio design system catalog</title>
+  <link rel="stylesheet" href="./tokens.css">
+  <style>
+    /* The catalog uses only --rpr-* custom properties from tokens.css. */
+    body {
+      margin: 0;
+      font-family: var(--rpr-font-family);
+      font-size: var(--rpr-font-base);
+      line-height: 1.5;
+      color: var(--rpr-text-primary);
+      background-color: var(--rpr-bg);
+    }
+    .page {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: var(--rpr-space-lg) var(--rpr-space-md) var(--rpr-space-xl);
+    }
+    h1 { font-size: var(--rpr-font-xl); margin: 0 0 var(--rpr-space-sm); }
+    h2 { font-size: var(--rpr-font-lg); margin: var(--rpr-space-xl) 0 var(--rpr-space-sm); }
+    p { color: var(--rpr-text-secondary); }
+    .section {
+      background: var(--rpr-surface);
+      border: 1px solid var(--rpr-border);
+      border-radius: var(--rpr-radius-md);
+      padding: var(--rpr-space-md);
+      margin-bottom: var(--rpr-space-lg);
+    }
+    .row { display: flex; flex-wrap: wrap; gap: var(--rpr-space-sm); align-items: center; }
+
+    /* Buttons */
+    button {
+      font: inherit;
+      font-weight: var(--rpr-weight-medium);
+      padding: var(--rpr-space-sm) var(--rpr-space-md);
+      border-radius: var(--rpr-radius-sm);
+      border: 1px solid var(--rpr-border);
+      background: var(--rpr-surface);
+      color: var(--rpr-text-primary);
+      cursor: pointer;
+    }
+    button.primary { background: var(--rpr-action); border-color: var(--rpr-action); color: var(--rpr-action-text); }
+    button.danger { background: var(--rpr-surface); border-color: var(--rpr-danger); color: var(--rpr-danger); }
+
+    /* Focus visibility (keyboard) */
+    :focus-visible {
+      outline: 3px solid var(--rpr-focus-ring);
+      outline-offset: 2px;
+    }
+
+    /* Inputs */
+    label { display: block; font-weight: var(--rpr-weight-medium); margin-bottom: var(--rpr-space-xs); }
+    input, select {
+      font: inherit;
+      padding: var(--rpr-space-sm);
+      border: 1px solid var(--rpr-border);
+      border-radius: var(--rpr-radius-sm);
+      background: var(--rpr-surface);
+      color: var(--rpr-text-primary);
+    }
+    .field { margin-bottom: var(--rpr-space-md); max-width: 360px; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: var(--rpr-space-sm); border-bottom: 1px solid var(--rpr-border); }
+    th { color: var(--rpr-text-secondary); font-weight: var(--rpr-weight-medium); }
+
+    /* Card */
+    .card {
+      background: var(--rpr-surface-raised);
+      border: 1px solid var(--rpr-border);
+      border-radius: var(--rpr-radius-md);
+      padding: var(--rpr-space-md);
+      max-width: 320px;
+    }
+
+    /* Chip */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--rpr-space-xs);
+      padding: 2px var(--rpr-space-sm);
+      border-radius: var(--rpr-radius-pill);
+      border: 1px solid var(--rpr-border);
+      font-size: var(--rpr-font-sm);
+      color: var(--rpr-text-primary);
+    }
+    .chip.status-completed { color: var(--rpr-success); border-color: var(--rpr-success); }
+    .chip.status-warning { color: var(--rpr-warning); border-color: var(--rpr-warning); }
+    .chip.status-failed { color: var(--rpr-danger); border-color: var(--rpr-danger); }
+
+    /* Skeleton */
+    .skeleton {
+      background: var(--rpr-border);
+      border-radius: var(--rpr-radius-sm);
+      height: var(--rpr-font-base);
+      margin-bottom: var(--rpr-space-sm);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse { 50% { opacity: 0.45; } }
+    @media (prefers-reduced-motion: reduce) {
+      .skeleton { animation: none; }
+    }
+
+    /* Toast */
+    .toast {
+      display: flex;
+      gap: var(--rpr-space-sm);
+      align-items: center;
+      justify-content: space-between;
+      background: var(--rpr-surface-raised);
+      border: 1px solid var(--rpr-border);
+      border-left: 4px solid var(--rpr-success);
+      border-radius: var(--rpr-radius-sm);
+      padding: var(--rpr-space-sm) var(--rpr-space-md);
+      max-width: 420px;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>Reperio design system</h1>
+    <p>Accessible component catalog. Every value comes from design-system/tokens.json; no third-party assets, scripts, or branding are used. Keyboard users can tab through each interactive element and rely on the visible focus ring.</p>
+
+    <section class="section" aria-labelledby="buttons-heading">
+      <h2 id="buttons-heading">Buttons</h2>
+      <div class="row">
+        <button type="button">Default action</button>
+        <button type="button" class="primary">Primary action</button>
+        <button type="button" class="danger">Destructive label</button>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="inputs-heading">
+      <h2 id="inputs-heading">Inputs</h2>
+      <div class="field">
+        <label for="source-name">Source label</label>
+        <input id="source-name" name="source-name" type="text" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="state-select">Review state</label>
+        <select id="state-select" name="state-select">
+          <option>All findings</option>
+          <option>New</option>
+          <option>Reviewed</option>
+          <option>Dismissed</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="chips-heading">
+      <h2 id="chips-heading">Status chips</h2>
+      <div class="row">
+        <span class="chip status-completed">Completed</span>
+        <span class="chip status-warning">Completed with warnings</span>
+        <span class="chip status-failed">Failed</span>
+      </div>
+      <p>Status is never communicated by color alone; each chip includes a text label.</p>
+    </section>
+
+    <section class="section" aria-labelledby="table-heading">
+      <h2 id="table-heading">Findings table</h2>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Path</th>
+            <th scope="col">Type</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>/Users/alice/Photos/IMG_0001.JPG</td>
+            <td>Photo</td>
+            <td><span class="chip status-completed">New</span></td>
+          </tr>
+          <tr>
+            <td>/Users/alice/Documents/report.pdf</td>
+            <td>Document</td>
+            <td><span class="chip status-warning">Partial</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section" aria-labelledby="card-heading">
+      <h2 id="card-heading">Cards and skeletons</h2>
+      <div class="card">
+        <h3>Case summary</h3>
+        <p>USB flash, FAT32, 14,214 entries, 3,119 findings.</p>
+        <div class="row">
+          <button type="button" class="primary">Open live scan</button>
+          <button type="button">Review findings</button>
+        </div>
+      </div>
+      <div role="status" aria-label="Loading">
+        <div class="skeleton" style="width: 60%;"></div>
+        <div class="skeleton" style="width: 40%;"></div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="dialog-heading">
+      <h2 id="dialog-heading">Dialog and toast patterns</h2>
+      <div role="dialog" aria-modal="true" aria-label="Dismiss confirmation" hidden>
+        <p>Dismiss 3 selected findings? This action is reversible from the dismissed view.</p>
+        <div class="row">
+          <button type="button" class="primary">Dismiss</button>
+          <button type="button">Cancel</button>
+        </div>
+      </div>
+      <div role="status" class="toast">
+        <span>Export to Internal export drive completed (5 of 5 verified).</span>
+        <button type="button">View manifest</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

@@ -970,6 +970,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-116 — Establish UI design system `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-004.
 - **Deliver:** accessible tokens/components for typography, spacing, color/status, buttons, inputs, dialogs, tables, cards, chips, skeletons, toasts, and dark/light support if retained.
 - **Acceptance:** components meet keyboard/focus/contrast basics and do not copy third-party branding/assets.
