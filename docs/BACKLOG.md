@@ -932,6 +932,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-109 — Integrate rclone destinations `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-031, RPR-070, RPR-105–108.
 - **Deliver:** pinned rclone adapter with allowlisted copy/check operations, generated per-job config, local/SMB/SFTP/FTP/WebDAV/S3/common cloud capability checks, resume/retry, and redacted output.
 - **Acceptance:** no `sync` or delete flags; FTP warns plaintext; credentials never enter arguments/logs; verification limitations recorded.
