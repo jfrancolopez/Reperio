@@ -909,6 +909,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-107 — Generate export paths and manifests `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-038, RPR-054, RPR-105, RPR-106.
 - **Deliver:** safe hierarchy preservation, destination-specific sanitization/collision rules, carved naming, JSON/CSV manifests, hashes, provenance, statuses, tool/app versions.
 - **Acceptance:** path traversal, reserved names, case collisions, long paths, invalid Unicode, and formula injection are handled and recorded.
