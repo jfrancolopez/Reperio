@@ -901,6 +901,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-106 — Implement verified local export `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-039, RPR-105.
 - **Deliver:** streaming copy to a temporary destination name, fsync/atomic finalize where supported, size+SHA-256 verification, progress, and partial cleanup/resume policy.
 - **Acceptance:** only extracted/recovered content is copied; failure never marks item complete; source and scratch remain unchanged.
