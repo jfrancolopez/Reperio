@@ -750,6 +750,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-086 — Implement Ollama adapter `[P1, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-083, RPR-084.
 - **Deliver:** native tags/capability check, model selection, JSON schema prompting/validation, embeddings, image support where declared, and cancellation.
 - **Acceptance:** missing model gives setup guidance; Reperio never auto-pulls a large model without explicit admin action.
