@@ -1,8 +1,14 @@
-"""Stable source identity resolution for RPR-011.
+"""Stable source identity resolution for RPR-011 and RPR-178.
 
 This layer consumes sanitized block-device facts from ``hostd.block_devices`` and
 binds them to stable opaque source IDs. Mutable kernel names remain reported as
 current facts, but they are never the source identity.
+
+For removable media (RPR-178) the layer separates the reusable *reader* identity
+from the inserted *medium* identity. A different same-capacity card, disc, or
+floppy inserted into the same reader therefore resolves to a distinct medium
+``source_id``; only the sampled fingerprint and medium facts make that possible,
+so missing fingerprints degrade identity strength with an explicit warning.
 """
 
 from __future__ import annotations
@@ -11,6 +17,8 @@ import hashlib
 import os
 from pathlib import Path
 from typing import Any
+
+from shared import media_identity
 
 DEFAULT_DEV_DISK_BY_ID = Path("/dev/disk/by-id")
 
@@ -34,6 +42,8 @@ def attach_stable_identities(
 
     for device in devices:
         identified = _with_identity(device, by_id_names)
+        if media_identity.is_removable(device):
+            identified = _with_media_identity(identified)
         source_id = identified["source_id"]
         existing = seen.get(source_id)
         if existing is not None:
@@ -46,46 +56,87 @@ def attach_stable_identities(
     return resolved
 
 
+def _with_media_identity(device: dict[str, Any]) -> dict[str, Any]:
+    """Bind a removable reader to its inserted-medium identity.
+
+    ``device`` must already carry a reader identity from ``_with_identity``.
+    The returned copy keeps ``reader_id`` and ``reader_identity_strength``
+    while replacing ``source_id`` with the medium-bound identity, so a
+    same-capacity medium swap changes the source identity.
+    """
+    copy = dict(device)
+    reader_id = _string(copy.get("source_id"))
+    reader_strength = _string(copy.get("identity_strength"))
+    reader_warnings = list(copy.get("identity_warnings", []))
+
+    signals = media_identity.normalize_medium_signals(copy)
+    warnings = list(media_identity.identity_warnings_for(copy, signals))
+    has_fingerprint = (
+        media_identity._normalized_fingerprint(signals.get("sampled_fingerprint_sha256"))
+        is not None
+    )
+    strength = "reader-plus-medium" if has_fingerprint else "reader-facts"
+    if not has_fingerprint and strength_warning_needed(copy):
+        warnings.append("missing_sampled_fingerprint")
+
+    medium_id = _medium_source_id(reader_id, signals)
+    copy["reader_id"] = reader_id
+    copy["reader_identity_strength"] = reader_strength
+    copy["source_id"] = medium_id
+    copy["identity_strength"] = strength
+    copy["identity_warnings"] = list(dict.fromkeys(reader_warnings + warnings))
+    copy["medium_identity"] = media_identity.medium_identity_record(
+        reader_id, signals, identity_strength=strength, warnings=tuple(warnings)
+    )
+    copy["children"] = [_with_child_identity(child, copy) for child in copy.get("children", [])]
+    return copy
+
+
+def _medium_source_id(reader_id: str, signals: dict[str, Any]) -> str:
+    basis = {"reader_id": reader_id, "medium_signals": signals}
+    return f"medium_{_digest(basis)}"
+
+
+def strength_warning_needed(device: dict[str, Any]) -> bool:
+    """Return true when the medium is present but the fingerprint is missing."""
+    return bool(
+        media_identity.is_plausible_medium(
+            {"medium_signals": media_identity.normalize_medium_signals(device)}
+        )
+    )
+
+
 def _with_identity(device: dict[str, Any], by_id_names: dict[str, list[str]]) -> dict[str, Any]:
     copy = dict(device)
     warnings = list(copy.get("warnings", []))
     kernel_name = _string(copy.get("kernel_name"))
     matched_by_id = by_id_names.get(kernel_name, [])
+    removable = bool(copy.get("removable"))
 
     if matched_by_id:
-        identity_basis = {
-            "by_id": matched_by_id[0],
-            "size_bytes": copy.get("size_bytes"),
-            "logical_block_size": copy.get("logical_block_size"),
-            "physical_block_size": copy.get("physical_block_size"),
-            "transport": copy.get("transport"),
-            "topology": _topology(copy),
-        }
+        identity_basis: dict[str, Any] = {"by_id": matched_by_id[0]}
+        if not removable:
+            identity_basis.update(_medium_dependent_facts(copy))
         strength = "by-id"
     elif _string(copy.get("serial")):
         identity_basis = {
             "vendor": copy.get("vendor"),
             "model": copy.get("model"),
             "serial": copy.get("serial"),
-            "size_bytes": copy.get("size_bytes"),
-            "logical_block_size": copy.get("logical_block_size"),
-            "physical_block_size": copy.get("physical_block_size"),
-            "transport": copy.get("transport"),
-            "topology": _topology(copy),
         }
+        if not removable:
+            identity_basis.update(_medium_dependent_facts(copy))
         strength = "serial-facts"
     else:
         identity_basis = {
             "vendor": copy.get("vendor"),
             "model": copy.get("model"),
             "device_type": copy.get("device_type"),
-            "size_bytes": copy.get("size_bytes"),
-            "logical_block_size": copy.get("logical_block_size"),
-            "physical_block_size": copy.get("physical_block_size"),
             "transport": copy.get("transport"),
-            "removable": copy.get("removable"),
-            "topology": _topology(copy),
+            "removable": removable,
         }
+        if not removable:
+            identity_basis.update(_medium_dependent_facts(copy))
         strength = "weak-facts"
         warnings.append("missing_stable_serial_or_by_id")
 
@@ -100,6 +151,15 @@ def _with_identity(device: dict[str, Any], by_id_names: dict[str, list[str]]) ->
     )
     copy["children"] = [_with_child_identity(child, copy) for child in copy.get("children", [])]
     return copy
+
+
+def _medium_dependent_facts(device: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "size_bytes": device.get("size_bytes"),
+        "logical_block_size": device.get("logical_block_size"),
+        "physical_block_size": device.get("physical_block_size"),
+        "topology": _topology(device),
+    }
 
 
 def _with_child_identity(child: dict[str, Any], parent: dict[str, Any]) -> dict[str, Any]:

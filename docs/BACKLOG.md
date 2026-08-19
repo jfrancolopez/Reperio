@@ -1423,6 +1423,7 @@ These tasks extend the same one-source, read-only pipeline to media that may hav
 
 ### RPR-178 — Extend the source identity contract to removable media `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-007, RPR-009–012.
 - **Deliver:** versioned source-kind and media-identity schemas for fixed disks, USB flash, card readers/media, optical drives/discs, floppy drives/media, and legacy adapters; separate reusable reader identity from inserted-medium identity; include capacity, sector/block size, geometry, write-protect signals, TOC/session facts, sampled fingerprint, and media-change generation.
 - **Acceptance:** no API treats `/dev/sdX`, `/dev/sr0`, or `/dev/fd0` alone as identity; missing serials use documented evidence and warnings; inserting a different same-capacity disc/card/floppy in the same reader produces a distinct source identity.
