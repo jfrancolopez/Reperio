@@ -766,6 +766,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-088 — Add batching, cache, and budget controls `[P1, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-083, RPR-087.
 - **Deliver:** cache key by content/input/prompt/provider/model/version, bounded batching/chunking, per-provider concurrency, retry budget, cancellation, and usage metrics.
 - **Acceptance:** a rescan does not resend unchanged content; provider outage cannot block deterministic scan completion.
