@@ -867,6 +867,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-102 — Store/reveal recovered secrets safely `[P0, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-031, RPR-095–101.
 - **Deliver:** encrypted secret reference, explicit UI reveal/copy, auto-hide, optional non-persistence, delete-secret action that leaves audit/result status.
 - **Acceptance:** unauthenticated LAN mode shows a critical warning before reveal; secrets never enter browser URL/history or telemetry.
