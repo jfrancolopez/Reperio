@@ -798,6 +798,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-093 — Add remote-provider privacy gate `[P0, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-031, RPR-083, RPR-084.
 - **Deliver:** explicit admin acknowledgment, per-provider/category/data-size policy, outbound payload preview/redaction option, audit, and a hard distinction between local/LAN/remote.
 - **Acceptance:** remote calls are impossible before acknowledgment; changing endpoint from private to public re-triggers acknowledgment.
