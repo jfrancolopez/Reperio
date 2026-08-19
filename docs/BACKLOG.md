@@ -888,6 +888,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-105 — Define destinations and export contracts `[P0, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-015, RPR-021, RPR-031.
 - **Deliver:** local/rclone destination profiles, capability/verification flags, secret references, export snapshot/items/status, and source-separation recheck.
 - **Acceptance:** destination is validated at submission and execution; immutable selected finding set is recorded.
