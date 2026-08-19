@@ -1029,6 +1029,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-122 — Build media masonry gallery `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-073, RPR-074, RPR-116, RPR-121.
 - **Deliver:** virtualized responsive masonry, aspect placeholders, infinite cursor load, select without opening, keyboard navigation, date/device/location groups, duplicate indicators.
 - **Acceptance:** missing thumbnails do not cause layout thrash; original/source active content is never rendered.
