@@ -171,6 +171,16 @@
       "linkage": "linked",
       "sandbox": "no",
       "notes": "Immutable OCI index digest used by packaging/container/control-plane.Dockerfile (RPR-006 build-smoke placeholder, not a release artifact). Full SBOM and Debian-layer license review deferred to RPR-147."
+    },
+    {
+      "name": "apprise",
+      "version": "1.12.0",
+      "license": "BSD-2-Clause",
+      "source": "https://pypi.org/project/apprise/1.12.0/",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "linked",
+      "sandbox": "notification-job",
+      "notes": "Pinned notification sidecar for RPR-112. Wheel SHA-256 28edabfec5a9d5dbcd9aa28bdfd8928ecb68764e40214b6e648eab6d974b5a93. Service URLs are secret-backed opaque vault references, never stored or returned; delivery is bounded, truncated, retried with capped backoff, and errors are redacted. Imported only inside the delivery job; not a build or CI dependency."
     }
   ]
 }

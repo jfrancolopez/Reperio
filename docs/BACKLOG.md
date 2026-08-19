@@ -945,6 +945,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-112 — Integrate Apprise notifications `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-070, RPR-111.
 - **Deliver:** pinned Apprise library/sidecar adapter, secret-backed service URLs, test notification, delivery attempt/backoff, and normalized errors.
 - **Acceptance:** email/webhook and at least one self-hosted route fixture work; service URLs are never returned after creation.
