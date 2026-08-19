@@ -742,6 +742,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-085 — Implement OpenAI-compatible LAN endpoint adapter `[P1, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-083, RPR-084.
 - **Deliver:** configurable base URL/model adapter for compatible local services with structured output, vision/embedding capability negotiation, streaming disabled unless needed, and retries.
 - **Acceptance:** private/LAN endpoints may use no key; TLS/auth options use secret references; arbitrary URL redirects are controlled.
