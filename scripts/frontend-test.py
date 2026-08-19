@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Frontend-test gate (RPR-005, extended by RPR-116).
+"""Frontend-test gate (RPR-005, extended by RPR-116 and RPR-117).
 
 No UI test framework exists yet. The gate verifies the web placeholder manifest
-is valid, versioned, and licensed, and runs the deterministic RPR-116 design
+is valid, versioned, and licensed, runs the deterministic RPR-116 design
 system check (design tokens, derived tokens.css, accessible component catalog,
-and WCAG contrast pairs). It becomes the real frontend-test entry point when
-browser-based UI tests arrive (RPR-132+).
+and WCAG contrast pairs), and runs the RPR-117 application-shell check
+(sidebar/top status, planned tabs, case/source context, connection state with
+bounded SSE reconnect, route-level loading/error boundaries, persistent
+unauthenticated-LAN warning, and a strict single-origin CSP). It becomes the
+real frontend-test entry point when browser-based UI tests arrive (RPR-132+).
 """
 
 from __future__ import annotations
@@ -18,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import app_shell_check  # noqa: E402
 import design_system_check  # noqa: E402
 
 
@@ -39,6 +43,7 @@ def check_frontend() -> list[str]:
     if not (ROOT / "web" / "README.md").exists():
         failures.append("web/README.md is missing")
     failures.extend(design_system_check.check_design_system())
+    failures.extend(app_shell_check.check_app_shell())
     return failures
 
 
@@ -49,7 +54,7 @@ def main() -> int:
         for failure in failures:
             print(f"  - {failure}")
         return 1
-    print("PASS: frontend placeholder manifest and design system")
+    print("PASS: frontend placeholder manifest, design system, and app shell")
     return 0
 
 

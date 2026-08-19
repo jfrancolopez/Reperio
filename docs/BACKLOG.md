@@ -985,6 +985,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-117 — Build application shell and navigation `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-027, RPR-116.
 - **Deliver:** responsive sidebar/top status, all planned tabs, case/source context, connection state, SSE reconnect, and route-level loading/error boundaries.
 - **Acceptance:** critical read-only state and unauthenticated-LAN warning are persistently discoverable.

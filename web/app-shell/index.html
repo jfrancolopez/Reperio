@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reperio — recovery review</title>
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <link rel="stylesheet" href="../design-system/tokens.css">
+  <link rel="stylesheet" href="./app-shell.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Primary">
+      <div class="brand">Reperio</div>
+      <nav class="tabs" aria-label="Sections">
+        <a class="tab" href="#dashboard" aria-current="page">Dashboard</a>
+        <a class="tab" href="#scan">Scan</a>
+        <a class="tab" href="#findings">Findings</a>
+        <a class="tab" href="#media">Media</a>
+        <a class="tab" href="#browser">Browser</a>
+        <a class="tab" href="#export">Export</a>
+        <a class="tab" href="#settings">Settings</a>
+        <a class="tab" href="#notifications">Notifications</a>
+      </nav>
+      <div class="readonly-badge" id="readonly-badge" role="status" aria-label="read-only mode">
+        Read-only
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="connection-state" id="connection-state" role="status" aria-live="polite" data-state="connecting">
+          Connecting to scanner…
+        </div>
+        <div class="case-context" id="case-context" aria-label="Case and source context">
+          <span id="case-name">No case</span>
+          <span id="source-name">No source selected</span>
+        </div>
+      </header>
+
+      <div class="lan-warning" id="lan-warning" role="alert" data-critical="true">
+        Unauthenticated LAN mode: the scanner is reachable without a password on
+        this network. Anyone who can reach it can view recovered findings.
+        Log in or review on a trusted network.
+      </div>
+
+      <main class="content">
+        <section class="route-view" id="route-view" aria-live="polite" aria-busy="true">
+          <div class="route-loading" id="route-loading" role="status" aria-label="Loading">
+            <div class="skeleton" style="width: 60%;"></div>
+            <div class="skeleton" style="width: 40%;"></div>
+          </div>
+          <div class="route-error" id="route-error" role="alert" hidden></div>
+          <div class="route-slot" id="route-slot"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="./app-shell.js"></script>
+</body>
+</html>
