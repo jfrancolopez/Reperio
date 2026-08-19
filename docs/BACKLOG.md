@@ -1509,6 +1509,7 @@ These tasks extend the same one-source, read-only pipeline to media that may hav
 
 ### RPR-187 — Build the removable-media selection and batch workflow `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-118–121, RPR-178–181.
 - **Deliver:** non-technical source selector grouping disks, flash/cards, optical, and floppy/legacy readers; media/reader facts, session/geometry summary, read-only proof, identity-strength warning, capacity-aware scratch estimate, insertion/removal state, and one-at-a-time “finish this medium, insert the next” case workflow.
 - **Acceptance:** replacing media never resumes or starts automatically; the operator can browse/export completed prior cases while scanning the next medium; empty readers and unsupported media explain what is needed; no erase, format, initialize, burn, blank, repair, or source-delete control exists.
