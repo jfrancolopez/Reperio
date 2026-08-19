@@ -1437,6 +1437,7 @@ These tasks extend the same one-source, read-only pipeline to media that may hav
 
 ### RPR-179 — Enumerate and enforce read-only removable sources `[P0, M0]`
 
+- **Status:** complete
 - **Depends:** RPR-013–020, RPR-178.
 - **Deliver:** host-controller discovery/preparation for flash/card, optical, and floppy devices; hotplug/media-change reporting; automount/holder detection; kernel/device read-only verification; physical lock/capability reporting; fixed allowlisted read-only operations for geometry and optical TOC.
 - **Acceptance:** scan launch fails when read-only status or medium identity cannot be proven; physical SD lock and write-once optical media are informational defense-in-depth, not substitutes for kernel/process denial; no eject, burn, blank, format, packet-write, repair, or generic ioctl/API exists.
