@@ -829,6 +829,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-096 — Try operator-supplied passwords safely `[P1, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-031, RPR-070, RPR-080, RPR-095.
 - **Deliver:** named secret sets and format-specific verification/extraction using stdin/file-descriptor mechanisms instead of command arguments.
 - **Acceptance:** attempted/recovered values never reach logs/process listings; successful output goes to separate scratch.
