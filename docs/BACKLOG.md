@@ -1021,6 +1021,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-121 — Build filters, facets, FTS, and saved views `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-029, RPR-120.
 - **Deliver:** user/volume/category/date/size/allocation/encrypted/corrupt/duplicate/interest/noise/export/dismiss facets, text search, chips, reset, URL/share-local state, saved views.
 - **Acceptance:** “include system/noise” is explicit; filter state is reflected in counts and export snapshots.
