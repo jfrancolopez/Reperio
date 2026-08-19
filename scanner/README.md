@@ -47,3 +47,11 @@ read-only and emits normalized findings to the catalog.
 - **Lost-volume candidates:** `scanner.lost_volume_candidates` scans read-only
   samples for filesystem/encrypted-volume signatures, separates them from
   current partitions, and emits bounded parser/carving attempts for `RPR-049`.
+- **USB/memory-card pipeline:** `scanner.usb_media_pipeline` classifies the
+  removable medium family and card type, decides partitioned versus
+  partitionless/superfloppy versus lost-partition layout, plans the deep
+  pipeline stages (enumeration, deleted-entry recovery, bounded carving,
+  classification, export), tags distinct provenance for
+  allocated/hidden/trashed/deleted/carved findings, and derives UI-visible
+  TRIM/GC/wear-leveling/continued-use states without declaring unrecoverable
+  blocks "clean" for `RPR-181`.

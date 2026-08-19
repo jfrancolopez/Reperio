@@ -1457,6 +1457,7 @@ These tasks extend the same one-source, read-only pipeline to media that may hav
 
 ### RPR-181 — Run the deep pipeline on USB flash and memory cards `[P1, M1]`
 
+- **Status:** complete
 - **Depends:** RPR-036–054, RPR-178–180.
 - **Deliver:** partitioned and partitionless/superfloppy scanning for USB flash, SD/microSD, CompactFlash, Memory Stick, SmartMedia, MMC, Microdrive, and similar Linux block media; reuse validated FAT16/32, exFAT, NTFS, and ext adapters; run filesystem deleted-entry recovery followed by bounded unallocated/whole-medium carving and normal classification/export.
 - **Acceptance:** allocated, hidden, trashed, deleted, and carved findings have distinct provenance; camera/DCIM and portable-backup content ranks usefully without hiding other files; UI states TRIM, garbage-collection, wear-leveling, and continued-use limits without declaring unrecoverable blocks “clean.”
