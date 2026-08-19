@@ -1354,6 +1354,7 @@ These IDs were added after the original milestone numbering. Schedule them by th
 
 ### RPR-165 — Recursively inspect nested disk and virtual-machine images `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-039, RPR-049, RPR-056, RPR-070.
 - **Deliver:** safe read-only adapters for prioritized raw/VHD/VHDX/VMDK/ISO containers from scratch copies, nested-source identity, depth/size/work budgets, and normalized child volumes/findings.
 - **Acceptance:** no hypervisor starts; no image mounts write; differencing/backing paths cannot escape the content store; recursion is opt-in/bounded.
