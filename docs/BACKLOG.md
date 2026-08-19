@@ -845,6 +845,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-098 — Wrap format-to-audit-material helpers `[P1, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-070, RPR-081, RPR-095.
 - **Deliver:** allowlisted `*2john`/`*2hashcat` adapters for selected archive/PDF/Office/key/wallet formats with normalized engine/mode metadata.
 - **Acceptance:** helpers receive copied target only; extracted material is classified secret and never downloadable by default.
