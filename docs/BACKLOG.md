@@ -816,6 +816,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-095 — Model protected targets and audit jobs `[P1, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-021, RPR-081.
 - **Deliver:** target/format/KDF/cost/capability/status, supplied-secret-set references, engine strategy, checkpoint, resource budget, result-secret reference, and audit events.
 - **Acceptance:** detection and auditing are separate; jobs are opt-in and never include plaintext secrets in rows/events.
