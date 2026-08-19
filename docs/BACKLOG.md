@@ -953,6 +953,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-113 — Implement progress and completion summaries `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-026, RPR-034, RPR-111, RPR-112.
 - **Deliver:** credible stage percent rules, activity-only fallback, elapsed heartbeat, finding/category counts, warnings, export counts, and local UI link.
 - **Acceptance:** no fabricated ETA/percentage without denominator; completion distinguishes warnings/failures/unsupported stages.
