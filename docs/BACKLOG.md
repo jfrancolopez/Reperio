@@ -599,6 +599,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-068 — Export browser CSV, JSON, and HTML `[P1, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-060, RPR-066, RPR-067, RPR-107.
 - **Deliver:** complete/current-filter exports with field dictionary, timezone/provenance notes, escaping, counts, and standalone passive HTML.
 - **Acceptance:** spreadsheet-formula injection and HTML/script injection are neutralized; no reusable auth tokens export by default.
