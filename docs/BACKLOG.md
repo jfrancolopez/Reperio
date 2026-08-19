@@ -733,6 +733,7 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 ### RPR-084 — Build provider settings and health checks `[P1, M3]`
 
+- **Status:** complete
 - **Depends:** RPR-031, RPR-083.
 - **Deliver:** ordered named profiles, enablement, endpoint/model, eligible workloads/categories, local/remote flag, weight, timeout, limits, and non-content health tests.
 - **Acceptance:** unlimited primary/secondary/tertiary profiles are supported; remote is off until acknowledged.
