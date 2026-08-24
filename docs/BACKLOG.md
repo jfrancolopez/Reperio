@@ -1383,6 +1383,7 @@ These IDs were added after the original milestone numbering. Schedule them by th
 
 ### RPR-169 — Label potentially dangerous recovered content `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-050, RPR-054, RPR-070.
 - **Deliver:** offline YARA-rule and optional ClamAV adapters, rule/signature version, malware/suspicious labels, confidence, and safe download warning; no automatic deletion/quarantine.
 - **Acceptance:** scanning is local/no-network unless signature update is explicitly run; findings remain exportable after warning; tool cannot execute content.
