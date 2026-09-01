@@ -27,14 +27,18 @@ class IdentityCollisionError(ValueError):
     """Raised when two current devices resolve to the same stable identity."""
 
 
+class IdentityNotFoundError(LookupError):
+    """Raised when an opaque stable identity is not among the current devices."""
+
+
 def attach_stable_identities(
     devices: list[dict[str, Any]], dev_disk_by_id: Path = DEFAULT_DEV_DISK_BY_ID
 ) -> list[dict[str, Any]]:
     """Return devices augmented with opaque stable identity facts.
 
-    Prefer ``/dev/disk/by-id`` names. If unavailable, use serial-backed facts.
-    If no serial/WWN evidence exists, use a weaker immutable-facts identity and
-    add a warning so callers can require stronger confirmation in later tasks.
+    Prefer WWN or serial hardware identifiers, retaining ``/dev/disk/by-id`` as
+    a resolution alias and fallback. If none exists, use a weaker facts identity
+    and add a warning so callers can require stronger confirmation later.
     """
     by_id_names = _by_id_names_by_kernel(dev_disk_by_id)
     resolved: list[dict[str, Any]] = []
@@ -44,16 +48,30 @@ def attach_stable_identities(
         identified = _with_identity(device, by_id_names)
         if media_identity.is_removable(device):
             identified = _with_media_identity(identified)
-        source_id = identified["source_id"]
-        existing = seen.get(source_id)
-        if existing is not None:
-            raise IdentityCollisionError(
-                f"stable identity collision for {source_id!r}: {existing!r} and "
-                f"{identified.get('kernel_name')!r}"
-            )
-        seen[source_id] = str(identified.get("kernel_name"))
+        for candidate in _identity_tree(identified):
+            source_id = _string(candidate.get("source_id"))
+            kernel_name = _string(candidate.get("kernel_name"))
+            existing = seen.get(source_id)
+            if existing is not None:
+                raise IdentityCollisionError(
+                    f"stable identity collision for {source_id!r}: {existing!r} and {kernel_name!r}"
+                )
+            seen[source_id] = kernel_name
         resolved.append(identified)
     return resolved
+
+
+def resolve_stable_identity(
+    source_id: str,
+    devices: list[dict[str, Any]],
+    dev_disk_by_id: Path = DEFAULT_DEV_DISK_BY_ID,
+) -> dict[str, Any]:
+    """Resolve an opaque source ID to current sanitized device facts."""
+    for device in attach_stable_identities(devices, dev_disk_by_id):
+        for candidate in _identity_tree(device):
+            if candidate.get("source_id") == source_id:
+                return candidate
+    raise IdentityNotFoundError(f"stable identity {source_id!r} is not current")
 
 
 def _with_media_identity(device: dict[str, Any]) -> dict[str, Any]:
@@ -113,20 +131,32 @@ def _with_identity(device: dict[str, Any], by_id_names: dict[str, list[str]]) ->
     matched_by_id = by_id_names.get(kernel_name, [])
     removable = bool(copy.get("removable"))
 
-    if matched_by_id:
-        identity_basis: dict[str, Any] = {"by_id": matched_by_id[0]}
+    wwn = _string(copy.get("wwn"))
+    serial = _string(copy.get("serial"))
+
+    if wwn:
+        identity_basis: dict[str, Any] = {
+            "vendor": copy.get("vendor"),
+            "model": copy.get("model"),
+            "wwn": wwn,
+        }
         if not removable:
             identity_basis.update(_medium_dependent_facts(copy))
-        strength = "by-id"
-    elif _string(copy.get("serial")):
+        strength = "wwn-facts"
+    elif serial:
         identity_basis = {
             "vendor": copy.get("vendor"),
             "model": copy.get("model"),
-            "serial": copy.get("serial"),
+            "serial": serial,
         }
         if not removable:
             identity_basis.update(_medium_dependent_facts(copy))
         strength = "serial-facts"
+    elif matched_by_id:
+        identity_basis = {"by_id": matched_by_id[0]}
+        if not removable:
+            identity_basis.update(_medium_dependent_facts(copy))
+        strength = "by-id"
     else:
         identity_basis = {
             "vendor": copy.get("vendor"),
@@ -173,6 +203,14 @@ def _with_child_identity(child: dict[str, Any], parent: dict[str, Any]) -> dict[
     copy["parent_source_id"] = parent["source_id"]
     copy["identity_strength"] = "parent-topology"
     return copy
+
+
+def _identity_tree(device: dict[str, Any]) -> list[dict[str, Any]]:
+    devices = [device]
+    children = device.get("children")
+    if isinstance(children, list):
+        devices.extend(child for child in children if isinstance(child, dict))
+    return devices
 
 
 def _by_id_names_by_kernel(dev_disk_by_id: Path) -> dict[str, list[str]]:

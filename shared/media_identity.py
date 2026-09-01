@@ -32,7 +32,14 @@ READER_KINDS = frozenset(
 )
 
 IDENTITY_STRENGTHS = frozenset(
-    {"by-id", "serial-facts", "weak-facts", "reader-plus-medium", "reader-facts"}
+    {
+        "by-id",
+        "wwn-facts",
+        "serial-facts",
+        "weak-facts",
+        "reader-plus-medium",
+        "reader-facts",
+    }
 )
 
 MEDIUM_SIGNAL_FIELDS = (
@@ -47,8 +54,8 @@ MEDIUM_SIGNAL_FIELDS = (
 
 MEDIUM_SIGNAL_WARNING_MESSAGES = {
     "missing_stable_serial_or_by_id": (
-        "reader has no stable serial or by-id name; medium identity relies on "
-        "sampled fingerprint and medium facts"
+        "reader has no stable serial, WWN, or by-id name; medium identity relies "
+        "on sampled fingerprint and medium facts"
     ),
     "missing_sampled_fingerprint": (
         "sampled fingerprint unavailable; medium identity is weak and a "

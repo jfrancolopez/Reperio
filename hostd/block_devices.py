@@ -82,6 +82,7 @@ def _read_device(entry: Path) -> dict[str, Any] | None:
         "model": _sanitize(_read_text(entry / "device" / "model")),
         "vendor": _sanitize(_read_text(entry / "device" / "vendor")),
         "serial": _sanitize(_read_text(entry / "device" / "serial")),
+        "wwn": _sanitize(_read_text(entry / "wwid") or _read_text(entry / "device" / "wwid")),
         "has_media": size_sectors > 0,
         "warnings": warnings,
         "children": [],

@@ -16,9 +16,9 @@ verification, SMART where supported, and launching the fixed scanner container.
 - **Protocol:** `hostd.protocol` validates the versioned Unix-socket envelopes;
   see `docs/HOSTD_PROTOCOL.md`.
 - **Enumeration:** `hostd.block_devices` reads sanitized sysfs-shaped block
-  facts for `RPR-010`; stable identity and safety decisions are later tasks.
-- **Identity:** `hostd.identity` resolves opaque stable source IDs from
-  `/dev/disk/by-id` and immutable facts for `RPR-011`.
+  facts for `RPR-010`; later modules consume these facts for safety decisions.
+- **Identity:** `hostd.identity` resolves opaque stable source IDs from WWN,
+  serial, `/dev/disk/by-id`, and weaker warned immutable facts for `RPR-011`.
 - **Fingerprinting:** `hostd.fingerprint` computes bounded sampled-sector hashes
   with `O_RDONLY` access for `RPR-012`; sampled bytes are never returned.
 - **System disk denial:** `hostd.system_disks` refuses active root, boot, state,

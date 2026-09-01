@@ -135,6 +135,7 @@ def _immutable_facts(
         "vendor",
         "model",
         "serial",
+        "wwn",
         "transport",
         "device_type",
         "physical_block_size",
