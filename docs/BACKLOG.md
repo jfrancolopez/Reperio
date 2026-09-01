@@ -123,7 +123,10 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 - **Depends:** RPR-009.
 - **Deliver:** host implementation using udev/sysfs/`lsblk`-equivalent data to list whole disks and child partitions with sanitized facts.
 - **Acceptance:** loop, USB, SATA, NVMe, SD/card readers, optical, floppy, device-mapper, and partition relationships are represented; empty readers and transient/media-change events do not crash listing.
-- **Tests:** mocked sysfs fixtures plus privileged CI loop-device coverage.
+- **Tests:** mocked sysfs fixtures plus an unprivileged live-sysfs CI smoke test;
+  disposable loop-device and representative hardware proof are release
+  acceptance work under RPR-020, RPR-153, and RPR-155 because privileged/raw
+  devices are prohibited in CI.
 
 ### RPR-011 — Implement stable device identity `[P0, M0]`
 

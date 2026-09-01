@@ -5,6 +5,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from hostd import block_devices
 
@@ -102,6 +103,51 @@ class HostdBlockDeviceEnumerationTests(unittest.TestCase):
             devices = block_devices.list_block_devices(root)
 
         self.assertEqual(["sda"], [device["kernel_name"] for device in devices])
+
+    def test_device_disappearing_during_read_is_skipped(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_disk(root, "sda", "8:0")
+            make_disk(root, "sdb", "8:16")
+            original = block_devices._read_device
+
+            def read_or_disappear(path: Path) -> dict | None:
+                if path.name == "sdb":
+                    raise FileNotFoundError(path)
+                return original(path)
+
+            with mock.patch.object(block_devices, "_read_device", side_effect=read_or_disappear):
+                devices = block_devices.list_block_devices(root)
+
+        self.assertEqual(["sda"], [device["kernel_name"] for device in devices])
+
+    def test_unsafe_identifiers_and_invalid_geometry_are_sanitized(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_disk(root, "sda", "../../8:0")
+            valid = make_disk(root, "sdb", "8:16")
+            write(valid / "size", "-1")
+            write(valid / "queue" / "logical_block_size", "0")
+            write(valid / "queue" / "physical_block_size", "not-a-number")
+            make_disk(root, "bad name", "9:0")
+
+            devices = block_devices.list_block_devices(root)
+
+        self.assertEqual(["sdb"], [device["kernel_name"] for device in devices])
+        self.assertEqual("8:16", devices[0]["major_minor"])
+        self.assertEqual(0, devices[0]["size_bytes"])
+        self.assertEqual(512, devices[0]["logical_block_size"])
+        self.assertEqual(512, devices[0]["physical_block_size"])
+
+    @unittest.skipUnless(Path("/sys/block").is_dir(), "Linux sysfs is unavailable")
+    def test_live_linux_sysfs_enumeration_is_unprivileged_and_sanitized(self) -> None:
+        devices = block_devices.list_block_devices()
+
+        for device in devices:
+            self.assertRegex(device["kernel_name"], block_devices.KERNEL_NAME_RE)
+            self.assertRegex(device["major_minor"], block_devices.MAJOR_MINOR_RE)
+            self.assertGreaterEqual(device["size_bytes"], 0)
+            self.assertNotIn("/dev/", repr(device))
 
     def test_missing_sysfs_root_returns_empty_list(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

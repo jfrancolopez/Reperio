@@ -5,8 +5,9 @@ state: identity resolution, mount/holder inspection, kernel read-only
 verification, SMART where supported, and launching the fixed scanner container.
 
 - **Source of truth:** `docs/adr/0002-linux-host-control.md`, `RPR-009`–`RPR-020`.
-- **Status:** placeholder runtime (`RPR-004`) with protocol contract (`RPR-009`);
-  no device implementation.
+- **Status:** placeholder service entry point (`RPR-004`) with implemented,
+  unit-tested host safety libraries; no Unix-socket daemon or integrated device
+  workflow yet.
 - **Health check:** `python -m hostd` (refuses any `--device` argument).
 - **Language note:** implemented in Python to match the control-plane stack. A
   future ADR may move `hostd` to a native binary if privileged-binary isolation

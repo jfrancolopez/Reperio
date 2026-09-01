@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,9 @@ SECTOR_BYTES = 512
 DEFAULT_SYS_BLOCK = Path("/sys/block")
 
 KNOWN_TRANSPORTS = ("usb", "ata", "sata", "nvme", "mmc", "scsi", "virtio", "loop")
+KERNEL_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$")
+MAJOR_MINOR_RE = re.compile(r"^(0|[1-9][0-9]*):(0|[1-9][0-9]*)$")
+MAX_BLOCK_SIZE = 16 * 1024 * 1024
 
 
 def list_block_devices(sys_block: Path = DEFAULT_SYS_BLOCK) -> list[dict[str, Any]]:
@@ -46,14 +50,18 @@ def _read_device(entry: Path) -> dict[str, Any] | None:
         return None
 
     major_minor = _read_text(entry / "dev")
-    if major_minor is None:
+    if major_minor is None or MAJOR_MINOR_RE.fullmatch(major_minor) is None:
         return None
 
     size_sectors = _read_int(entry / "size", default=0)
     logical_block_size = _read_int(entry / "queue" / "logical_block_size", default=SECTOR_BYTES)
+    if not _valid_block_size(logical_block_size):
+        logical_block_size = SECTOR_BYTES
     physical_block_size = _read_int(
         entry / "queue" / "physical_block_size", default=logical_block_size
     )
+    if not _valid_block_size(physical_block_size):
+        physical_block_size = logical_block_size
     removable = _read_bool(entry / "removable")
     read_only = _read_bool(entry / "ro")
     device_type = _classify_device(name, entry)
@@ -102,7 +110,7 @@ def _read_partition(child: Path, parent: dict[str, Any]) -> dict[str, Any] | Non
     if not _valid_kernel_name(name) or _read_text(child / "partition") is None:
         return None
     major_minor = _read_text(child / "dev")
-    if major_minor is None:
+    if major_minor is None or MAJOR_MINOR_RE.fullmatch(major_minor) is None:
         return None
     size_sectors = _read_int(child / "size", default=0)
     start_sector = _read_int(child / "start", default=0)
@@ -177,9 +185,10 @@ def _read_int(path: Path, *, default: int) -> int:
     if text is None:
         return default
     try:
-        return int(text, 10)
+        value = int(text, 10)
     except ValueError:
         return default
+    return value if value >= 0 else default
 
 
 def _read_bool(path: Path) -> bool:
@@ -194,7 +203,11 @@ def _sanitize(value: str | None) -> str | None:
 
 
 def _valid_kernel_name(name: str) -> bool:
-    return bool(name) and "/" not in name and "\x00" not in name and ".." not in name
+    return KERNEL_NAME_RE.fullmatch(name) is not None and ".." not in name
+
+
+def _valid_block_size(value: int) -> bool:
+    return 0 < value <= MAX_BLOCK_SIZE and value & (value - 1) == 0
 
 
 def _candidate_id(kind: str, major_minor: str, name: str) -> str:
