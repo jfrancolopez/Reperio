@@ -27,6 +27,8 @@ arguments. Source references are opaque Reperio IDs plus a media/device
 generation. A request naming a known source with an old generation is rejected as
 stale before any later source-touching operation can run.
 
-Contract tests live in `tests/test_hostd_protocol.py` and cover unknown methods,
-path-like strings, stale source generations, extra launch flags, incompatible
-schema versions, and response-envelope consistency.
+Contract tests live in `tests/test_hostd_protocol.py` and cover every valid
+method, unknown methods, path-like strings, stale source generations, Boolean
+generation confusion, extra launch flags, incompatible schema versions, exact
+success/error response shapes, and parity between the Python allowlist and each
+method-specific JSON Schema parameter definition.

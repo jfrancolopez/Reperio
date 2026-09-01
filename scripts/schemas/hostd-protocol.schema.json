@@ -2,15 +2,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://reperio.example.invalid/schemas/hostd-protocol/v1",
   "title": "Reperio host-controller Unix-socket protocol",
-  "description": "RPR-009 contract for the authenticated, versioned, allowlisted hostd protocol. The protocol contains no generic command, path passthrough, mount, write, repair, arbitrary ioctl, or caller-supplied container arguments.",
-  "type": "object",
-  "required": ["schema_version", "request", "response"],
-  "additionalProperties": false,
-  "properties": {
-    "schema_version": { "const": 1 },
-    "request": { "$ref": "#/$defs/request" },
-    "response": { "$ref": "#/$defs/response" }
-  },
+  "description": "RPR-009 authenticated, versioned, allowlisted hostd wire messages with no command, path, mount, write, repair, ioctl, or caller-supplied container surface.",
+  "oneOf": [
+    { "$ref": "#/$defs/request" },
+    { "$ref": "#/$defs/response" }
+  ],
   "$defs": {
     "opaque_id": {
       "type": "string",
@@ -29,7 +25,7 @@
         "principal": { "const": "reperio-api" }
       }
     },
-    "request": {
+    "request_envelope": {
       "type": "object",
       "required": ["schema_version", "request_id", "auth", "method", "params"],
       "additionalProperties": false,
@@ -48,64 +44,234 @@
             "reconnect"
           ]
         },
-        "params": {
-          "type": "object",
-          "additionalProperties": false,
+        "params": { "type": "object" }
+      }
+    },
+    "request": {
+      "oneOf": [
+        { "$ref": "#/$defs/list_devices_request" },
+        { "$ref": "#/$defs/inspect_safety_request" },
+        { "$ref": "#/$defs/prepare_read_only_request" },
+        { "$ref": "#/$defs/launch_scanner_request" },
+        { "$ref": "#/$defs/scanner_status_request" },
+        { "$ref": "#/$defs/stop_scanner_request" },
+        { "$ref": "#/$defs/reconnect_request" }
+      ]
+    },
+    "list_devices_request": {
+      "allOf": [
+        { "$ref": "#/$defs/request_envelope" },
+        {
           "properties": {
-            "source_id": { "$ref": "#/$defs/opaque_id" },
-            "observed_generation": { "type": "integer", "minimum": 0 },
-            "safety_inspection_id": { "$ref": "#/$defs/opaque_id" },
-            "operator_confirmation_token": { "$ref": "#/$defs/opaque_id" },
-            "readonly_preparation_id": { "$ref": "#/$defs/opaque_id" },
-            "scan_case_id": { "$ref": "#/$defs/opaque_id" },
-            "scratch_separation_id": { "$ref": "#/$defs/opaque_id" },
-            "scanner_session_id": { "$ref": "#/$defs/opaque_id" },
-            "resource_profile": {
-              "type": "string",
-              "pattern": "^[a-z][a-z0-9_-]{0,63}$"
-            },
-            "reason": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9 ._:-]{0,127}$"
-            }
+            "method": { "const": "list_devices" },
+            "params": { "$ref": "#/$defs/list_devices_params" }
           }
+        }
+      ]
+    },
+    "inspect_safety_request": {
+      "allOf": [
+        { "$ref": "#/$defs/request_envelope" },
+        {
+          "properties": {
+            "method": { "const": "inspect_safety" },
+            "params": { "$ref": "#/$defs/inspect_safety_params" }
+          }
+        }
+      ]
+    },
+    "prepare_read_only_request": {
+      "allOf": [
+        { "$ref": "#/$defs/request_envelope" },
+        {
+          "properties": {
+            "method": { "const": "prepare_read_only" },
+            "params": { "$ref": "#/$defs/prepare_read_only_params" }
+          }
+        }
+      ]
+    },
+    "launch_scanner_request": {
+      "allOf": [
+        { "$ref": "#/$defs/request_envelope" },
+        {
+          "properties": {
+            "method": { "const": "launch_scanner" },
+            "params": { "$ref": "#/$defs/launch_scanner_params" }
+          }
+        }
+      ]
+    },
+    "scanner_status_request": {
+      "allOf": [
+        { "$ref": "#/$defs/request_envelope" },
+        {
+          "properties": {
+            "method": { "const": "scanner_status" },
+            "params": { "$ref": "#/$defs/scanner_status_params" }
+          }
+        }
+      ]
+    },
+    "stop_scanner_request": {
+      "allOf": [
+        { "$ref": "#/$defs/request_envelope" },
+        {
+          "properties": {
+            "method": { "const": "stop_scanner" },
+            "params": { "$ref": "#/$defs/stop_scanner_params" }
+          }
+        }
+      ]
+    },
+    "reconnect_request": {
+      "allOf": [
+        { "$ref": "#/$defs/request_envelope" },
+        {
+          "properties": {
+            "method": { "const": "reconnect" },
+            "params": { "$ref": "#/$defs/reconnect_params" }
+          }
+        }
+      ]
+    },
+    "list_devices_params": {
+      "type": "object",
+      "required": [],
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "inspect_safety_params": {
+      "type": "object",
+      "required": ["source_id", "observed_generation"],
+      "additionalProperties": false,
+      "properties": {
+        "source_id": { "$ref": "#/$defs/opaque_id" },
+        "observed_generation": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "prepare_read_only_params": {
+      "type": "object",
+      "required": [
+        "source_id",
+        "observed_generation",
+        "safety_inspection_id",
+        "operator_confirmation_token"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_id": { "$ref": "#/$defs/opaque_id" },
+        "observed_generation": { "type": "integer", "minimum": 0 },
+        "safety_inspection_id": { "$ref": "#/$defs/opaque_id" },
+        "operator_confirmation_token": { "$ref": "#/$defs/opaque_id" }
+      }
+    },
+    "launch_scanner_params": {
+      "type": "object",
+      "required": [
+        "source_id",
+        "observed_generation",
+        "safety_inspection_id",
+        "readonly_preparation_id",
+        "scan_case_id",
+        "scratch_separation_id",
+        "resource_profile"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_id": { "$ref": "#/$defs/opaque_id" },
+        "observed_generation": { "type": "integer", "minimum": 0 },
+        "safety_inspection_id": { "$ref": "#/$defs/opaque_id" },
+        "readonly_preparation_id": { "$ref": "#/$defs/opaque_id" },
+        "scan_case_id": { "$ref": "#/$defs/opaque_id" },
+        "scratch_separation_id": { "$ref": "#/$defs/opaque_id" },
+        "resource_profile": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$"
         }
       }
     },
-    "response": {
+    "scanner_status_params": {
       "type": "object",
-      "required": ["schema_version", "request_id", "ok"],
+      "required": ["scanner_session_id"],
+      "additionalProperties": false,
+      "properties": {
+        "scanner_session_id": { "$ref": "#/$defs/opaque_id" }
+      }
+    },
+    "stop_scanner_params": {
+      "type": "object",
+      "required": ["scanner_session_id", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "scanner_session_id": { "$ref": "#/$defs/opaque_id" },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9 ._:-]{0,127}$"
+        }
+      }
+    },
+    "reconnect_params": {
+      "type": "object",
+      "required": ["scan_case_id", "source_id", "observed_generation"],
+      "additionalProperties": false,
+      "properties": {
+        "scan_case_id": { "$ref": "#/$defs/opaque_id" },
+        "source_id": { "$ref": "#/$defs/opaque_id" },
+        "observed_generation": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "response": {
+      "oneOf": [
+        { "$ref": "#/$defs/success_response" },
+        { "$ref": "#/$defs/error_response" }
+      ]
+    },
+    "success_response": {
+      "type": "object",
+      "required": ["schema_version", "request_id", "ok", "result"],
       "additionalProperties": false,
       "properties": {
         "schema_version": { "const": 1 },
         "request_id": { "$ref": "#/$defs/request_id" },
-        "ok": { "type": "boolean" },
-        "result": { "type": "object" },
-        "error": {
-          "type": "object",
-          "required": ["code", "message"],
-          "additionalProperties": false,
-          "properties": {
-            "code": {
-              "enum": [
-                "bad_request",
-                "unauthorized",
-                "not_found",
-                "stale_source",
-                "safety_blocked",
-                "read_only_failed",
-                "scanner_unavailable",
-                "internal_error"
-              ]
-            },
-            "message": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 512
-            }
-          }
+        "ok": { "const": true },
+        "result": { "type": "object" }
+      }
+    },
+    "error_response": {
+      "type": "object",
+      "required": ["schema_version", "request_id", "ok", "error"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": 1 },
+        "request_id": { "$ref": "#/$defs/request_id" },
+        "ok": { "const": false },
+        "error": { "$ref": "#/$defs/error" }
+      }
+    },
+    "error": {
+      "type": "object",
+      "required": ["code", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "bad_request",
+            "unauthorized",
+            "not_found",
+            "stale_source",
+            "safety_blocked",
+            "read_only_failed",
+            "scanner_unavailable",
+            "internal_error"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
         }
       }
     }

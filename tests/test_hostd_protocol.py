@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import copy
+import json
 import unittest
+from pathlib import Path
 
 from hostd import protocol
 
 SOURCE_ID = "src_abcdefghijklmnop"
 GENERATION = 7
+SCHEMA_PATH = (
+    Path(__file__).resolve().parents[1] / "scripts" / "schemas" / "hostd-protocol.schema.json"
+)
 
 
 def auth() -> dict[str, str]:
@@ -68,6 +73,15 @@ class HostdProtocolContractTests(unittest.TestCase):
         )
 
         with self.assertRaisesRegex(protocol.ProtocolError, "stale"):
+            protocol.validate_request(message, source_generations={SOURCE_ID: GENERATION})
+
+    def test_boolean_generation_is_rejected(self) -> None:
+        message = request(
+            "inspect_safety",
+            {"source_id": SOURCE_ID, "observed_generation": True},
+        )
+
+        with self.assertRaisesRegex(protocol.ProtocolError, "non-negative integer"):
             protocol.validate_request(message, source_generations={SOURCE_ID: GENERATION})
 
     def test_unknown_current_source_is_rejected(self) -> None:
@@ -135,6 +149,26 @@ class HostdProtocolContractTests(unittest.TestCase):
 
         self.assertFalse(normalized["ok"])
 
+    def test_response_result_and_error_shapes_are_validated(self) -> None:
+        with self.assertRaisesRegex(protocol.ProtocolError, "result must be an object"):
+            protocol.validate_response(
+                {
+                    "schema_version": protocol.PROTOCOL_SCHEMA_VERSION,
+                    "request_id": "req-001",
+                    "ok": True,
+                    "result": "not-an-object",
+                }
+            )
+        with self.assertRaisesRegex(protocol.ProtocolError, "code is not supported"):
+            protocol.validate_response(
+                {
+                    "schema_version": protocol.PROTOCOL_SCHEMA_VERSION,
+                    "request_id": "req-001",
+                    "ok": False,
+                    "error": {"code": "shell_failed", "message": "rejected"},
+                }
+            )
+
     def test_response_rejects_pathlike_result(self) -> None:
         message = {
             "schema_version": protocol.PROTOCOL_SCHEMA_VERSION,
@@ -153,6 +187,66 @@ class HostdProtocolContractTests(unittest.TestCase):
             self.assertTrue(
                 protocol.METHOD_REQUIRED_KEYS[method] <= protocol.METHOD_PARAM_KEYS[method], method
             )
+
+    def test_all_method_requests_validate_with_exact_parameters(self) -> None:
+        requests: dict[str, dict] = {
+            "list_devices": {},
+            "inspect_safety": {
+                "source_id": SOURCE_ID,
+                "observed_generation": GENERATION,
+            },
+            "prepare_read_only": {
+                "source_id": SOURCE_ID,
+                "observed_generation": GENERATION,
+                "safety_inspection_id": opaque("safe"),
+                "operator_confirmation_token": opaque("confirm"),
+            },
+            "launch_scanner": {
+                "source_id": SOURCE_ID,
+                "observed_generation": GENERATION,
+                "safety_inspection_id": opaque("safe"),
+                "readonly_preparation_id": opaque("roprep"),
+                "scan_case_id": opaque("case"),
+                "scratch_separation_id": opaque("scratch"),
+                "resource_profile": "default",
+            },
+            "scanner_status": {"scanner_session_id": opaque("session")},
+            "stop_scanner": {
+                "scanner_session_id": opaque("session"),
+                "reason": "operator stop",
+            },
+            "reconnect": {
+                "scan_case_id": opaque("case"),
+                "source_id": SOURCE_ID,
+                "observed_generation": GENERATION,
+            },
+        }
+        for method, params in requests.items():
+            with self.subTest(method=method):
+                normalized = protocol.validate_request(
+                    request(method, params), source_generations={SOURCE_ID: GENERATION}
+                )
+                self.assertEqual(method, normalized["method"])
+
+    def test_json_schema_parameter_contracts_match_python_validator(self) -> None:
+        schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+        definitions = schema["$defs"]
+
+        self.assertEqual(
+            [{"$ref": "#/$defs/request"}, {"$ref": "#/$defs/response"}], schema["oneOf"]
+        )
+        for method in protocol.METHODS:
+            params = definitions[f"{method}_params"]
+            self.assertFalse(params["additionalProperties"], method)
+            self.assertEqual(
+                set(protocol.METHOD_PARAM_KEYS[method]), set(params["properties"]), method
+            )
+            self.assertEqual(
+                set(protocol.METHOD_REQUIRED_KEYS[method]), set(params["required"]), method
+            )
+        self.assertEqual(
+            set(protocol.ERROR_CODES), set(definitions["error"]["properties"]["code"]["enum"])
+        )
 
     def test_launch_scanner_validates_without_container_surface(self) -> None:
         message = request(
