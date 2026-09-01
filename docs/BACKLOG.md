@@ -1485,6 +1485,7 @@ These tasks extend the same one-source, read-only pipeline to media that may hav
 
 ### RPR-182 — Add FAT12 floppy enumeration and deleted recovery `[P2, M2]`
 
+- **Status:** complete
 - **Depends:** RPR-008, RPR-037–049, RPR-178–180.
 - **Deliver:** DOS FAT12/superfloppy geometry detection, allocated/deleted directory entry normalization, deleted cluster-chain confidence, bad-sector handling, and raw carving for readable unallocated sectors; support exact validated capacities/geometries first.
 - **Acceptance:** ambiguous geometry is not guessed silently; original names/timestamps are preserved only when metadata survives; reused, fragmented, partial, and bad-sector files are labeled; no filesystem repair or boot-sector rebuild function is exposed.

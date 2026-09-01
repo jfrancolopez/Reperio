@@ -7,9 +7,9 @@ from dataclasses import dataclass
 
 from scanner.entry_normalization import Extent, NormalizedEntry, RawTimestamp
 
-SUPPORTED_FAT_FILESYSTEMS = frozenset({"fat32", "exfat"})
-END_OF_CHAIN = frozenset({0x0FFFFFF8, 0x0FFFFFFF, 0xFFFFFFFF})
-BAD_CLUSTER = frozenset({0x0FFFFFF7, 0xFFFFFFF7})
+SUPPORTED_FAT_FILESYSTEMS = frozenset({"fat12", "fat32", "exfat"})
+END_OF_CHAIN = frozenset({*range(0xFF8, 0x1000), 0x0FFFFFF8, 0x0FFFFFFF, 0xFFFFFFFF})
+BAD_CLUSTER = frozenset({0xFF7, 0x0FFFFFF7, 0xFFFFFFF7})
 
 
 @dataclass(frozen=True)

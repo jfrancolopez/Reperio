@@ -55,3 +55,8 @@ read-only and emits normalized findings to the catalog.
   allocated/hidden/trashed/deleted/carved findings, and derives UI-visible
   TRIM/GC/wear-leveling/continued-use states without declaring unrecoverable
   blocks "clean" for `RPR-181`.
+- **FAT12 floppy recovery:** `scanner.fat12_parser` recognizes exact supported
+  DOS superfloppy geometries, compares FAT copies, normalizes allocated and
+  deleted root entries with explicit chain confidence, carries read gaps, and
+  emits readable free-cluster carve ranges for `RPR-182`; it exposes no source
+  path, mount, repair, rebuild, or write operation.

@@ -65,6 +65,32 @@ filler only.
 - Fixture hashes and names are inert; the encrypted-test marker is not a
   credential.
 
+## FAT12 recovery acceptance (RPR-182)
+
+The scanner's dedicated read-only FAT12 adapter recognizes only exact DOS BPB
+matches for these initial floppy geometries:
+
+| Conventional capacity | Bytes | Tracks/heads/sectors | Cluster size |
+| --- | ---: | --- | ---: |
+| 360 KiB | 368,640 | 40/2/9 | 1,024 bytes |
+| 720 KiB | 737,280 | 80/2/9 | 1,024 bytes |
+| 1.2 MB | 1,228,800 | 80/2/15 | 512 bytes |
+| 1.44 MB | 1,474,560 | 80/2/18 | 512 bytes |
+
+Capacity alone is never treated as geometry. A mismatched BPB, missing DOS/FAT12
+signature, or unsupported capacity is refused rather than guessed. The adapter
+compares both FAT copies, preserves valid short/long names and timestamps, labels
+fragmented or partial allocated chains, and treats deleted multi-cluster chains
+as contiguous candidates with explicit fragmentation uncertainty. Reused
+deleted clusters are not exposed as recoverable extents.
+
+Known or observed unreadable sectors remain visible as read gaps and split the
+free-cluster ranges supplied to the existing PhotoRec adapter. The FAT12 module
+accepts only a read-range interface; it exposes no source path opener, mount,
+write, format, repair, or boot-sector rebuild operation. Generated geometry,
+deleted/reused/fragmented, FAT-copy corruption, bad-sector, media-resume, and
+pre/post source-hash tests live in `tests/test_fat12_recovery.py`.
+
 ## Commands
 
 - `make fixture-check` (also part of `make quality`) — deterministic rebuild +
