@@ -44,6 +44,18 @@ class HostdSystemDiskDenialTests(unittest.TestCase):
         self.assertTrue(evaluation["override_required"])
         self.assertEqual("critical_mount:/boot", evaluation["denial_reasons"][0]["reason"])
 
+    def test_separate_active_usr_mount_denies_parent_disk(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = identified_disk(Path(tmp), "sda", "8:0", ("sda2", "8:2"))
+
+        protected = system_disks.protected_uses_from_mounts(
+            [{"mount_point": "/usr", "major_minor": "8:2"}]
+        )
+        evaluation = system_disks.evaluate_system_disk_denial(source, protected)
+
+        self.assertTrue(evaluation["denied_by_default"])
+        self.assertEqual("critical_mount:/usr", evaluation["denial_reasons"][0]["reason"])
+
     def test_lvm_ancestry_denies_physical_member(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             source = identified_disk(Path(tmp), "sda", "8:0", ("sda2", "8:2"))
@@ -83,6 +95,19 @@ class HostdSystemDiskDenialTests(unittest.TestCase):
         self.assertTrue(evaluation["denied_by_default"])
         self.assertEqual("reperio_state", evaluation["denial_reasons"][0]["reason"])
 
+    def test_parent_mount_backing_reperio_state_denies_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = identified_disk(Path(tmp), "sda", "8:0", ("sda1", "8:1"))
+
+        protected = system_disks.protected_uses_from_mounts(
+            [{"mount_point": "/srv", "major_minor": "8:1"}],
+            state_paths=["/srv/reperio/state"],
+        )
+
+        evaluation = system_disks.evaluate_system_disk_denial(source, protected)
+        self.assertTrue(evaluation["denied_by_default"])
+        self.assertEqual("reperio_state", evaluation["denial_reasons"][0]["reason"])
+
     def test_container_storage_ancestry_denies_source(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             source = identified_disk(Path(tmp), "sda", "8:0", ("sda3", "8:3"))
@@ -96,6 +121,20 @@ class HostdSystemDiskDenialTests(unittest.TestCase):
 
         self.assertTrue(evaluation["denied_by_default"])
         self.assertEqual("container_storage", evaluation["denial_reasons"][0]["reason"])
+
+    def test_parent_mount_backing_container_storage_is_protected(self) -> None:
+        protected = system_disks.protected_uses_from_mounts(
+            [{"mount_point": "/var/lib", "major_minor": "8:3"}]
+        )
+
+        self.assertEqual("container_storage", protected[0]["reason"])
+
+    def test_paths_are_normalized_before_protection_decisions(self) -> None:
+        protected = system_disks.protected_uses_from_mounts(
+            [{"mount_point": "/var/lib/docker/../unrelated", "major_minor": "8:3"}]
+        )
+
+        self.assertEqual([], protected)
 
     def test_active_swap_denies_source(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -130,7 +169,17 @@ class HostdSystemDiskDenialTests(unittest.TestCase):
         with self.assertRaisesRegex(system_disks.SystemDiskOverrideError, "denied"):
             system_disks.require_system_disk_override(evaluation, {})
 
-        system_disks.require_system_disk_override(
+        with self.assertRaisesRegex(system_disks.SystemDiskOverrideError, "acknowledgment"):
+            system_disks.require_system_disk_override(
+                evaluation,
+                {
+                    "allow_system_disk": True,
+                    "operator_acknowledged": "yes",
+                    "persistent_warning": system_disks.SYSTEM_DISK_OVERRIDE_WARNING,
+                },
+            )
+
+        decision = system_disks.require_system_disk_override(
             evaluation,
             {
                 "allow_system_disk": True,
@@ -138,6 +187,11 @@ class HostdSystemDiskDenialTests(unittest.TestCase):
                 "persistent_warning": system_disks.SYSTEM_DISK_OVERRIDE_WARNING,
             },
         )
+        self.assertTrue(decision["override_used"])
+        self.assertEqual(
+            [system_disks.SYSTEM_DISK_OVERRIDE_WARNING], decision["persistent_warnings"]
+        )
+        self.assertEqual(evaluation["denial_reasons"], decision["denial_reasons"])
 
 
 if __name__ == "__main__":

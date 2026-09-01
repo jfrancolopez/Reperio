@@ -7,15 +7,19 @@ mount, open, repair, or write any source device.
 
 from __future__ import annotations
 
+import posixpath
+import re
 from collections.abc import Iterable, Mapping
 from typing import Any
 
 SYSTEM_DISK_OVERRIDE_WARNING = (
-    "I understand this source appears to back the running system and Reperio may stress it."
+    "This source backs the running system. Scanning it can produce inconsistent recovery "
+    "results or destabilize the host; keep this warning visible for the entire scan."
 )
 
-CRITICAL_MOUNTS = frozenset({"/", "/boot", "/boot/efi"})
+CRITICAL_MOUNTS = frozenset({"/", "/boot", "/boot/efi", "/usr", "/var"})
 CONTAINER_STORAGE_PREFIXES = ("/var/lib/docker", "/var/lib/containers", "/var/lib/kubelet")
+MAJOR_MINOR_RE = re.compile(r"^(0|[1-9][0-9]*):(0|[1-9][0-9]*)$")
 
 
 class SystemDiskOverrideError(ValueError):
@@ -31,12 +35,14 @@ def protected_uses_from_mounts(
     Reperio state path, or known container-storage path protects the backing
     major:minor by default.
     """
-    state_path_set = {_normalize_path(path) for path in state_paths}
+    state_path_set = {
+        normalized for path in state_paths if (normalized := _normalize_path(path)) is not None
+    }
     protected: list[dict[str, str]] = []
     for mount in mounts:
         mount_point = _normalize_path(str(mount.get("mount_point", "")))
         major_minor = str(mount.get("major_minor", ""))
-        if not _valid_major_minor(major_minor):
+        if mount_point is None or not _valid_major_minor(major_minor):
             continue
         reason = _mount_reason(mount_point, state_path_set)
         if reason is not None:
@@ -90,16 +96,24 @@ def evaluate_system_disk_denial(
     }
 
 
-def require_system_disk_override(evaluation: Mapping[str, Any], policy: Mapping[str, Any]) -> None:
-    """Validate the separate explicit policy required for a denied system disk."""
+def require_system_disk_override(
+    evaluation: Mapping[str, Any], policy: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Validate and return persistent evidence for a launch-policy decision."""
     if not evaluation.get("denied_by_default"):
-        return
+        return {"override_used": False, "persistent_warnings": []}
     if policy.get("allow_system_disk") is not True:
         raise SystemDiskOverrideError("system-disk source is denied by default")
     if policy.get("persistent_warning") != SYSTEM_DISK_OVERRIDE_WARNING:
         raise SystemDiskOverrideError("system-disk override requires the persistent warning text")
-    if not policy.get("operator_acknowledged"):
+    if policy.get("operator_acknowledged") is not True:
         raise SystemDiskOverrideError("system-disk override requires operator acknowledgment")
+    return {
+        "override_used": True,
+        "source_id": evaluation.get("source_id"),
+        "persistent_warnings": [SYSTEM_DISK_OVERRIDE_WARNING],
+        "denial_reasons": list(evaluation.get("denial_reasons", [])),
+    }
 
 
 def _source_major_minors(device: Mapping[str, Any]) -> set[str]:
@@ -147,24 +161,22 @@ def _expand_ancestry(ancestry: Mapping[str, Iterable[str]]) -> dict[str, set[str
 def _mount_reason(mount_point: str, state_paths: set[str]) -> str | None:
     if mount_point in CRITICAL_MOUNTS:
         return f"critical_mount:{mount_point}"
-    if mount_point in state_paths:
+    if any(_paths_overlap(mount_point, state_path) for state_path in state_paths):
         return "reperio_state"
-    if any(mount_point == prefix or mount_point.startswith(prefix + "/") for prefix in state_paths):
-        return "reperio_state"
-    if any(
-        mount_point == prefix or mount_point.startswith(prefix + "/")
-        for prefix in CONTAINER_STORAGE_PREFIXES
-    ):
+    if any(_paths_overlap(mount_point, prefix) for prefix in CONTAINER_STORAGE_PREFIXES):
         return "container_storage"
     return None
 
 
-def _normalize_path(path: str) -> str:
-    if path != "/":
-        return path.rstrip("/")
-    return path
+def _paths_overlap(first: str, second: str) -> bool:
+    return first == second or first.startswith(second + "/") or second.startswith(first + "/")
+
+
+def _normalize_path(path: str) -> str | None:
+    if not path.startswith("/") or "\x00" in path:
+        return None
+    return posixpath.normpath(path)
 
 
 def _valid_major_minor(value: str) -> bool:
-    major, separator, minor = value.partition(":")
-    return bool(separator) and major.isdigit() and minor.isdigit()
+    return MAJOR_MINOR_RE.fullmatch(value) is not None
