@@ -63,9 +63,13 @@ def _read_mountinfo(path: Path) -> tuple[list[dict[str, Any]], bool]:
         fields = line.split()
         if len(fields) < 6 or "-" not in fields:
             continue
+        separator = fields.index("-")
+        if separator + 1 >= len(fields):
+            continue
         major_minor = fields[2]
         mount_point = _unescape_mountinfo(fields[4])
         options = fields[5]
+        fstype = _safe_fstype(fields[separator + 1])
         normalized = _normalize_mount(
             {"major_minor": major_minor, "mount_point": mount_point, "options": options}
         )
@@ -75,6 +79,7 @@ def _read_mountinfo(path: Path) -> tuple[list[dict[str, Any]], bool]:
                     "major_minor": normalized["major_minor"],
                     "mount_point": normalized["mount_point"],
                     "read_only": normalized["mode"] == "ro",
+                    "fstype": fstype,
                 }
             )
     return mounts, True
@@ -298,6 +303,11 @@ def _safe_name(value: str) -> str:
 
 def _safe_type(value: str) -> str:
     return value if SAFE_TYPE_RE.fullmatch(value) is not None else "unsupported"
+
+
+def _safe_fstype(value: str) -> str:
+    lowered = value.lower()
+    return lowered if re.fullmatch(r"^[a-z0-9][a-z0-9._-]{0,63}$", lowered) else "unknown"
 
 
 def _normalize_path(value: str) -> str | None:

@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from hostd import block_devices, destination_separation, identity
-from tests.test_hostd_block_devices import make_disk, make_partition
+from tests.test_hostd_block_devices import make_disk, make_partition, write
 
 
 def source_disk(root: Path) -> dict:
@@ -114,6 +114,24 @@ class HostdDestinationSeparationTests(unittest.TestCase):
             "network_filesystem_physical_separation_not_locally_provable", result["warnings"]
         )
 
+    def test_bind_mount_on_source_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = source_disk(root)
+            dest = root / "bind" / "export"
+            dest.mkdir(parents=True)
+
+            result = destination_separation.evaluate_destination_separation(
+                source,
+                dest,
+                mounts=[
+                    {"mount_point": str(root / "bind"), "major_minor": "8:1", "fstype": "none"}
+                ],
+            )
+
+        self.assertFalse(result["separate"])
+        self.assertEqual("destination_shares_source_physical_disk", result["blockers"][0]["reason"])
+
     def test_unmounted_destination_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -185,6 +203,78 @@ class HostdDestinationSeparationTests(unittest.TestCase):
             )
 
         self.assertTrue(result["separate"])
+
+    def test_missing_source_topology_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dest = root / "other"
+            dest.mkdir()
+
+            result = destination_separation.evaluate_destination_separation(
+                {},
+                dest,
+                mounts=[{"mount_point": str(dest), "major_minor": "8:99", "fstype": "ext4"}],
+            )
+
+        self.assertFalse(result["separate"])
+        self.assertEqual("missing_source_topology", result["blockers"][0]["reason"])
+
+    def test_selected_device_mapper_source_includes_physical_ancestry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dest = root / "physical"
+            dest.mkdir()
+            source = {"source_id": "source_dm", "major_minor": "253:0", "children": []}
+
+            result = destination_separation.evaluate_destination_separation(
+                source,
+                dest,
+                mounts=[{"mount_point": str(dest), "major_minor": "8:2", "fstype": "ext4"}],
+                holders={"8:2": [{"major_minor": "253:0", "holder_type": "device_mapper"}]},
+            )
+
+        self.assertFalse(result["separate"])
+        self.assertIn("8:2", result["source_ancestry"])
+
+    def test_live_resolver_uses_mountinfo_and_holder_facts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = source_disk(root)
+            dest = root / "lv" / "export"
+            dest.mkdir(parents=True)
+            mountinfo = root / "mountinfo"
+            mountinfo.write_text(
+                f"37 25 253:0 / {root / 'lv'} rw,relatime - ext4 /dev/dm-0 rw\n",
+                encoding="utf-8",
+            )
+            write(root / "sys-dev" / "8:2" / "holders" / "dm-0" / "dev", "253:0")
+
+            result = destination_separation.evaluate_live_destination_separation(
+                source,
+                dest,
+                mountinfo_path=mountinfo,
+                sys_dev_block=root / "sys-dev",
+            )
+
+        self.assertFalse(result["separate"])
+        self.assertTrue(result["inspection_complete"])
+
+    def test_live_resolver_failure_cannot_claim_separation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = source_disk(root)
+            dest = root / "other"
+            dest.mkdir()
+
+            result = destination_separation.evaluate_live_destination_separation(
+                source,
+                dest,
+                mountinfo_path=root / "missing-mountinfo",
+                sys_dev_block=root / "missing-sysfs",
+            )
+
+        self.assertFalse(result["separate"])
+        self.assertFalse(result["inspection_complete"])
 
 
 if __name__ == "__main__":

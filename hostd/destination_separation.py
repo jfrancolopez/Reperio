@@ -2,11 +2,44 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
+from hostd import storage_inspection
+
 NETWORK_FILESYSTEMS = frozenset({"nfs", "nfs4", "cifs", "smb3", "sshfs", "fuse.sshfs"})
+MAJOR_MINOR_RE = re.compile(r"^(0|[1-9][0-9]*):(0|[1-9][0-9]*)$")
+FSTYPE_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+
+
+def evaluate_live_destination_separation(
+    source: Mapping[str, Any],
+    destination_path: Path,
+    *,
+    mountinfo_path: Path = storage_inspection.DEFAULT_MOUNTINFO,
+    sys_dev_block: Path = storage_inspection.DEFAULT_SYS_DEV_BLOCK,
+) -> dict[str, Any]:
+    """Resolve destination backing storage from read-only Linux kernel facts."""
+    mounts = storage_inspection.read_mountinfo(mountinfo_path)
+    source_major_minors = _source_major_minors(source)
+    holders = storage_inspection.read_holder_graph(source_major_minors, sys_dev_block=sys_dev_block)
+    result = evaluate_destination_separation(
+        source, destination_path, mounts=mounts, holders=holders
+    )
+    missing = []
+    if not mountinfo_path.is_file():
+        missing.append("mountinfo")
+    if not sys_dev_block.is_dir():
+        missing.append("sysfs")
+    if missing:
+        result["blockers"].append(
+            {"reason": "separation_inspection_unavailable", "detail": ",".join(missing)}
+        )
+        result["separate"] = False
+        result["inspection_complete"] = False
+    return result
 
 
 def evaluate_destination_separation(
@@ -21,12 +54,22 @@ def evaluate_destination_separation(
     The function consumes injected mount and holder facts and never creates,
     mounts, opens, writes, or deletes the destination or source.
     """
-    resolved_path = destination_path.resolve(strict=False)
     blockers: list[dict[str, str]] = []
     warnings: list[str] = []
+    try:
+        resolved_path = destination_path.resolve(strict=False)
+    except (OSError, RuntimeError) as error:
+        resolved_path = destination_path.absolute()
+        blockers.append(
+            {"reason": "destination_path_unresolvable", "detail": error.__class__.__name__}
+        )
 
     if not destination_path.exists():
         blockers.append({"reason": "destination_path_missing", "detail": str(destination_path)})
+
+    source_major_minors = _source_major_minors(source)
+    if not source_major_minors:
+        blockers.append({"reason": "missing_source_topology", "detail": "no valid major:minor"})
 
     mount = _find_mount(resolved_path, mounts)
     if mount is None:
@@ -40,10 +83,12 @@ def evaluate_destination_separation(
             destination_path, resolved_path, mount, blockers, warnings, [mount["major_minor"]]
         )
 
-    source_major_minors = _source_major_minors(source)
     ancestry = _expand_ancestry(_normalize_holders(holders or {}))
+    source_ancestry = set(source_major_minors)
+    for major_minor in source_major_minors:
+        source_ancestry.update(ancestry.get(major_minor, set()))
     destination_ancestry = {mount["major_minor"], *ancestry.get(mount["major_minor"], set())}
-    overlap = sorted(source_major_minors & destination_ancestry)
+    overlap = sorted(source_ancestry & destination_ancestry, key=_major_minor_key)
     if overlap:
         blockers.append(
             {
@@ -53,7 +98,13 @@ def evaluate_destination_separation(
         )
 
     return _result(
-        destination_path, resolved_path, mount, blockers, warnings, sorted(destination_ancestry)
+        destination_path,
+        resolved_path,
+        mount,
+        blockers,
+        warnings,
+        sorted(destination_ancestry, key=_major_minor_key),
+        source_ancestry=sorted(source_ancestry, key=_major_minor_key),
     )
 
 
@@ -64,6 +115,8 @@ def _result(
     blockers: list[dict[str, str]],
     warnings: list[str],
     destination_ancestry: list[str],
+    *,
+    source_ancestry: list[str] | None = None,
 ) -> dict[str, Any]:
     return {
         "requested_path": str(requested_path),
@@ -73,6 +126,8 @@ def _result(
         "warnings": warnings,
         "mount": mount,
         "destination_ancestry": destination_ancestry,
+        "source_ancestry": source_ancestry or [],
+        "inspection_complete": True,
     }
 
 
@@ -93,11 +148,23 @@ def _find_mount(path: Path, mounts: Iterable[Mapping[str, Any]]) -> dict[str, st
 def _normalize_mount(mount: Mapping[str, Any]) -> dict[str, str] | None:
     mount_point = str(mount.get("mount_point", ""))
     major_minor = str(mount.get("major_minor", ""))
-    fstype = str(mount.get("fstype", ""))
-    if not mount_point.startswith("/") or not _valid_major_minor(major_minor):
+    fstype = str(mount.get("fstype", "")).lower()
+    if (
+        not mount_point.startswith("/")
+        or len(mount_point) > 4096
+        or "\x00" in mount_point
+        or any(ord(char) < 32 for char in mount_point)
+        or not _valid_major_minor(major_minor)
+    ):
+        return None
+    if FSTYPE_RE.fullmatch(fstype) is None:
+        fstype = "unknown"
+    try:
+        resolved_mount_point = Path(mount_point).resolve(strict=False)
+    except (OSError, RuntimeError):
         return None
     return {
-        "mount_point": str(Path(mount_point).resolve(strict=False)),
+        "mount_point": str(resolved_mount_point),
         "major_minor": major_minor,
         "fstype": fstype,
     }
@@ -150,5 +217,9 @@ def _expand_ancestry(parent_by_child: Mapping[str, list[str]]) -> dict[str, set[
 
 
 def _valid_major_minor(value: str) -> bool:
-    major, separator, minor = value.partition(":")
-    return bool(separator) and major.isdigit() and minor.isdigit()
+    return MAJOR_MINOR_RE.fullmatch(value) is not None
+
+
+def _major_minor_key(value: str) -> tuple[int, int]:
+    major, minor = value.split(":", 1)
+    return int(major), int(minor)
