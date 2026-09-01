@@ -32,6 +32,10 @@ This is a point-in-time audit, not a permanent status page. Use `git status`, th
 ## What `make validate` now proves
 
 - Candidate repository files contain no supported high-confidence credential signatures.
+- Gitleaks applies its full default rule set to the worktree and full history.
+  Its checked-in policy permits only four exact documented inert redaction-test
+  values in their exact test files; generated Python bytecode is excluded because
+  the corresponding source is scanned independently.
 - Reperio runtime/recovery roots, disk-image formats, private key/keystore formats, and runtime databases are absent.
 - Repository files are below 5 MiB and symbolic links are absent.
 - UTF-8 text hygiene, final newlines, and Git whitespace checks pass.
@@ -54,5 +58,7 @@ These checks are repository guardrails, not proof that future application code i
 4. Keep the dependency registry complete and current; every new dependency must pass the license gate and the intake checklist before it is committed.
 5. Keep the versioned schemas in `scripts/schemas/` current; a new registry/policy/config version requires migrating the schema and updating both real documents and the rejection fixtures.
 6. Regenerate `fixtures/expected/fixture-manifest.json` only through a reviewed `scripts/fixtures_check.py --emit` run after a deliberate builder/schema change; never reuse it to mask drift, and document the change in `docs/FIXTURES.md`.
+7. Keep `.gitleaks.toml` exceptions exact-value plus exact-path. Never disable a
+   default rule or add a broad source-path exception to make CI pass.
 
 No secret scanner can guarantee that a credential is harmless. If a real secret is ever committed, rotate or revoke it immediately before considering history cleanup.

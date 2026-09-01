@@ -1,0 +1,41 @@
+title = "Reperio Gitleaks policy"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Generated Python bytecode duplicates source already scanned"
+targetRules = ["generic-api-key"]
+paths = ['''(^|/)__pycache__/''']
+
+[[allowlists]]
+description = "RPR-098 inert audit-material redaction fixture"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+regexes = ['''^abcdefghij12345$''']
+paths = ['''^tests/test_audit_helpers\.py$''']
+
+[[allowlists]]
+description = "RPR-085 inert provider-key redaction fixture"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+regexes = ['''^sk-abcdefghijklmnop123456$''']
+paths = ['''^tests/test_openai_compatible\.py$''']
+
+[[allowlists]]
+description = "RPR-112 inert notification redaction fixture"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+regexes = ['''^abc123def456gh789$''']
+paths = ['''^tests/test_apprise_adapter\.py$''']
+
+[[allowlists]]
+description = "RPR-102 inert secret-reveal fixture"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+regexes = ['''^correct-horse-battery-staple-42$''']
+paths = ['''^tests/test_secret_reveal\.py$''']

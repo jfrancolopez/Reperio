@@ -59,5 +59,5 @@ else
   gitleaks_binary="$temporary_directory/gitleaks"
 fi
 
-"$gitleaks_binary" dir --redact --no-banner .
-"$gitleaks_binary" git --redact --no-banner .
+"$gitleaks_binary" dir --config .gitleaks.toml --redact --no-banner .
+"$gitleaks_binary" git --config .gitleaks.toml --redact --no-banner .
