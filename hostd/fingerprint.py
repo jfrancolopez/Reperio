@@ -7,17 +7,19 @@ sector sample. Sampled bytes are never returned or logged by this module.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
-FINGERPRINT_SCHEMA_VERSION = 1
-FINGERPRINT_ALGORITHM = "reperio-sampled-sector-sha256-v1"
+FINGERPRINT_SCHEMA_VERSION = 2
+FINGERPRINT_ALGORITHM = "reperio-sampled-sector-sha256-v2"
 DEFAULT_SECTOR_SIZE = 512
 MAX_SAMPLES = 3
+MAX_SECTOR_SIZE = 16 * 1024 * 1024
 
-ReadAt = Callable[[int, int], bytes]
+ReadAt = Callable[[int, int], object]
 
 
 def fingerprint_path(path: Path, identity_facts: Mapping[str, Any]) -> dict[str, Any]:
@@ -55,27 +57,28 @@ def fingerprint_from_reader(
     sector from each planned sample location and returns only SHA-256 digests or
     explicit failure statuses.
     """
-    if size_bytes < 0:
-        raise ValueError("size_bytes must be non-negative")
-    if sector_size <= 0:
-        raise ValueError("sector_size must be positive")
+    _validate_dimensions(size_bytes, sector_size)
 
     plan = sample_plan(size_bytes=size_bytes, sector_size=sector_size)
     samples = [_read_sample(read_at, offset, length) for offset, length in plan]
     facts = _immutable_facts(identity_facts, size_bytes=size_bytes, sector_size=sector_size)
-    fingerprint_hash = _digest(
-        {
-            "algorithm": FINGERPRINT_ALGORITHM,
-            "facts": facts,
-            "samples": samples,
-        }
-    )
+    complete = bool(samples) and all(sample["status"] == "ok" for sample in samples)
+    fingerprint_hash = None
+    if complete:
+        fingerprint_hash = _digest(
+            {
+                "algorithm": FINGERPRINT_ALGORITHM,
+                "facts": facts,
+                "samples": samples,
+            }
+        )
     return {
         "schema_version": FINGERPRINT_SCHEMA_VERSION,
         "algorithm": FINGERPRINT_ALGORITHM,
         "size_bytes": size_bytes,
         "sector_size": sector_size,
         "sample_count": len(samples),
+        "complete": complete,
         "samples": samples,
         "immutable_facts": facts,
         "fingerprint_hash": fingerprint_hash,
@@ -84,18 +87,19 @@ def fingerprint_from_reader(
 
 def sample_plan(*, size_bytes: int, sector_size: int) -> list[tuple[int, int]]:
     """Return deterministic byte ranges for first, middle, and last sectors."""
-    if size_bytes <= 0:
+    _validate_dimensions(size_bytes, sector_size)
+    if size_bytes == 0:
         return []
-    if sector_size <= 0:
-        raise ValueError("sector_size must be positive")
     sector_count = (size_bytes + sector_size - 1) // sector_size
     sector_indexes = sorted({0, sector_count // 2, sector_count - 1})[:MAX_SAMPLES]
     plan: list[tuple[int, int]] = []
+    sampled_bytes = 0
     for sector_index in sector_indexes:
         offset = sector_index * sector_size
         length = min(sector_size, max(0, size_bytes - offset))
-        if length > 0:
+        if length > 0 and sampled_bytes + length < size_bytes:
             plan.append((offset, length))
+            sampled_bytes += length
     return plan
 
 
@@ -108,6 +112,15 @@ def _read_sample(read_at: ReadAt, offset: int, length: int) -> dict[str, Any]:
             "length": length,
             "status": "unreadable",
             "error": error.__class__.__name__,
+        }
+    if not isinstance(data, bytes):
+        return {"offset": offset, "length": length, "status": "invalid_read_result"}
+    if len(data) > length:
+        return {
+            "offset": offset,
+            "length": length,
+            "status": "overlong",
+            "read_length": len(data),
         }
     if len(data) != length:
         return {
@@ -151,13 +164,25 @@ def _immutable_facts(
 
 
 def _positive_int(value: object, label: str) -> int:
-    if not isinstance(value, int) or value <= 0:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         raise ValueError(f"{label} must be a positive integer")
     return value
 
 
+def _validate_dimensions(size_bytes: int, sector_size: int) -> None:
+    if isinstance(size_bytes, bool) or not isinstance(size_bytes, int) or size_bytes < 0:
+        raise ValueError("size_bytes must be a non-negative integer")
+    if isinstance(sector_size, bool) or not isinstance(sector_size, int) or sector_size <= 0:
+        raise ValueError("sector_size must be a positive integer")
+    if sector_size > MAX_SECTOR_SIZE:
+        raise ValueError("sector_size exceeds the supported bound")
+
+
 def _digest(value: object) -> str:
-    return hashlib.sha256(repr(_normalize(value)).encode()).hexdigest()
+    canonical = json.dumps(
+        _normalize(value), sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def _normalize(value: object) -> object:

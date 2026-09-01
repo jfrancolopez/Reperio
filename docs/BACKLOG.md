@@ -140,7 +140,10 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 
 - **Status:** complete
 - **Depends:** RPR-011, RPR-008.
-- **Deliver:** deterministic sampled-sector fingerprint definition and implementation that reads only non-secret bounded ranges alongside immutable device facts.
+- **Deliver:** deterministic sampled-sector fingerprint definition and
+  implementation that reads only bounded ranges, keeps potentially sensitive
+  sampled bytes process-local, and combines their hashes with non-secret
+  immutable device facts.
 - **Acceptance:** fingerprints detect a same-size replacement fixture; sampling does not scan the full disk or log sampled bytes.
 - **Tests:** matching, one-sector-changed, truncated, unreadable-sample, and sector-size-change fixtures.
 

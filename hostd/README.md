@@ -35,3 +35,15 @@ verification, SMART where supported, and launching the fixed scanner container.
   launch profile with one read-only source device for `RPR-019`.
 - **No-source-write suite:** `scripts/no_source_write_suite.py` runs the
   disposable-fixture byte-compare harness for `RPR-020`.
+
+## Sampled fingerprint v2
+
+Fingerprint record schema v2 uses `reperio-sampled-sector-sha256-v2`. It selects
+at most the first, middle, and last logical sectors while always leaving part of
+the source unread. The logical sector size is capped at 16 MiB. Each exact-length
+sample is SHA-256 hashed in-process;
+raw bytes and read-error messages are never returned. A usable final fingerprint
+exists only when the nonempty sample set is entirely readable. It is SHA-256 of
+UTF-8 canonical JSON containing the algorithm name, immutable sanitized device
+facts, and ordered sample metadata/digests (sorted keys, compact separators,
+ASCII escapes, and no non-finite numbers).
