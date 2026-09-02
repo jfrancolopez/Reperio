@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sqlite3
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
 SUPPORTED_CHECKPOINT_VERSION = 1
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+MAX_CHECKPOINT_TEXT = 128
 
 
 class CheckpointError(ValueError):
@@ -54,6 +57,14 @@ def save_checkpoint(
 ) -> None:
     """Atomically store a checkpoint and supersede the previous stage checkpoint."""
 
+    _validate_checkpoint_inputs(
+        source_fingerprint=source_fingerprint,
+        stage=stage,
+        checkpoint_version=checkpoint_version,
+        tool_name=tool_name,
+        tool_version=tool_version,
+        blob=blob,
+    )
     cursor_json = _canonical_json(cursor)
     counters_json = _canonical_json(counters)
     digest = _integrity_hash(
@@ -171,24 +182,67 @@ def _latest_checkpoint_id(connection: sqlite3.Connection, job_id: str, stage: st
 
 
 def _record_from_row(row: tuple[Any, ...]) -> CheckpointRecord:
-    return CheckpointRecord(
-        checkpoint_id=str(row[0]),
-        job_id=str(row[1]),
-        source_fingerprint=str(row[2]),
-        stage=str(row[3]),
-        checkpoint_version=int(row[4]),
-        tool_name=str(row[5]),
-        tool_version=str(row[6]),
-        cursor=dict(json.loads(str(row[7]))),
-        counters=dict(json.loads(str(row[8]))),
-        blob=bytes(row[9]),
-        integrity_sha256=str(row[10]),
-        supersedes_checkpoint_id=None if row[11] is None else str(row[11]),
-    )
+    try:
+        cursor = json.loads(str(row[7]))
+        counters = json.loads(str(row[8]))
+        if not isinstance(cursor, dict) or not isinstance(counters, dict):
+            raise ValueError("checkpoint cursor and counters must be objects")
+        return CheckpointRecord(
+            checkpoint_id=str(row[0]),
+            job_id=str(row[1]),
+            source_fingerprint=str(row[2]),
+            stage=str(row[3]),
+            checkpoint_version=int(row[4]),
+            tool_name=str(row[5]),
+            tool_version=str(row[6]),
+            cursor=cursor,
+            counters=counters,
+            blob=bytes(row[9]),
+            integrity_sha256=str(row[10]),
+            supersedes_checkpoint_id=None if row[11] is None else str(row[11]),
+        )
+    except (TypeError, ValueError, json.JSONDecodeError, RecursionError) as error:
+        raise CheckpointError("checkpoint record is malformed; restart stage") from error
 
 
 def _canonical_json(payload: Mapping[str, Any]) -> str:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    try:
+        return json.dumps(payload, allow_nan=False, sort_keys=True, separators=(",", ":"))
+    except (TypeError, ValueError, RecursionError) as error:
+        raise CheckpointError("checkpoint payload is not canonical JSON") from error
+
+
+def _validate_checkpoint_inputs(
+    *,
+    source_fingerprint: str,
+    stage: str,
+    checkpoint_version: int,
+    tool_name: str,
+    tool_version: str,
+    blob: bytes,
+) -> None:
+    if not isinstance(source_fingerprint, str) or SHA256_RE.fullmatch(source_fingerprint) is None:
+        raise CheckpointError("checkpoint source fingerprint is invalid")
+    if (
+        not isinstance(checkpoint_version, int)
+        or isinstance(checkpoint_version, bool)
+        or checkpoint_version <= 0
+    ):
+        raise CheckpointError("checkpoint version is invalid")
+    for value, label in (
+        (stage, "stage"),
+        (tool_name, "tool name"),
+        (tool_version, "tool version"),
+    ):
+        if (
+            not isinstance(value, str)
+            or not value
+            or len(value) > MAX_CHECKPOINT_TEXT
+            or "\x00" in value
+        ):
+            raise CheckpointError(f"checkpoint {label} is invalid")
+    if not isinstance(blob, bytes):
+        raise CheckpointError("checkpoint blob is invalid")
 
 
 def _integrity_hash(

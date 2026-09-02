@@ -157,6 +157,53 @@ class CheckpointTests(unittest.TestCase):
             self.assertIn("source", str(source_error.exception))
             self.assertIn("tool", str(tool_error.exception))
 
+    def test_malformed_json_checkpoint_requires_restart_stage(self) -> None:
+        with closing(self._connection()) as connection:
+            self._create_job(connection)
+            self._save_valid(connection)
+            connection.execute(
+                "UPDATE checkpoints SET cursor_json = ? WHERE checkpoint_id = ?",
+                ("[]", "checkpoint_1"),
+            )
+
+            with self.assertRaises(checkpoints.CheckpointError) as captured:
+                self._load(connection)
+
+            self.assertTrue(captured.exception.restart_stage)
+            self.assertIn("malformed", str(captured.exception))
+
+    def test_checkpoint_rejects_invalid_identity_and_non_finite_payload(self) -> None:
+        with closing(self._connection()) as connection:
+            self._create_job(connection)
+            with self.assertRaisesRegex(checkpoints.CheckpointError, "fingerprint"):
+                checkpoints.save_checkpoint(
+                    connection,
+                    checkpoint_id="checkpoint_bad_fingerprint",
+                    job_id="job_1",
+                    source_fingerprint="not-a-hash",
+                    stage="filesystem",
+                    tool_name="parser",
+                    tool_version="1.0.0",
+                    cursor={},
+                    counters={},
+                    blob=b"invalid",
+                    created_at=NOW,
+                )
+            with self.assertRaisesRegex(checkpoints.CheckpointError, "canonical JSON"):
+                checkpoints.save_checkpoint(
+                    connection,
+                    checkpoint_id="checkpoint_nan",
+                    job_id="job_1",
+                    source_fingerprint=SOURCE,
+                    stage="filesystem",
+                    tool_name="parser",
+                    tool_version="1.0.0",
+                    cursor={"offset": float("nan")},
+                    counters={},
+                    blob=b"invalid",
+                    created_at=NOW,
+                )
+
     def test_old_schema_database_migrates_to_checkpoint_table(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "catalog.sqlite3"
