@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from typing import Any
@@ -11,7 +12,7 @@ from migrations import runner
 from tests.test_api_service import asgi_request
 
 try:
-    from api.app import HostdUnavailable, create_app
+    from api.app import CONFIRMATION_TOKEN_TTL_SECONDS, HostdUnavailable, create_app
 except ModuleNotFoundError as error:
     raise unittest.SkipTest("FastAPI runtime dependencies are not installed") from error
 
@@ -162,6 +163,19 @@ class ApiScanCaseTests(unittest.TestCase):
                     headers={"content-type": "application/json"},
                 )
             )
+
+        self.assertEqual(409, response.status_code)
+
+    def test_start_rejects_expired_confirmation_token(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            hostd = FakeHostd()
+            app = self._app(Path(tmp), hostd)
+            token = self._preview_token(app)
+            app.state.source_confirmations["source_current"]["issued_at"] = (
+                time.monotonic() - CONFIRMATION_TOKEN_TTL_SECONDS - 1
+            )
+
+            response = self._start(app, token)
 
         self.assertEqual(409, response.status_code)
 

@@ -7,6 +7,7 @@ import base64
 import hashlib
 import json
 import sqlite3
+import time
 import uuid
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -27,6 +28,7 @@ from shared import catalog_schema, event_outbox
 
 DEFAULT_MAX_REQUEST_BYTES = 1_048_576
 DEFAULT_TIMEOUT_SECONDS = 30.0
+CONFIRMATION_TOKEN_TTL_SECONDS = 300.0
 REQUEST_ID_HEADER = "x-request-id"
 NOW_SQL = "strftime('%Y-%m-%dT%H:%M:%SZ', 'now')"
 
@@ -244,6 +246,7 @@ def create_app(
             "generation": body.observed_generation,
             "safety_inspection_id": safety_id,
             "token": token,
+            "issued_at": time.monotonic(),
         }
         return {
             "source_id": source_id,
@@ -258,6 +261,7 @@ def create_app(
         _require_confirmation(app, body)
         connection = _open_ready_catalog(app.state.catalog_path)
         try:
+            connection.execute("BEGIN IMMEDIATE")
             _ensure_no_active_case(connection, body.source_id)
             readonly = _hostd(
                 app,
@@ -564,11 +568,16 @@ def _confirmation_token(source_id: str, generation: int, safety_inspection_id: s
 
 def _require_confirmation(app: FastAPI, body: StartScanRequest) -> None:
     confirmation = app.state.source_confirmations.get(body.source_id)
-    if confirmation != {
+    expected = {
         "generation": body.observed_generation,
         "safety_inspection_id": body.safety_inspection_id,
         "token": body.operator_confirmation_token,
-    }:
+    }
+    if (
+        not isinstance(confirmation, Mapping)
+        or confirmation.get("issued_at", 0) < time.monotonic() - CONFIRMATION_TOKEN_TTL_SECONDS
+        or any(confirmation.get(key) != value for key, value in expected.items())
+    ):
         raise StarletteHTTPException(status_code=409)
 
 
