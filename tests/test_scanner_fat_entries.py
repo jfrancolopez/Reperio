@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import unittest
+from typing import cast
 
 from scanner import entry_normalization, fat_entries, filesystem_enumeration
 
 
 class ScannerFatEntryTests(unittest.TestCase):
     def test_fat32_long_and_short_names_preserve_unicode_and_timezone_limits(self) -> None:
-        entry = normalized("11", "Résumé 2026.txt", allocated=True)
+        entry = normalized("11", "RESUME~1.TXT", allocated=True)
 
         enriched, details = fat_entries.enrich_fat_entry(
             entry,
@@ -24,6 +25,9 @@ class ScannerFatEntryTests(unittest.TestCase):
         self.assertEqual("fat32", details.filesystem)
         self.assertEqual("RESUME~1.TXT", details.short_name)
         self.assertEqual("Résumé 2026.txt", details.long_name)
+        self.assertEqual("Résumé 2026.txt", enriched.display_name)
+        self.assertEqual("Résumé 2026.txt", enriched.display_path)
+        self.assertEqual(entry.raw_path_bytes, enriched.raw_path_bytes)
         self.assertEqual((5, 9), details.cluster_chain)
         self.assertEqual("local_ambiguous", details.timezone_state)
         self.assertEqual(
@@ -31,6 +35,7 @@ class ScannerFatEntryTests(unittest.TestCase):
         )
         self.assertIn("fat_short_name", enriched.attributes)
         self.assertIn("fat_timestamp_timezone_ambiguous", enriched.warnings)
+        self.assertIn("fat_cluster_chain_fragmented", enriched.warnings)
 
     def test_exfat_deleted_fragmented_entry_is_distinct_and_extractable(self) -> None:
         entry = normalized("12", "deleted photo.jpg", allocated=False)
@@ -50,6 +55,7 @@ class ScannerFatEntryTests(unittest.TestCase):
         self.assertEqual("complete", details.chain_status)
         self.assertEqual((20, 35, 36), details.cluster_chain)
         self.assertEqual(3, len(enriched.extents))
+        self.assertIn("fat_chain_end_unknown", details.warnings)
 
     def test_volume_label_is_cataloged_as_virtual_metadata(self) -> None:
         entry = normalized("13", "NO NAME", entry_type="virtual")
@@ -63,6 +69,7 @@ class ScannerFatEntryTests(unittest.TestCase):
         self.assertEqual("virtual", enriched.entry_type)
         self.assertEqual("BACKUP_DISK", details.volume_label)
         self.assertIn("volume_label", enriched.attributes)
+        self.assertEqual((), enriched.extents)
 
     def test_corrupt_cluster_loop_is_bounded_and_visible(self) -> None:
         chain, status, warnings = fat_entries.normalize_cluster_chain((4, 5, 6, 5), max_clusters=10)
@@ -79,6 +86,23 @@ class ScannerFatEntryTests(unittest.TestCase):
         self.assertEqual((2, 3, 4), chain)
         self.assertEqual("truncated", status)
         self.assertIn("fat_cluster_chain_bounded", warnings)
+
+    def test_malformed_cluster_values_are_explicit_and_bounded(self) -> None:
+        chain, status, warnings = fat_entries.normalize_cluster_chain(
+            cast(tuple[int, ...], (4, "bad", 4)), max_clusters=10
+        )
+
+        self.assertEqual((4,), chain)
+        self.assertEqual("corrupt", status)
+        self.assertIn("fat_invalid_cluster", warnings)
+
+    def test_fat32_end_of_chain_range_and_file_size_trim_are_supported(self) -> None:
+        chain, status, _ = fat_entries.normalize_cluster_chain((2, 0x0FFFFFF9), max_clusters=10)
+
+        self.assertEqual((2,), chain)
+        self.assertEqual("complete", status)
+        extents = fat_entries.cluster_extents((2, 3), 512, 4096, size_bytes=700)
+        self.assertEqual((512, 188), tuple(extent.length_bytes for extent in extents))
 
 
 def normalized(
