@@ -170,6 +170,31 @@ class JobLeaseRetryTests(unittest.TestCase):
                 second.close()
                 first.close()
 
+    def test_lease_bounds_reject_zero_negative_and_excessive_values(self) -> None:
+        with closing(self._connection()) as connection:
+            self._create_job(connection, "job_bounds")
+            for lease_seconds in (0, -1, job_state.MAX_LEASE_SECONDS + 1, True):
+                with self.assertRaisesRegex(job_state.JobStateError, "lease_seconds"):
+                    job_state.claim_next_job(
+                        connection,
+                        owner="worker_a",
+                        now=NOW,
+                        lease_seconds=lease_seconds,
+                    )
+
+    def test_idempotency_payload_rejects_non_finite_json(self) -> None:
+        with self.assertRaisesRegex(job_state.JobStateError, "canonical JSON"):
+            job_state.stage_idempotency_key(
+                case_id="case_1", stage="scan", input_payload={"score": float("nan")}
+            )
+
+        for kwargs in (
+            {"base_delay_seconds": 0},
+            {"base_delay_seconds": 30, "max_delay_seconds": 29},
+        ):
+            with self.assertRaisesRegex(job_state.JobStateError, "retry policy"):
+                job_state.RetryPolicy(**kwargs)
+
     def _connection(self) -> sqlite3.Connection:
         connection = sqlite3.connect(":memory:")
         catalog_schema.create_initial_schema(connection)

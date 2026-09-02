@@ -10,6 +10,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 TERMINAL_STATES = frozenset({"completed", "completed-warning", "failed", "cancelled"})
+MAX_LEASE_SECONDS = 24 * 60 * 60
 
 ALLOWED_TRANSITIONS = {
     "pending": frozenset({"leased", "cancelled"}),
@@ -34,6 +35,15 @@ class JobStateError(ValueError):
 class RetryPolicy:
     base_delay_seconds: int = 30
     max_delay_seconds: int = 300
+
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.base_delay_seconds, bool)
+            or isinstance(self.max_delay_seconds, bool)
+            or self.base_delay_seconds <= 0
+            or self.max_delay_seconds < self.base_delay_seconds
+        ):
+            raise JobStateError("retry policy bounds are invalid")
 
 
 def stage_idempotency_key(*, case_id: str, stage: str, input_payload: Mapping[str, Any]) -> str:
@@ -136,6 +146,7 @@ def claim_next_job(
 ) -> dict[str, Any] | None:
     """Atomically lease the next runnable pending, retrying, or expired job."""
 
+    _validate_lease_seconds(lease_seconds)
     lease_expires_at = _add_seconds(now, lease_seconds)
     with connection:
         row = connection.execute(
@@ -183,6 +194,7 @@ def heartbeat_job(
 ) -> bool:
     """Extend a live lease owned by the worker; exact-expiry heartbeats are accepted."""
 
+    _validate_lease_seconds(lease_seconds)
     cursor = connection.execute(
         """
         UPDATE jobs
@@ -336,7 +348,10 @@ def _validate_transition(from_state: str, to_state: str) -> None:
 
 
 def _canonical_json(payload: Mapping[str, Any]) -> str:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    try:
+        return json.dumps(payload, allow_nan=False, sort_keys=True, separators=(",", ":"))
+    except (TypeError, ValueError, RecursionError) as error:
+        raise JobStateError("job payload is not canonical JSON") from error
 
 
 def _add_seconds(timestamp: str, seconds: int) -> str:
@@ -347,3 +362,8 @@ def _add_seconds(timestamp: str, seconds: int) -> str:
 def _retry_delay_seconds(attempts: int, retry_policy: RetryPolicy) -> int:
     uncapped = retry_policy.base_delay_seconds * (2 ** max(attempts - 1, 0))
     return int(min(uncapped, retry_policy.max_delay_seconds))
+
+
+def _validate_lease_seconds(value: object) -> None:
+    if isinstance(value, bool) or not isinstance(value, int) or not 0 < value <= MAX_LEASE_SECONDS:
+        raise JobStateError("lease_seconds is outside the supported bound")
