@@ -103,6 +103,16 @@ class ScannerSchedulerTests(unittest.TestCase):
 
         self.assertEqual((scheduler.STAGE_FINALIZATION,), plan.runnable)
 
+    def test_invalid_io_budget_is_rejected(self) -> None:
+        with self.assertRaisesRegex(scheduler.SchedulerError, "max_io_cost"):
+            scheduler.runnable_stages(
+                scheduler.initial_statuses(), scheduler.SchedulerConfig(max_io_cost=0)
+            )
+
+    def test_restart_rejects_completed_stage_with_missing_dependency(self) -> None:
+        with self.assertRaisesRegex(scheduler.SchedulerError, "incomplete dependencies"):
+            scheduler.restart_plan({scheduler.STAGE_ENUMERATION})
+
 
 if __name__ == "__main__":
     unittest.main()

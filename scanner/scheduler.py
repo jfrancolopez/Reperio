@@ -99,6 +99,7 @@ def runnable_stages(
     """Select runnable stages under dependency and conservative I/O limits."""
 
     _validate_statuses(statuses)
+    _validate_config(config)
     completed = {
         stage for stage, state in statuses.items() if state in {STAGE_COMPLETED, STAGE_SKIPPED}
     }
@@ -162,11 +163,19 @@ def restart_plan(
 ) -> StagePlan:
     """Plan a restart without rerunning already completed stages."""
 
+    _validate_config(config)
     statuses = initial_statuses()
     for stage in completed_stages:
         if stage not in STAGES:
             raise SchedulerError("unknown completed stage")
         statuses[stage] = STAGE_COMPLETED
+    for stage in completed_stages:
+        dependencies = STAGES[stage].dependencies
+        if not all(
+            dependency in completed_stages or not _enabled(dependency, config)
+            for dependency in dependencies
+        ):
+            raise SchedulerError("completed stage has incomplete dependencies")
     return runnable_stages(statuses, config)
 
 
@@ -238,3 +247,12 @@ def _validate_statuses(statuses: Mapping[str, str]) -> None:
     }
     if any(state not in allowed for state in statuses.values()):
         raise SchedulerError("unknown stage status")
+
+
+def _validate_config(config: SchedulerConfig) -> None:
+    if isinstance(config.max_io_cost, bool) or config.max_io_cost < 1:
+        raise SchedulerError("max_io_cost must be positive")
+    if not isinstance(config.enable_enrichment, bool) or not isinstance(
+        config.enable_carving, bool
+    ):
+        raise SchedulerError("stage enable flags must be boolean")
