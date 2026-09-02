@@ -210,11 +210,11 @@ def transition_job(
     job = get_job(connection, job_id)
     from_state = str(job["state"])
     _validate_transition(from_state, to_state)
-    connection.execute(
+    cursor = connection.execute(
         """
         UPDATE jobs
         SET state = ?, error_json = ?, lease_owner = ?, lease_expires_at = NULL, updated_at = ?
-        WHERE job_id = ?
+        WHERE job_id = ? AND state = ?
         """,
         (
             to_state,
@@ -222,8 +222,11 @@ def transition_job(
             None if to_state != "leased" else job["lease_owner"],
             now,
             job_id,
+            from_state,
         ),
     )
+    if cursor.rowcount != 1:
+        raise JobStateError("job state changed before transition could be committed")
 
 
 def safe_stop_job(connection: sqlite3.Connection, *, job_id: str, now: str) -> None:

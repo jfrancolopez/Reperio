@@ -163,6 +163,18 @@ class JobStateTests(unittest.TestCase):
             )
             self.assertEqual('{"a":"fixed","z":1}', original_input)
 
+    def test_transition_rejects_stale_state_update(self) -> None:
+        with closing(self._connection()) as connection:
+            self._insert_job(connection, "job_stale", "running")
+            job_state.transition_job(
+                connection, job_id="job_stale", to_state="completed", now=LATER
+            )
+
+            with self.assertRaisesRegex(job_state.JobStateError, "invalid job transition"):
+                job_state.transition_job(
+                    connection, job_id="job_stale", to_state="failed", now=LATER
+                )
+
     def _connection(self) -> sqlite3.Connection:
         connection = sqlite3.connect(":memory:")
         catalog_schema.create_initial_schema(connection)
