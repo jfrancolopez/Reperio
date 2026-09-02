@@ -110,9 +110,15 @@ class NoSourceWriteHarness:
         except protocol.ProtocolError:
             protocol_blocked = True
 
+        source = self._source_device()
+        preparation = read_only.prepare_read_only(
+            source,
+            ops=FakeReadOnlyOps(),
+            storage_state=storage_inspection.inspect_storage_state(source),
+        )
         spec = scanner_sandbox.build_scanner_launch(
-            {"kernel_name": "sda"},
-            {"prepared": True},
+            source,
+            preparation,
             {
                 "memory_limit_mib": 512,
                 "pids_limit": 64,

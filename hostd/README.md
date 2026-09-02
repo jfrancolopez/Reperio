@@ -31,8 +31,10 @@ verification, SMART where supported, and launching the fixed scanner container.
   read-only state for whole disks and children for `RPR-016`.
 - **Safety audit:** `hostd.safety_audit` appends redacted, hash-chained safety
   records and verifies ordering/tamper evidence for `RPR-018`.
-- **Scanner sandbox:** `hostd.scanner_sandbox` builds an immutable Docker/Podman
-  launch profile with one read-only source device for `RPR-019`.
+- **Scanner sandbox:** `hostd.scanner_sandbox` validates, audits, and invokes an
+  immutable Docker/Podman launch profile with one identity-bound read-only source
+  device for `RPR-019`. It uses `--pull=never`; release image publication and
+  runtime manifests remain deferred to `RPR-146`.
 - **No-source-write suite:** `scripts/no_source_write_suite.py` runs the
   disposable-fixture byte-compare harness for `RPR-020`.
 
