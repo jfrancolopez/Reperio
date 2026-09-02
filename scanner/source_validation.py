@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fcntl
 import os
 import stat
 from collections.abc import Mapping
@@ -85,7 +86,8 @@ class LinuxSourceOps:
         return os.pread(fd, length, offset)
 
     def verify_read_only(self, fd: int) -> bool:
-        return not os.access(f"/proc/self/fd/{fd}", os.W_OK)
+        flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        return flags & os.O_ACCMODE == os.O_RDONLY
 
     def close(self, fd: int) -> None:
         os.close(fd)
@@ -96,8 +98,14 @@ def validate_source(
 ) -> SourceValidationResult:
     """Validate source identity, read-only state, geometry, and fingerprint."""
 
+    _validate_expected(expected)
     selected_ops = ops or LinuxSourceOps()
-    before = selected_ops.lstat(expected.path)
+    try:
+        before = selected_ops.lstat(expected.path)
+    except OSError as error:
+        raise SourceValidationError(
+            "source_stat_failed", "source identity could not be read"
+        ) from error
     if before.is_symlink:
         raise SourceValidationError("source_symlink", "source path must not be a symlink")
     if not before.is_block:
@@ -115,12 +123,17 @@ def validate_source(
             raise SourceValidationError("source_replaced", "source changed during validation")
         if not selected_ops.verify_read_only(fd):
             raise SourceValidationError("source_writable", "source is not verified read-only")
-        actual = fingerprint.fingerprint_from_reader(
-            lambda offset, length: selected_ops.pread(fd, length, offset),
-            size_bytes=expected.size_bytes,
-            sector_size=expected.sector_size,
-            identity_facts=expected.identity_facts,
-        )
+        try:
+            actual = fingerprint.fingerprint_from_reader(
+                lambda offset, length: selected_ops.pread(fd, length, offset),
+                size_bytes=expected.size_bytes,
+                sector_size=expected.sector_size,
+                identity_facts=expected.identity_facts,
+            )
+        except (OSError, TypeError, ValueError) as error:
+            raise SourceValidationError(
+                "source_fingerprint_failed", "source fingerprint could not be verified"
+            ) from error
     finally:
         selected_ops.close(fd)
 
@@ -151,3 +164,24 @@ def _stat_to_source_stat(value: os.stat_result) -> SourceStat:
         is_symlink=stat.S_ISLNK(mode),
         device_id=int(value.st_rdev),
     )
+
+
+def _validate_expected(expected: ExpectedSource) -> None:
+    if not expected.source_id or len(expected.source_id) > 128:
+        raise SourceValidationError(
+            "invalid_expected_source", "expected source identity is invalid"
+        )
+    if (
+        isinstance(expected.size_bytes, bool)
+        or not isinstance(expected.size_bytes, int)
+        or expected.size_bytes < 0
+        or isinstance(expected.sector_size, bool)
+        or not isinstance(expected.sector_size, int)
+        or expected.sector_size <= 0
+        or not isinstance(expected.fingerprint_hash, str)
+        or len(expected.fingerprint_hash) != 64
+        or any(char not in "0123456789abcdef" for char in expected.fingerprint_hash)
+    ):
+        raise SourceValidationError(
+            "invalid_expected_source", "expected source geometry is invalid"
+        )

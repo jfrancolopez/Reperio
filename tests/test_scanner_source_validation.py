@@ -136,6 +136,28 @@ class ScannerSourceValidationTests(unittest.TestCase):
             )
         self.assertEqual("source_open_failed", captured.exception.code)
 
+    def test_invalid_expected_geometry_is_rejected_before_open(self) -> None:
+        expected = expected_source(DATA)
+        invalid = source_validation.ExpectedSource(
+            path=expected.path,
+            source_id=expected.source_id,
+            size_bytes=-1,
+            sector_size=expected.sector_size,
+            fingerprint_hash=expected.fingerprint_hash,
+            identity_facts=expected.identity_facts,
+        )
+
+        with self.assertRaisesRegex(source_validation.SourceValidationError, "geometry"):
+            source_validation.validate_source(invalid, ops=FakeSourceOps())
+
+    def test_unreadable_sample_is_reported_without_raw_exception(self) -> None:
+        class FailingFingerprintOps(FakeSourceOps):
+            def pread(self, fd: int, length: int, offset: int) -> bytes:
+                raise OSError("fixture read failure")
+
+        with self.assertRaisesRegex(source_validation.SourceValidationError, "fingerprint"):
+            source_validation.validate_source(expected_source(DATA), ops=FailingFingerprintOps())
+
 
 def expected_source(data: bytes) -> source_validation.ExpectedSource:
     identity_facts = facts(size=len(data))
