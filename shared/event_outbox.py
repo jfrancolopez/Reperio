@@ -84,6 +84,14 @@ def list_events(
 ) -> list[dict[str, Any]]:
     """Return ordered events after a per-case sequence for polling or SSE resume."""
     _validate_public_id("case_id", case_id)
+    if (
+        isinstance(after_sequence, bool)
+        or not isinstance(after_sequence, int)
+        or after_sequence < 0
+    ):
+        raise EventOutboxError("after_sequence must be a non-negative integer")
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0:
+        raise EventOutboxError("limit must be a positive integer")
     bounded_limit = min(max(limit, 1), MAX_POLL_LIMIT)
     rows = connection.execute(
         """
@@ -119,6 +127,8 @@ def compact_published_events(
     connection: sqlite3.Connection, *, before_created_at: str, limit: int = 1000
 ) -> int:
     """Delete old already-published events only; unpublished rows are retained."""
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0:
+        raise EventOutboxError("limit must be a positive integer")
     cursor = connection.execute(
         """
         DELETE FROM events
@@ -186,7 +196,12 @@ def _event_from_row(row: sqlite3.Row | tuple[Any, ...]) -> dict[str, Any]:
 
 
 def _canonical_json(payload: Mapping[str, Any]) -> str:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    try:
+        return json.dumps(payload, allow_nan=False, sort_keys=True, separators=(",", ":"))
+    except TypeError:
+        raise
+    except (ValueError, RecursionError) as error:
+        raise EventOutboxError("event payload is not canonical JSON") from error
 
 
 def _validate_public_id(label: str, value: str) -> None:

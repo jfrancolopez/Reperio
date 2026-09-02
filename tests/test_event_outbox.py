@@ -100,6 +100,16 @@ class EventOutboxTests(unittest.TestCase):
         self.assertIn('"percent":25', payload)
         self.assertNotIn("<script", payload.lower())
 
+    def test_event_payload_and_polling_bounds_are_strict(self) -> None:
+        with closing(self._connection()) as connection:
+            self._insert_source_case_and_job(connection)
+            with self.assertRaisesRegex(event_outbox.EventOutboxError, "canonical JSON"):
+                self._append_event(connection, "event_nan", "job.progress", {"value": float("nan")})
+            with self.assertRaisesRegex(event_outbox.EventOutboxError, "after_sequence"):
+                event_outbox.list_events(connection, case_id="case_1", after_sequence=-1)
+            with self.assertRaisesRegex(event_outbox.EventOutboxError, "limit"):
+                event_outbox.list_events(connection, case_id="case_1", limit=True)
+
     def test_api_poll_and_sse_resume_after_restart(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "catalog.sqlite3"
