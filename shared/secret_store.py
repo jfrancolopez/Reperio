@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import json
 import os
 import secrets
@@ -67,8 +68,14 @@ class SecretStore:
             )
         except InvalidTag as error:
             raise SecretStoreError("secret cannot be decrypted with this master key") from error
-        data = json.loads(plaintext.decode("utf-8"))
-        return str(data["value"])
+        try:
+            data = json.loads(plaintext.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise SecretStoreError("secret record plaintext is malformed") from error
+        value = data.get("value") if isinstance(data, dict) else None
+        if not isinstance(value, str):
+            raise SecretStoreError("secret record plaintext is malformed")
+        return value
 
     def metadata(self, ref: str) -> SecretMetadata:
         payload = self._read_payload(ref)
@@ -155,6 +162,19 @@ class SecretStore:
             raise SecretStoreError("secret reference cannot be read") from error
         if not isinstance(data, dict):
             raise SecretStoreError("secret record is malformed")
+        if (
+            not isinstance(data.get("label"), str)
+            or not isinstance(data.get("key_version"), int)
+            or isinstance(data["key_version"], bool)
+            or data["key_version"] < 1
+            or not isinstance(data.get("nonce"), str)
+            or not isinstance(data.get("ciphertext"), str)
+        ):
+            raise SecretStoreError("secret record is malformed")
+        nonce = _decode(data["nonce"])
+        ciphertext = _decode(data["ciphertext"])
+        if len(nonce) != NONCE_BYTES or len(ciphertext) < 16:
+            raise SecretStoreError("secret record contains invalid encrypted data")
         return data
 
     def _path_for_ref(self, ref: str) -> Path:
@@ -185,7 +205,12 @@ def _encode(value: bytes) -> str:
 def _decode(value: object) -> bytes:
     if not isinstance(value, str):
         raise SecretStoreError("secret record contains invalid encoded field")
-    return base64.urlsafe_b64decode(value.encode("ascii"))
+    try:
+        encoded = value.encode("ascii")
+        padded = encoded + b"=" * (-len(encoded) % 4)
+        return base64.b64decode(padded, altchars=b"-_", validate=True)
+    except (UnicodeEncodeError, binascii.Error) as error:
+        raise SecretStoreError("secret record contains invalid encoded field") from error
 
 
 def _write_private_bytes(path: Path, data: bytes) -> None:

@@ -80,6 +80,30 @@ class SecretStoreTests(unittest.TestCase):
             self.assertTrue(all(item.ok for item in audits))
             self.assertEqual({0o600, 0o700}, {item.expected_mode for item in audits})
 
+    def test_corrupt_record_fails_without_raw_parser_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            store = secret_store.SecretStore(root)
+            metadata = store.put(label="provider-token", value="fixture-value")
+            record_path = root / "secrets" / f"{metadata.ref.removeprefix('vault:')}.json"
+            record_path.write_text('{"nonce":"not-base64"}', encoding="utf-8")
+
+            with self.assertRaises(secret_store.SecretStoreError):
+                store.get(metadata.ref)
+
+    def test_corrupt_plaintext_fails_as_store_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            store = secret_store.SecretStore(root)
+            metadata = store.put(label="provider-token", value="fixture-value")
+            record_path = root / "secrets" / f"{metadata.ref.removeprefix('vault:')}.json"
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            record["ciphertext"] = record["ciphertext"][:-2] + "AA"
+            record_path.write_text(json.dumps(record), encoding="utf-8")
+
+            with self.assertRaises(secret_store.SecretStoreError):
+                store.get(metadata.ref)
+
 
 if __name__ == "__main__":
     unittest.main()
