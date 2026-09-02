@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Protocol
 
 SUPPORTED_TABLES = frozenset({"DOS Partition Table", "GUID Partition Table"})
+MAX_TOOL_OUTPUT_CHARS = 1_048_576
+MAX_DESCRIPTION_CHARS = 1_024
 DENIED_ARGUMENT_FRAGMENTS = frozenset(
     {
         "repair",
@@ -108,8 +110,10 @@ def discover_partitions(
 ) -> PartitionDiscoveryResult:
     """Discover partition extents without mounting or exposing repair commands."""
 
-    if sector_size <= 0:
+    if isinstance(sector_size, bool) or not isinstance(sector_size, int) or sector_size <= 0:
         raise PartitionDiscoveryError("invalid_sector_size", "sector size must be positive")
+    if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+        raise PartitionDiscoveryError("invalid_timeout", "partition timeout must be positive")
     args = (mmls_binary, "-B", "-S", str(sector_size), str(source_path))
     _validate_safe_command(args)
     selected_runner = runner or SubprocessTskRunner()
@@ -133,11 +137,16 @@ def parse_mmls_output(
 ) -> PartitionDiscoveryResult:
     """Parse bounded mmls text into normalized partition entries and warnings."""
 
-    if sector_size <= 0:
+    if isinstance(sector_size, bool) or not isinstance(sector_size, int) or sector_size <= 0:
         raise PartitionDiscoveryError("invalid_sector_size", "sector size must be positive")
+    if len(stdout) > MAX_TOOL_OUTPUT_CHARS or len(stderr) > MAX_TOOL_OUTPUT_CHARS:
+        raise PartitionDiscoveryError(
+            "partition_output_too_large", "partition tool output is too large"
+        )
     warnings: list[str] = []
     table_type: str | None = None
     partitions: list[PartitionEntry] = []
+    unrecognized_line = False
     for raw_line in stdout.splitlines():
         line = raw_line.strip()
         if not line:
@@ -149,6 +158,7 @@ def parse_mmls_output(
             continue
         match = MMLS_LINE.match(raw_line)
         if match is None:
+            unrecognized_line = True
             continue
         entry = _entry_from_match(match, sector_size)
         partitions.append(entry)
@@ -161,6 +171,8 @@ def parse_mmls_output(
         warnings.append(f"mmls_stderr:{stderr_text}")
     if table_type is None:
         warnings.append("partition_table_missing")
+    if unrecognized_line:
+        warnings.append("unrecognized_partition_output")
     if not partitions:
         warnings.append("no_partitions")
     if _has_overlap(partitions):
@@ -182,8 +194,14 @@ def _entry_from_match(match: re.Match[str], sector_size: int) -> PartitionEntry:
     allocated = match.group("meta") == "Meta"
     expected_count = max(0, end_sector - start_sector + 1)
     warnings: list[str] = []
+    if len(description) > MAX_DESCRIPTION_CHARS:
+        description = description[:MAX_DESCRIPTION_CHARS]
+        warnings.append(f"description_truncated:{match.group('slot')}")
     if sector_count != expected_count:
         warnings.append(f"length_mismatch:{match.group('slot')}")
+    if end_sector < start_sector or sector_count <= 0:
+        warnings.append(f"invalid_extent:{match.group('slot')}")
+        allocated = False
     if "Primary Table" in description or "Unallocated" in description:
         allocated = False
     return PartitionEntry(
@@ -234,7 +252,7 @@ def _validate_safe_command(args: tuple[str, ...]) -> None:
     if not args:
         raise PartitionDiscoveryError("empty_command", "partition command is empty")
     binary = Path(args[0]).name
-    if binary != "mmls":
+    if args[0] != "mmls" or binary != "mmls":
         raise PartitionDiscoveryError("unsafe_partition_command", "only mmls is allowed")
     joined = " ".join(args).lower()
     if any(fragment in joined for fragment in DENIED_ARGUMENT_FRAGMENTS):

@@ -150,6 +150,31 @@ class ScannerPartitionDiscoveryTests(unittest.TestCase):
             )
         self.assertEqual("unsafe_partition_command", captured.exception.code)
 
+    def test_invalid_extent_is_reportable_and_not_allocated(self) -> None:
+        result = partition_discovery.parse_mmls_output(
+            "Partition Table: DOS Partition Table\n"
+            "000:  Meta      0000000010   0000000009   0000000001   Invalid\n",
+            "",
+            0,
+            source_id="source_1",
+            sector_size=512,
+        )
+
+        self.assertFalse(result.partitions[0].allocated)
+        self.assertIn("invalid_extent:000:", result.partitions[0].warnings)
+
+    def test_noncanonical_mmls_path_is_rejected(self) -> None:
+        with self.assertRaisesRegex(
+            partition_discovery.PartitionDiscoveryError, "only mmls is allowed"
+        ):
+            partition_discovery.discover_partitions(
+                Path("/dev/reperio-source"),
+                source_id="source_1",
+                sector_size=512,
+                runner=FakeRunner(partition_discovery.TskCommandResult(0, "", "")),
+                mmls_binary="/tmp/mmls",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
