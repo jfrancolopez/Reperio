@@ -12,6 +12,8 @@ from typing import Protocol
 from scanner.partition_discovery import PartitionEntry
 
 SUPPORTED_FILESYSTEMS = frozenset({"ntfs", "fat12", "fat16", "fat32", "exfat"})
+MAX_TOOL_OUTPUT_CHARS = 1_048_576
+MAX_BATCH_SIZE = 4_096
 DENIED_ARGUMENT_FRAGMENTS = frozenset(
     {
         "repair",
@@ -106,9 +108,19 @@ def enumerate_filesystem(
 ) -> FilesystemEnumerationResult:
     """Identify a volume and enumerate entries by direct byte offset only."""
 
-    if batch_size <= 0:
+    if (
+        isinstance(batch_size, bool)
+        or not isinstance(batch_size, int)
+        or not 0 < batch_size <= MAX_BATCH_SIZE
+    ):
         raise FilesystemEnumerationError("invalid_batch_size", "batch size must be positive")
-    offset_arg = str(partition.offset_bytes)
+    if (
+        isinstance(timeout_seconds, bool)
+        or not isinstance(timeout_seconds, int)
+        or timeout_seconds <= 0
+    ):
+        raise FilesystemEnumerationError("invalid_timeout", "filesystem timeout must be positive")
+    offset_arg = str(partition.start_sector)
     fsstat_args = (fsstat_binary, "-o", offset_arg, str(source_path))
     fls_args = (fls_binary, "-r", "-p", "-o", offset_arg, str(source_path))
     _validate_safe_command(fsstat_args, expected_binary="fsstat")
@@ -184,8 +196,16 @@ def parse_fls_output(
 ) -> tuple[tuple[FilesystemEntry, ...], tuple[str, ...]]:
     """Parse bounded fls output while preserving stable object and parent IDs."""
 
-    if batch_size <= 0:
+    if (
+        isinstance(batch_size, bool)
+        or not isinstance(batch_size, int)
+        or not 0 < batch_size <= MAX_BATCH_SIZE
+    ):
         raise FilesystemEnumerationError("invalid_batch_size", "batch size must be positive")
+    if len(stdout) > MAX_TOOL_OUTPUT_CHARS or len(stderr) > MAX_TOOL_OUTPUT_CHARS:
+        raise FilesystemEnumerationError(
+            "filesystem_output_too_large", "filesystem tool output is too large"
+        )
     warnings: list[str] = []
     entries: list[FilesystemEntry] = []
     for raw_line in _bounded_lines(stdout, limit=batch_size):
@@ -219,6 +239,12 @@ def parse_fls_output(
 
 def _run_tsk(args: tuple[str, ...], timeout_seconds: int, *, timeout_code: str) -> TskCommandResult:
     _validate_safe_command(args, expected_binary=Path(args[0]).name)
+    if (
+        isinstance(timeout_seconds, bool)
+        or not isinstance(timeout_seconds, int)
+        or timeout_seconds <= 0
+    ):
+        raise FilesystemEnumerationError("invalid_timeout", "filesystem timeout must be positive")
     try:
         completed = subprocess.run(
             args,
@@ -299,7 +325,7 @@ def _validate_safe_command(args: tuple[str, ...], *, expected_binary: str) -> No
     if not args:
         raise FilesystemEnumerationError("empty_command", "filesystem command is empty")
     binary = Path(args[0]).name
-    if binary != expected_binary:
+    if args[0] != expected_binary or binary != expected_binary:
         raise FilesystemEnumerationError(
             "unsafe_filesystem_command", "unexpected filesystem tool requested"
         )

@@ -78,12 +78,12 @@ class ScannerFilesystemEnumerationTests(unittest.TestCase):
             [
                 (
                     "fsstat",
-                    ("fsstat", "-o", str(2048 * 512), "/dev/reperio-source"),
+                    ("fsstat", "-o", "2048", "/dev/reperio-source"),
                     9,
                 ),
                 (
                     "fls",
-                    ("fls", "-r", "-p", "-o", str(2048 * 512), "/dev/reperio-source"),
+                    ("fls", "-r", "-p", "-o", "2048", "/dev/reperio-source"),
                     9,
                 ),
             ],
@@ -162,6 +162,33 @@ class ScannerFilesystemEnumerationTests(unittest.TestCase):
             )
 
         self.assertEqual("unsafe_filesystem_command", captured.exception.code)
+
+    def test_noncanonical_tool_paths_and_invalid_limits_are_rejected(self) -> None:
+        with self.assertRaisesRegex(
+            filesystem_enumeration.FilesystemEnumerationError, "unexpected filesystem tool"
+        ):
+            filesystem_enumeration.enumerate_filesystem(
+                Path("/dev/reperio-source"),
+                partition(),
+                source_id="source_1",
+                runner=FakeRunner(
+                    filesystem_enumeration.TskCommandResult(0, NTFS_FSSTAT, ""),
+                    filesystem_enumeration.TskCommandResult(0, FLS_OUTPUT, ""),
+                ),
+                fsstat_binary="/tmp/fsstat",
+            )
+
+        with self.assertRaisesRegex(filesystem_enumeration.FilesystemEnumerationError, "timeout"):
+            filesystem_enumeration.enumerate_filesystem(
+                Path("/dev/reperio-source"),
+                partition(),
+                source_id="source_1",
+                runner=FakeRunner(
+                    filesystem_enumeration.TskCommandResult(0, NTFS_FSSTAT, ""),
+                    filesystem_enumeration.TskCommandResult(0, FLS_OUTPUT, ""),
+                ),
+                timeout_seconds=0,
+            )
 
 
 def partition() -> partition_discovery.PartitionEntry:
