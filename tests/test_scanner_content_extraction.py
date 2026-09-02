@@ -127,6 +127,33 @@ class ScannerContentExtractionTests(unittest.TestCase):
             self.assertEqual("skipped", result.status)
             self.assertIn("size_limit_exceeded", result.warnings)
 
+    def test_extent_size_mismatch_is_explicit_partial_result(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = make_store(Path(tmp) / "scratch")
+            entry = normalized_entry(size=20, extents=(extent(0, 10),))
+
+            result = content_extraction.extract_allocated_content(
+                entry, reader=FakeReader(DATA), scratch=store, max_size_bytes=1024
+            )
+
+        self.assertEqual("partial", result.status)
+        self.assertEqual("extent_size_mismatch", result.error_code)
+        self.assertIn("extent_size_mismatch", result.warnings)
+
+    def test_invalid_resume_checkpoint_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = make_store(Path(tmp) / "scratch")
+            entry = normalized_entry(size=20, extents=(extent(0, 10), extent(10, 10)))
+
+            with self.assertRaisesRegex(content_extraction.ContentExtractionError, "checkpoint"):
+                content_extraction.extract_allocated_content(
+                    entry,
+                    reader=FakeReader(DATA),
+                    scratch=store,
+                    max_size_bytes=1024,
+                    resume_checkpoint={"extent_index": 2},
+                )
+
 
 def normalized_entry(
     *,

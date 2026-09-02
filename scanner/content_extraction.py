@@ -9,7 +9,7 @@ from typing import Any, Protocol
 
 from scanner.entry_normalization import Extent, NormalizedEntry
 from scanner.read_errors import ReadCounters, ReadPolicy, ResilientReader
-from shared.scratch_store import ScratchObject, ScratchStore
+from shared.scratch_store import ScratchObject, ScratchStore, ScratchStoreError
 
 CHUNK_SIZE = 1024 * 1024
 
@@ -50,7 +50,11 @@ def extract_allocated_content(
 ) -> ExtractionResult:
     """Stream allocated content to scratch without blocking catalog entry creation."""
 
-    if max_size_bytes <= 0:
+    if (
+        isinstance(max_size_bytes, bool)
+        or not isinstance(max_size_bytes, int)
+        or max_size_bytes <= 0
+    ):
         raise ContentExtractionError("invalid_limit", "maximum extraction size must be positive")
     if not entry.allocated:
         return _skipped(entry, "not_allocated")
@@ -63,9 +67,19 @@ def extract_allocated_content(
         )
     if not entry.extents:
         return _skipped(entry, "metadata_only")
-    expected_size = (
-        entry.size_bytes if entry.size_bytes is not None else sum_extent_lengths(entry.extents)
-    )
+    extent_size = sum_extent_lengths(entry.extents)
+    expected_size = entry.size_bytes if entry.size_bytes is not None else extent_size
+    if expected_size != extent_size:
+        return ExtractionResult(
+            entry.entry_id,
+            "partial",
+            0,
+            None,
+            None,
+            warnings=("extent_size_mismatch",),
+            error_code="extent_size_mismatch",
+            checkpoint={"entry_id": entry.entry_id, "status": "extent_size_mismatch"},
+        )
     if expected_size > max_size_bytes:
         return ExtractionResult(
             entry.entry_id,
@@ -77,9 +91,15 @@ def extract_allocated_content(
             checkpoint={"entry_id": entry.entry_id, "status": "size_limit_exceeded"},
         )
 
-    start_extent = int((resume_checkpoint or {}).get("extent_index", 0))
-    if start_extent < 0 or start_extent >= len(entry.extents):
-        start_extent = 0
+    checkpoint_value = (resume_checkpoint or {}).get("extent_index", 0)
+    if (
+        isinstance(checkpoint_value, bool)
+        or not isinstance(checkpoint_value, int)
+        or checkpoint_value < 0
+        or checkpoint_value >= len(entry.extents)
+    ):
+        raise ContentExtractionError("invalid_checkpoint", "resume extent checkpoint is invalid")
+    start_extent = checkpoint_value
     resilient_reader = (
         ResilientReader(reader, policy=read_policy) if read_policy is not None else None
     )
@@ -91,7 +111,7 @@ def extract_allocated_content(
             provenance=_provenance(entry),
             expected_size=expected_size - sum_extent_lengths(entry.extents[:start_extent]),
         )
-    except OSError as error:
+    except (OSError, ScratchStoreError) as error:
         return ExtractionResult(
             entry.entry_id,
             "partial",
@@ -99,7 +119,9 @@ def extract_allocated_content(
             None,
             None,
             warnings=("io_error",),
-            error_code=error.__class__.__name__,
+            error_code=error.code
+            if isinstance(error, ScratchStoreError)
+            else error.__class__.__name__,
             checkpoint={"entry_id": entry.entry_id, "extent_index": start_extent},
             read_counters=resilient_reader.counters if resilient_reader is not None else None,
         )
