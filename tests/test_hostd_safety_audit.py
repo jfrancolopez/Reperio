@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import tempfile
-import threading
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from unittest import mock
 
 from hostd import safety_audit
 
@@ -67,37 +68,79 @@ class HostdSafetyAuditTests(unittest.TestCase):
             audit.append("read_only_verification", {"prepared": True})
             path.write_text(path.read_text(encoding="utf-8")[:20], encoding="utf-8")
 
-            with self.assertRaisesRegex(safety_audit.AuditVerificationError, "invalid JSON"):
+            with self.assertRaisesRegex(safety_audit.AuditVerificationError, "truncated"):
                 safety_audit.verify_audit_log(path)
 
     def test_concurrent_appends_preserve_sequence_ordering(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "safety.jsonl"
-            audit = safety_audit.SafetyAuditLog(path)
-
-            threads = [
-                threading.Thread(
-                    target=audit.append, args=("scanner_sandbox_profile", {"index": index})
-                )
-                for index in range(20)
-            ]
-            for thread in threads:
-                thread.start()
-            for thread in threads:
-                thread.join()
+            with ThreadPoolExecutor(max_workers=8) as executor:
+                futures = [
+                    executor.submit(
+                        safety_audit.SafetyAuditLog(path).append,
+                        "scanner_sandbox_profile",
+                        {"index": index},
+                    )
+                    for index in range(20)
+                ]
+                for future in futures:
+                    future.result()
             state = safety_audit.verify_audit_log(path)
 
         self.assertEqual(list(range(1, 21)), [record["sequence"] for record in state["records"]])
 
-    def test_rotation_continuation_can_start_from_verified_existing_log(self) -> None:
+    def test_rotation_preserves_cross_segment_ordering(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "safety.jsonl"
-            safety_audit.SafetyAuditLog(path).append("device_resolution", {"source_id": "source_1"})
-            safety_audit.SafetyAuditLog(path).append("system_disk_decision", {"denied": False})
+            rotated = Path(tmp) / "safety.1.jsonl"
+            audit = safety_audit.SafetyAuditLog(path)
+            audit.append("device_resolution", {"source_id": "source_1"})
+            continuation = audit.rotate(rotated)
+            audit.append("system_disk_decision", {"denied": False})
 
-            state = safety_audit.verify_audit_log(path)
+            state = safety_audit.verify_audit_segments([rotated, path])
 
-        self.assertEqual(3, state["next_sequence"])
+        self.assertEqual(2, continuation["sequence"])
+        self.assertEqual(4, state["next_sequence"])
+        self.assertEqual([1, 2, 3], [record["sequence"] for record in state["records"]])
+
+    def test_append_refuses_to_exceed_segment_bound(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "safety.jsonl"
+            audit = safety_audit.SafetyAuditLog(path)
+            audit.append("device_resolution", {"source_id": "source_1"})
+            original = path.read_bytes()
+
+            with mock.patch.object(safety_audit, "MAX_AUDIT_FILE_BYTES", len(original)):
+                with self.assertRaisesRegex(safety_audit.AuditWriteError, "requires rotation"):
+                    audit.append("system_disk_decision", {"denied": False})
+
+            self.assertEqual(original, path.read_bytes())
+
+    def test_symlink_log_path_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            target = root / "target"
+            target.write_text("must-not-change", encoding="utf-8")
+            path = root / "safety.jsonl"
+            path.symlink_to(target)
+
+            with self.assertRaises(safety_audit.AuditWriteError):
+                safety_audit.SafetyAuditLog(path).append(
+                    "device_resolution", {"source_id": "source_1"}
+                )
+
+            self.assertEqual("must-not-change", target.read_text(encoding="utf-8"))
+
+    def test_bytes_and_device_paths_are_always_redacted(self) -> None:
+        payload = safety_audit.redact(
+            {"innocent_name": b"raw-sector", "device": "/dev/sda", "temperature": float("nan")}
+        )
+
+        encoded = json.dumps(payload, sort_keys=True)
+        self.assertNotIn("raw-sector", encoded)
+        self.assertNotIn("/dev/sda", encoded)
+        self.assertNotIn("NaN", encoded)
 
 
 if __name__ == "__main__":
