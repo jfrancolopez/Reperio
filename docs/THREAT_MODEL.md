@@ -24,6 +24,11 @@ assigned to two later backlog tasks:
 The exact concrete tests for those tasks are defined in section 8. Until they
 exist, no release may claim the invoked devices/tools are safe.
 
+Implementation status: the checked-in `RPR-020` harness currently provides only
+synthetic regular-file and dependency-contract preflight checks. It is not the
+required loop-device/container integration evidence, and `RPR-020` remains
+incomplete. Its result explicitly reports `integration_proof_complete: false`.
+
 ## 2. Assets
 
 | Asset | Sensitivity | Primary defender |
@@ -253,7 +258,7 @@ minimal scan; byte-compares the source afterward. Refuses real disks.
 
 | Risk | Why it remains | Mitigation | Owner |
 |---|---|---|---|
-| Kernel/controller bug still writes | No software can absolutely guarantee kernel behavior | Defense in depth: `O_RDONLY` + BLKROSET + capability-less container + `make` suite proving writes fail; penetration review (RPR-153) | RPR-016, RPR-020, RPR-153 |
+| Kernel/controller bug still writes | No software can absolutely guarantee kernel behavior | Defense in depth: `O_RDONLY` + BLKROSET + capability-less container + required disposable-device suite; penetration review (RPR-153) | RPR-016, RPR-020, RPR-153 |
 | Physical hardware write path is not observable in software | TRIM/garbage-collection continue on some devices | Documented honest limitations (master plan §4); no delete/repair exists so Reperio itself cannot trigger them | RPR-154 |
 | Compromised privileged host controller | hostd is the smallest privileged component and must run privileged | Narrow allowlisted protocol, append-only audit, no shell/parsing/AI in hostd; RPR-153 review | RPR-009, RPR-018, RPR-153 |
 | A future feature weakens a boundary | Road-map drift | Reviewer gate in `AGENTS.md`; conflict rule stops implementation and documents the conflict | Review gate |

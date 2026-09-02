@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Destructive-to-fixture-only no-source-write harness for RPR-020."""
+"""Synthetic no-source-write preflight for the still-open RPR-020 integration suite."""
 
 from __future__ import annotations
 
 import hashlib
+import os
 import stat
 import tempfile
 from collections.abc import Mapping
@@ -37,16 +38,23 @@ class FakeReadOnlyOps:
 
 
 class NoSourceWriteHarness:
-    """Run RPR-020 attacks against a verified disposable source fixture only."""
+    """Run dependency-contract preflight checks against a synthetic regular file."""
 
     def __init__(self, root: Path, source_path: Path, expected_sha256: str) -> None:
+        if os.geteuid() == 0:
+            raise UnsafeFixtureError("synthetic preflight must not run as root")
+        if root.is_symlink() or source_path.is_symlink():
+            raise UnsafeFixtureError("harness root and source must not be symlinks")
         self.root = root.resolve(strict=True)
         self.source_path = source_path.resolve(strict=True)
         self.expected_sha256 = expected_sha256
+        self.expected_size = fixture_builder.TOTAL_SECTORS * fixture_builder.BYTES_PER_SECTOR
         self._assert_disposable_fixture()
 
     @classmethod
     def create(cls) -> NoSourceWriteHarness:
+        if os.geteuid() == 0:
+            raise UnsafeFixtureError("synthetic preflight must not run as root")
         root = Path(tempfile.mkdtemp(prefix="reperio-rpr020-"))
         image, _ = fixture_builder.build_image()
         source_path = root / "source.fixture"
@@ -60,6 +68,7 @@ class NoSourceWriteHarness:
         return cls(root, source_path, fixture_builder.image_sha256(expected_image))
 
     def run_all(self) -> dict[str, Any]:
+        self._assert_disposable_fixture()
         before = self._source_hash()
         results = {
             "malicious_adapter_attempt": self.malicious_adapter_attempt(),
@@ -71,21 +80,46 @@ class NoSourceWriteHarness:
             "minimal_scan": self.minimal_scan(),
         }
         after = self._source_hash()
+        self._assert_disposable_fixture()
         return {
+            "evidence_level": "synthetic_contract_preflight",
+            "integration_proof_complete": False,
             "source_hash_before": before,
             "source_hash_after": after,
             "source_unchanged": before == after == self.expected_sha256,
             "attempts": results,
+            "limitations": [
+                "no_loop_device",
+                "no_real_container_runtime",
+                "no_kernel_device_cgroup_proof",
+                "release_acceptance_still_required",
+            ],
         }
 
     def malicious_adapter_attempt(self) -> dict[str, Any]:
         blocked = 0
+        flags = os.O_RDWR | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
         try:
-            with self.source_path.open("r+b") as handle:
-                handle.write(b"X")
+            fd = os.open(self.source_path, flags)
         except OSError:
             blocked += 1
-        return {"attempted": 1, "blocked": blocked, "passed": blocked == 1}
+        else:
+            try:
+                opened = os.fstat(fd)
+                if (
+                    stat.S_ISREG(opened.st_mode)
+                    and opened.st_nlink == 1
+                    and opened.st_size == self.expected_size
+                ):
+                    os.write(fd, b"X")
+            finally:
+                os.close(fd)
+        return {
+            "attempted": 1,
+            "blocked": blocked,
+            "passed": blocked == 1,
+            "evidence": "regular_file_mode_preflight_only",
+        }
 
     def compromised_api_payload(self) -> dict[str, Any]:
         request = {
@@ -132,7 +166,10 @@ class NoSourceWriteHarness:
             scanner_sandbox.validate_scanner_spec(spec)
         except scanner_sandbox.ScannerSandboxError:
             sandbox_blocked = True
-        return {"passed": protocol_blocked and sandbox_blocked}
+        return {
+            "passed": protocol_blocked and sandbox_blocked,
+            "evidence": "protocol_and_spec_validation_only",
+        }
 
     def same_disk_scratch(self) -> dict[str, Any]:
         source = self._source_device()
@@ -143,7 +180,11 @@ class NoSourceWriteHarness:
             scratch,
             mounts=[{"mount_point": str(self.root), "major_minor": "8:1", "fstype": "ext4"}],
         )
-        return {"passed": result["separate"] is False, "blockers": result["blockers"]}
+        return {
+            "passed": result["separate"] is False,
+            "blockers": result["blockers"],
+            "evidence": "synthetic_storage_topology",
+        }
 
     def symlink_swap(self) -> dict[str, Any]:
         source_mount = self.root / "source-mount"
@@ -159,7 +200,11 @@ class NoSourceWriteHarness:
             link,
             mounts=[{"mount_point": str(source_mount), "major_minor": "8:1", "fstype": "ext4"}],
         )
-        return {"passed": result["separate"] is False, "blockers": result["blockers"]}
+        return {
+            "passed": result["separate"] is False,
+            "blockers": result["blockers"],
+            "evidence": "synthetic_symlink_topology",
+        }
 
     def device_renumber(self) -> dict[str, Any]:
         first = self._identified_device("sda", "8:0", "usb-Reperio_Disk_123")
@@ -168,6 +213,7 @@ class NoSourceWriteHarness:
             "passed": first["source_id"] == second["source_id"]
             and first["kernel_name"] != second["kernel_name"],
             "source_id": first["source_id"],
+            "evidence": "synthetic_sysfs_renumbering",
         }
 
     def scanner_restart(self) -> dict[str, Any]:
@@ -185,12 +231,19 @@ class NoSourceWriteHarness:
         }
         first = scanner_sandbox.build_scanner_launch(source, prep, resources)
         second = scanner_sandbox.build_scanner_launch(source, prep, resources)
-        return {"passed": first == second and prep["prepared"] is True}
+        return {
+            "passed": first == second and prep["prepared"] is True,
+            "evidence": "spec_rebuild_only",
+        }
 
     def minimal_scan(self) -> dict[str, Any]:
-        image = self.source_path.read_bytes()
+        image = self._source_bytes()
         findings = fixture_reader.read_image(image)["findings"]
-        return {"passed": bool(findings), "finding_count": len(findings)}
+        return {
+            "passed": bool(findings),
+            "finding_count": len(findings),
+            "evidence": "in_process_fixture_parser_only",
+        }
 
     def _source_device(self) -> dict[str, Any]:
         return self._identified_device("sda", "8:0", "usb-Reperio_Disk_123")
@@ -225,19 +278,62 @@ class NoSourceWriteHarness:
         )[0]
 
     def _assert_disposable_fixture(self) -> None:
+        if os.geteuid() == 0:
+            raise UnsafeFixtureError("synthetic preflight must not run as root")
         try:
             self.source_path.relative_to(self.root)
         except ValueError as error:
             raise UnsafeFixtureError("source fixture must live under the harness root") from error
         if self.source_path.name != "source.fixture":
             raise UnsafeFixtureError("source fixture must use the harness-controlled filename")
+        root_stat = self.root.stat(follow_symlinks=False)
+        source_stat = self.source_path.stat(follow_symlinks=False)
+        if not stat.S_ISDIR(root_stat.st_mode) or stat.S_IMODE(root_stat.st_mode) != 0o700:
+            raise UnsafeFixtureError("harness root must be a private directory")
+        if root_stat.st_uid != os.geteuid() or source_stat.st_uid != os.geteuid():
+            raise UnsafeFixtureError("harness paths must be owned by the current user")
+        if not stat.S_ISREG(source_stat.st_mode) or source_stat.st_nlink != 1:
+            raise UnsafeFixtureError("source fixture must be a private regular file")
+        if source_stat.st_size != self.expected_size:
+            raise UnsafeFixtureError("source fixture size does not match the deterministic image")
+        if stat.S_IMODE(source_stat.st_mode) & 0o222:
+            raise UnsafeFixtureError("source fixture must have no write permission bits")
         if self._source_hash() != self.expected_sha256:
             raise UnsafeFixtureError(
                 "source fixture hash does not match the deterministic RPR-008 image"
             )
 
     def _source_hash(self) -> str:
-        return hashlib.sha256(self.source_path.read_bytes()).hexdigest()
+        return hashlib.sha256(self._source_bytes()).hexdigest()
+
+    def _source_bytes(self) -> bytes:
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            fd = os.open(self.source_path, flags)
+        except OSError as error:
+            raise UnsafeFixtureError("source fixture could not be opened read-only") from error
+        chunks: list[bytes] = []
+        try:
+            opened = os.fstat(fd)
+            if (
+                not stat.S_ISREG(opened.st_mode)
+                or opened.st_nlink != 1
+                or opened.st_size != self.expected_size
+                or stat.S_IMODE(opened.st_mode) & 0o222
+            ):
+                raise UnsafeFixtureError("opened source fixture facts are unsafe")
+            remaining = self.expected_size
+            while remaining:
+                chunk = os.read(fd, min(remaining, 1024 * 1024))
+                if not chunk:
+                    raise UnsafeFixtureError("source fixture was truncated during read")
+                chunks.append(chunk)
+                remaining -= len(chunk)
+            if os.read(fd, 1):
+                raise UnsafeFixtureError("source fixture grew during read")
+        finally:
+            os.close(fd)
+        return b"".join(chunks)
 
 
 def _write(path: Path, value: str) -> None:

@@ -35,8 +35,9 @@ verification, SMART where supported, and launching the fixed scanner container.
   immutable Docker/Podman launch profile with one identity-bound read-only source
   device for `RPR-019`. It uses `--pull=never`; release image publication and
   runtime manifests remain deferred to `RPR-146`.
-- **No-source-write suite:** `scripts/no_source_write_suite.py` runs the
-  disposable-fixture byte-compare harness for `RPR-020`.
+- **No-source-write preflight:** `scripts/no_source_write_suite.py` runs
+  synthetic regular-file and dependency-contract checks. It explicitly does not
+  satisfy the still-open `RPR-020` loop-device/container acceptance evidence.
 
 ## Sampled fingerprint v2
 
