@@ -126,13 +126,30 @@ def create_app(
         request_id = _request_id(request)
         request.state.request_id = request_id
         content_length = request.headers.get("content-length")
-        if content_length is not None and int(content_length) > max_request_bytes:
-            return _error_response(
-                status_code=413,
-                code="request_too_large",
-                message="request body exceeds configured size limit",
-                request_id=request_id,
-            )
+        if content_length is not None:
+            try:
+                content_length_value = int(content_length)
+            except ValueError:
+                return _error_response(
+                    status_code=400,
+                    code="invalid_request",
+                    message="content-length header is invalid",
+                    request_id=request_id,
+                )
+            if content_length_value < 0:
+                return _error_response(
+                    status_code=400,
+                    code="invalid_request",
+                    message="content-length header is invalid",
+                    request_id=request_id,
+                )
+            if content_length_value > max_request_bytes:
+                return _error_response(
+                    status_code=413,
+                    code="request_too_large",
+                    message="request body exceeds configured size limit",
+                    request_id=request_id,
+                )
         try:
             response = await asyncio.wait_for(call_next(request), timeout=request_timeout_seconds)
         except TimeoutError:
@@ -183,20 +200,20 @@ def create_app(
         return {"status": "ok", "version": __version__}
 
     @app.get("/api/v1/ready", tags=["system"], response_model=None)
-    async def readiness() -> Response | dict[str, str]:
+    async def readiness(request: Request) -> Response | dict[str, str]:
         if app.state.migration_in_progress:
             return _error_response(
                 status_code=503,
                 code="migration_in_progress",
                 message="database migration is in progress",
-                request_id="readiness",
+                request_id=_request_id(request),
             )
         if app.state.catalog_path is None or not runner.ready_for_workers(app.state.catalog_path):
             return _error_response(
                 status_code=503,
                 code="catalog_not_ready",
                 message="catalog schema is not ready for workers",
-                request_id="readiness",
+                request_id=_request_id(request),
             )
         return {"status": "ready", "schema_version": str(runner.CURRENT_SCHEMA_VERSION)}
 

@@ -60,6 +60,27 @@ class ApiServiceTests(unittest.TestCase):
         self.assertEqual(413, response.status_code)
         self.assertEqual("request_too_large", response.json["error"]["code"])
 
+    def test_invalid_content_length_returns_structured_error(self) -> None:
+        app = create_app()
+
+        response = asyncio.run(
+            asgi_request(app, "POST", "/api/v1/health", headers={"content-length": "invalid"})
+        )
+
+        self.assertEqual(400, response.status_code)
+        self.assertEqual("invalid_request", response.json["error"]["code"])
+
+    def test_readiness_error_preserves_request_id(self) -> None:
+        app = create_app(migration_in_progress=True)
+
+        response = asyncio.run(
+            asgi_request(app, "GET", "/api/v1/ready", headers={"x-request-id": "req-ready"})
+        )
+
+        self.assertEqual(503, response.status_code)
+        self.assertEqual("req-ready", response.headers["x-request-id"])
+        self.assertEqual("req-ready", response.json["error"]["request_id"])
+
     def test_timeout_returns_structured_error(self) -> None:
         app = create_app(request_timeout_seconds=0.001)
 
