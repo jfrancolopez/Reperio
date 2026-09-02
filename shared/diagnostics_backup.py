@@ -44,7 +44,7 @@ def build_redacted_support_bundle(
     return {
         "format_version": BACKUP_FORMAT_VERSION,
         "settings": _redact(settings),
-        "secrets": tuple(_redact(secret) for secret in secret_snapshot),
+        "secrets": tuple(_redact_secret(secret) for secret in secret_snapshot),
         "diagnostics": _redact(diagnostics or {}),
     }
 
@@ -62,6 +62,15 @@ def create_state_backup(
     if not workers_paused():
         raise DiagnosticsBackupError("workers_not_paused", "backup requires paused workers")
     state_root = state_root.resolve()
+    resolved_archive = archive_path.resolve()
+    try:
+        resolved_archive.relative_to(state_root)
+    except ValueError:
+        pass
+    else:
+        raise DiagnosticsBackupError(
+            "archive_inside_state", "backup archive must be outside the state directory"
+        )
     archive_path.parent.mkdir(parents=True, exist_ok=True)
     entries = _state_entries(state_root, include_derivatives=include_derivatives)
     manifest = _manifest(state_root, entries, schema_version=schema_version)
@@ -87,14 +96,23 @@ def restore_state_backup(
 ) -> tuple[str, ...]:
     """Restore a validated backup into an empty state directory."""
 
-    restore_root.mkdir(parents=True, exist_ok=True)
+    if restore_root.exists():
+        if restore_root.is_symlink() or not restore_root.is_dir():
+            raise DiagnosticsBackupError("unsafe_restore_root", "restore directory is unsafe")
+        if any(restore_root.iterdir()):
+            raise DiagnosticsBackupError("restore_not_empty", "restore directory must be empty")
     with tarfile.open(archive_path, "r:gz") as archive:
         manifest = _load_manifest(archive)
         if int(manifest.get("schema_version", 0)) > max_schema_version:
             raise DiagnosticsBackupError("future_schema", "backup schema is newer than supported")
-        expected = {item["path"]: item["sha256"] for item in manifest.get("entries", ())}
+        expected = _manifest_entries(manifest)
+        members = archive.getmembers()
+        member_names = [member.name for member in members if member.name != "manifest.json"]
+        if len(member_names) != len(set(member_names)):
+            raise DiagnosticsBackupError("duplicate_member", "archive contains duplicate data")
+        restore_root.mkdir(parents=True, exist_ok=True)
         restored: list[str] = []
-        for member in archive.getmembers():
+        for member in members:
             if member.name == "manifest.json":
                 continue
             _validate_member(member)
@@ -108,10 +126,14 @@ def restore_state_backup(
             content = data.read()
             if hashlib.sha256(content).hexdigest() != expected[member.name]:
                 raise DiagnosticsBackupError("integrity_mismatch", "backup member hash mismatch")
+            if len(content) != _manifest_size(manifest, member.name):
+                raise DiagnosticsBackupError("integrity_mismatch", "backup member size mismatch")
             target = restore_root / member.name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(content)
             restored.append(member.name)
+        if set(restored) != set(expected):
+            raise DiagnosticsBackupError("missing_member", "backup member is missing")
     return tuple(sorted(restored))
 
 
@@ -164,6 +186,43 @@ def _load_manifest(archive: tarfile.TarFile) -> dict[str, Any]:
     return manifest
 
 
+def _manifest_entries(manifest: Mapping[str, Any]) -> dict[str, str]:
+    entries = manifest.get("entries")
+    if not isinstance(entries, list):
+        raise DiagnosticsBackupError("corrupt_manifest", "backup manifest entries are invalid")
+    expected: dict[str, str] = {}
+    for item in entries:
+        if not isinstance(item, Mapping):
+            raise DiagnosticsBackupError("corrupt_manifest", "backup manifest entry is invalid")
+        path = item.get("path")
+        digest = item.get("sha256")
+        size = item.get("size_bytes")
+        if (
+            not isinstance(path, str)
+            or not path
+            or path == "manifest.json"
+            or not isinstance(digest, str)
+            or len(digest) != 64
+            or any(char not in "0123456789abcdef" for char in digest)
+            or not isinstance(size, int)
+            or isinstance(size, bool)
+            or size < 0
+        ):
+            raise DiagnosticsBackupError("corrupt_manifest", "backup manifest entry is invalid")
+        _validate_member(tarfile.TarInfo(path))
+        if path in expected:
+            raise DiagnosticsBackupError("duplicate_member", "backup manifest contains duplicates")
+        expected[path] = digest
+    return expected
+
+
+def _manifest_size(manifest: Mapping[str, Any], path: str) -> int:
+    for item in manifest["entries"]:
+        if isinstance(item, Mapping) and item.get("path") == path:
+            return int(item["size_bytes"])
+    raise DiagnosticsBackupError("missing_member", "backup member is missing")
+
+
 def _validate_member(member: tarfile.TarInfo) -> None:
     path = Path(member.name)
     if member.isdir() or member.issym() or member.islnk() or member.isdev():
@@ -183,6 +242,15 @@ def _redact(value: Any) -> Any:
     if isinstance(value, list | tuple):
         return tuple(_redact(item) for item in value)
     return value
+
+
+def _redact_secret(value: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        str(key): "********"
+        if _secretish(str(key)) or str(key).lower() == "value"
+        else _redact(item)
+        for key, item in value.items()
+    }
 
 
 def _secretish(key: str) -> bool:
