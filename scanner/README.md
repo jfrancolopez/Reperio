@@ -32,12 +32,13 @@ read-only and emits normalized findings to the catalog.
 - **Read-error handling:** `scanner.read_errors` normalizes EIO, timeout, and
   short-read ranges into bounded gaps, counters, retries, warnings, and pause
   recommendations for `RPR-044`; no repair command is exposed.
+- **PhotoRec carving:** `scanner.photorec_carving` invokes the pinned PhotoRec
+  `7.2` binary through a fixed scripted command, accepts only the upstream-
+  validated `/dev` source endpoint, and writes quarantine output under separate
+  scratch; TestDisk/repair/write modes are not exposed.
 - **Lifecycle:** `scanner.lifecycle` coordinates cooperative pause, safe stop,
   source-reconnect-aware restart, and UI-visible pause acknowledgements for
   `RPR-045`.
-- **PhotoRec carving:** `scanner.photorec_carving` builds scripted, allowlisted
-  PhotoRec searches into scratch quarantine and normalizes logs/timeouts for
-  `RPR-046` without exposing interactive repair features.
 - **PhotoRec resume:** `scanner.photorec_resume` backs up and validates
   `photorec.ses` state against source/tool/config bindings before any resume
   invocation for `RPR-047`.

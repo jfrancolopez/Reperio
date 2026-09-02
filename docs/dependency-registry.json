@@ -163,6 +163,16 @@
       "notes": "RPR-017 invokes smartctl as a fixed read-only JSON inspection command for disk health. The adapter forbids self-tests and device-setting flags, accepts only sanitized kernel names, normalizes fixture-backed output, and never receives arbitrary source paths or network access. Release packaging must provide the pinned distro/source package and corresponding notices/source offer."
     },
     {
+      "name": "PhotoRec",
+      "version": "7.2",
+      "license": "GPL-2.0-or-later",
+      "source": "https://www.cgsecurity.org/wiki/PhotoRec",
+      "architecture": ["amd64", "arm64"],
+      "linkage": "separate_process",
+      "sandbox": "scanner-fixed-container",
+      "notes": "RPR-046 invokes PhotoRec as a fixed scripted read-only carving command with allowlisted signatures/ranges, bounded timeout/output, separate scratch quarantine, and no TestDisk repair/write surface. Release packaging must retain the PhotoRec license/source offer and record the immutable 7.2 artifact identity."
+    },
+    {
       "name": "python:3.12-slim (docker base image)",
       "version": "sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
       "license": "Python-2.0",
