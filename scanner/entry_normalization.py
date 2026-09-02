@@ -160,12 +160,12 @@ def raw_entry(
 
 
 def _encode_path(value: str) -> bytes:
-    return unicodedata.normalize("NFC", value).encode("utf-8", errors="surrogateescape")
+    return value.encode("utf-8", errors="surrogateescape")
 
 
 def _display_path(value: bytes) -> tuple[str, tuple[str, ...]]:
     warnings: list[str] = []
-    decoded = value.decode("utf-8", errors="replace")
+    decoded = unicodedata.normalize("NFC", value.decode("utf-8", errors="replace"))
     if "\ufffd" in decoded:
         warnings.append("invalid_unicode")
     if "\x00" in decoded:

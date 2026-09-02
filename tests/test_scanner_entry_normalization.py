@@ -87,6 +87,16 @@ class ScannerEntryNormalizationTests(unittest.TestCase):
 
                 self.assertEqual(sample or b".", normalized.raw_path_bytes)
 
+    def test_decomposed_unicode_preserves_raw_bytes_and_normalizes_display(self) -> None:
+        path_bytes = "cafe\u0301.txt".encode()
+
+        normalized = entry_normalization.normalize_entry(
+            entry_normalization.raw_entry(volume_id="vol1", object_id="70", path_bytes=path_bytes)
+        )
+
+        self.assertEqual(path_bytes, normalized.raw_path_bytes)
+        self.assertEqual("café.txt", normalized.display_path)
+
 
 def enumerated(
     object_id: str,
