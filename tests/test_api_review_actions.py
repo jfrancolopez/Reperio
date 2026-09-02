@@ -108,6 +108,23 @@ class ApiReviewActionTests(unittest.TestCase):
 
         self.assertEqual(403, response.status_code)
 
+    def test_undo_group_id_is_not_a_sql_like_pattern(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            app = self._app(root)
+            self._seed(root, ["finding_a"])
+            dismissed = self._post(
+                app, "/api/v1/findings/review/dismiss", {"finding_ids": ["finding_a"]}
+            )
+
+            response = self._post(app, "/api/v1/review-actions/review_%/undo", {})
+
+            status = self._statuses(root)["finding_a"]
+
+        self.assertEqual(404, response.status_code)
+        self.assertEqual("dismissed", status)
+        self.assertNotEqual("review_%", dismissed.json["review_action_id"])
+
     def _app(self, root: Path) -> Any:
         db_path = root / "catalog.sqlite3"
         runner.migrate_catalog(db_path)

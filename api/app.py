@@ -1000,10 +1000,10 @@ def _undo_review_action(
         """
         SELECT review_action_id, finding_id, note
         FROM review_actions
-        WHERE review_action_id = ? OR note LIKE ?
+        WHERE review_action_id = ? OR json_extract(note, '$.group_id') = ?
         ORDER BY review_action_id
         """,
-        (review_action_id, f'%"group_id": "{review_action_id}"%'),
+        (review_action_id, review_action_id),
     ).fetchall()
     if not rows:
         raise StarletteHTTPException(status_code=404)
