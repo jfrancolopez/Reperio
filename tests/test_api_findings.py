@@ -124,6 +124,16 @@ class ApiFindingQueryTests(unittest.TestCase):
 
         self.assertEqual(400, response.status_code)
 
+    def test_malformed_encoded_cursor_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            app = self._app(Path(tmp))
+
+            response = asyncio.run(asgi_request(app, "GET", "/api/v1/findings?cursor=!!!!"))
+            scalar = asyncio.run(asgi_request(app, "GET", "/api/v1/findings?cursor=bnVsbA"))
+
+        self.assertEqual(400, response.status_code)
+        self.assertEqual(400, scalar.status_code)
+
     def _app(self, root: Path) -> Any:
         db_path = root / "catalog.sqlite3"
         runner.migrate_catalog(db_path)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import binascii
 import hashlib
 import json
 import sqlite3
@@ -1104,11 +1105,15 @@ def _encode_finding_cursor(created_at: str, finding_id: str) -> str:
 def _decode_finding_cursor(cursor: str | None) -> tuple[str | None, str | None]:
     if cursor is None:
         return None, None
+    if len(cursor) > 512:
+        raise StarletteHTTPException(status_code=400)
     try:
         padded = cursor + "=" * (-len(cursor) % 4)
         payload = json.loads(base64.urlsafe_b64decode(padded.encode()).decode())
-    except (ValueError, json.JSONDecodeError):
+    except (binascii.Error, UnicodeError, ValueError, json.JSONDecodeError):
         raise StarletteHTTPException(status_code=400) from None
+    if not isinstance(payload, dict):
+        raise StarletteHTTPException(status_code=400)
     created_at = payload.get("created_at")
     finding_id = payload.get("finding_id")
     if not isinstance(created_at, str) or not isinstance(finding_id, str):
@@ -1127,11 +1132,15 @@ def _encode_browser_cursor(created_at: str, browser_artifact_id: str) -> str:
 def _decode_browser_cursor(cursor: str | None) -> tuple[str | None, str | None]:
     if cursor is None:
         return None, None
+    if len(cursor) > 512:
+        raise StarletteHTTPException(status_code=400)
     try:
         padded = cursor + "=" * (-len(cursor) % 4)
         payload = json.loads(base64.urlsafe_b64decode(padded.encode()).decode())
-    except (ValueError, json.JSONDecodeError):
+    except (binascii.Error, UnicodeError, ValueError, json.JSONDecodeError):
         raise StarletteHTTPException(status_code=400) from None
+    if not isinstance(payload, dict):
+        raise StarletteHTTPException(status_code=400)
     created_at = payload.get("created_at")
     browser_artifact_id = payload.get("browser_artifact_id")
     if not isinstance(created_at, str) or not isinstance(browser_artifact_id, str):
