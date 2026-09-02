@@ -28,6 +28,8 @@ Implementation status: the checked-in `RPR-020` harness currently provides only
 synthetic regular-file and dependency-contract preflight checks. It is not the
 required loop-device/container integration evidence, and `RPR-020` remains
 incomplete. Its result explicitly reports `integration_proof_complete: false`.
+The approved non-CI execution and evidence contract is
+`docs/NO_SOURCE_WRITE_ACCEPTANCE.md` and depends on the signed `RPR-146` image.
 
 ## 2. Assets
 

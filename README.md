@@ -110,6 +110,7 @@ Start with [agent onboarding](docs/AGENT_START_HERE.md), use the [task packet te
 |---|---|
 | [Master plan](docs/MASTER_PLAN.md) | Product decisions, safety invariants, architecture, pipeline, UX, providers, release model, and honest limitations. |
 | [Threat model](docs/THREAT_MODEL.md) | Assets, trust boundaries, attacker/failure scenarios, prohibited operations, and invariant controls/verifications for the no-write boundary. |
+| [No-source-write acceptance](docs/NO_SOURCE_WRITE_ACCEPTANCE.md) | Owner-run, non-CI disposable Linux environment and evidence contract for the incomplete `RPR-020` release gate. |
 | [Architecture decisions](docs/adr/README.md) | Accepted ADRs (license, host control, no mounts, SQLite jobs, one source, scratch store, sandboxes, optional AI) with reversal conditions. |
 | [Implementation backlog](docs/BACKLOG.md) | 191 small, dependency-ordered tasks with deliverables, acceptance criteria, and tests. |
 | [Requirements traceability](docs/TRACEABILITY.md) | Maps every confirmed requirement to specification sections and backlog coverage. |

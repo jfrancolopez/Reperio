@@ -214,7 +214,10 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
   scanner runtime, inspect device-cgroup enforcement, or prove restart behavior.
   Privileged/raw-device CI remains prohibited; disposable Linux runtime evidence
   is still required before this task or the release safety gate can pass.
-- **Depends:** RPR-008, RPR-013–019.
+- **Depends:** RPR-008, RPR-013–019, RPR-146. The release-artifact dependency is
+  intentional: runtime no-write proof must inspect the exact signed scanner
+  image in the owner-run non-CI lane defined by
+  `docs/NO_SOURCE_WRITE_ACCEPTANCE.md`.
 - **Deliver:** destructive-to-fixture-only test harness that snapshots a loop disk, tries all plausible Reperio write paths, runs a minimal scan, and byte-compares the source afterward.
 - **Acceptance:** every attempted write fails; source hash is unchanged; the suite runs only against a verified disposable fixture and refuses real disks.
 - **Tests:** include malicious adapter attempt, compromised API payload, same-disk scratch, symlink swap, device renumber, and scanner restart.
