@@ -5,12 +5,16 @@ from __future__ import annotations
 import array
 import fcntl
 import os
+import re
+import stat
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, Protocol
 
 BLKROSET = 0x125D
 BLKROGET = 0x125E
+KERNEL_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$")
+MAJOR_MINOR_RE = re.compile(r"^(0|[1-9][0-9]*):(0|[1-9][0-9]*)$")
 
 
 class ReadOnlyOperationError(OSError):
@@ -53,11 +57,25 @@ class LinuxIoctlReadOnlyOps:
         if not _valid_kernel_name(kernel_name):
             raise ReadOnlyOperationError(f"invalid kernel name {kernel_name!r}")
         path = self.device_root / kernel_name
-        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
         try:
-            return os.open(path, flags)
+            fd = os.open(path, flags)
         except OSError as error:
-            raise ReadOnlyOperationError(str(error)) from error
+            raise ReadOnlyOperationError(error.__class__.__name__) from error
+        try:
+            opened = os.fstat(fd)
+            expected_major, expected_minor = _major_minor(target.get("major_minor", ""))
+            if not stat.S_ISBLK(opened.st_mode):
+                raise ReadOnlyOperationError("opened target is not a block device")
+            if (os.major(opened.st_rdev), os.minor(opened.st_rdev)) != (
+                expected_major,
+                expected_minor,
+            ):
+                raise ReadOnlyOperationError("opened target identity changed")
+        except Exception:
+            os.close(fd)
+            raise
+        return fd
 
 
 def prepare_read_only(
@@ -68,6 +86,12 @@ def prepare_read_only(
 ) -> dict[str, Any]:
     """Set and verify kernel read-only state for a source and its children."""
     storage_blockers = list((storage_state or {}).get("blockers", []))
+    if storage_state is None:
+        storage_blockers.append({"reason": "storage_inspection_required"})
+    elif storage_state.get("inspection_complete") is not True:
+        storage_blockers.append({"reason": "storage_inspection_incomplete"})
+    elif storage_state.get("safe_for_preparation") is not True:
+        storage_blockers.append({"reason": "storage_state_not_safe"})
     if storage_blockers:
         return {
             "source_id": device.get("source_id"),
@@ -82,7 +106,15 @@ def prepare_read_only(
 
     targets = _targets(device)
     results: list[dict[str, str | bool]] = []
-    blockers: list[dict[str, str]] = []
+    blockers = _target_blockers(device, targets)
+    if blockers:
+        return {
+            "source_id": device.get("source_id"),
+            "prepared": False,
+            "targets": [],
+            "blockers": blockers,
+            "audit": _audit(device, [], False),
+        }
     for target in targets:
         result: dict[str, str | bool] = {
             "kernel_name": target["kernel_name"],
@@ -160,6 +192,22 @@ def _append_target(targets: list[dict[str, str]], item: Mapping[str, Any]) -> No
             targets.append({"kernel_name": kernel_name, "major_minor": major_minor})
 
 
+def _target_blockers(
+    device: Mapping[str, Any], targets: Sequence[Mapping[str, str]]
+) -> list[dict[str, str]]:
+    children = device.get("children")
+    if not isinstance(children, Sequence) or isinstance(children, str | bytes):
+        return [{"reason": "invalid_source_topology", "detail": "children must be a list"}]
+    expected_count = 1 + len(children)
+    if len(targets) != expected_count:
+        return [{"reason": "invalid_source_target", "detail": "target facts are incomplete"}]
+    kernel_names = {target["kernel_name"] for target in targets}
+    major_minors = {target["major_minor"] for target in targets}
+    if len(kernel_names) != len(targets) or len(major_minors) != len(targets):
+        return [{"reason": "duplicate_source_target", "detail": "target facts are ambiguous"}]
+    return []
+
+
 def _audit(
     device: Mapping[str, Any], targets: Sequence[Mapping[str, Any]], prepared: bool
 ) -> dict[str, Any]:
@@ -177,9 +225,15 @@ def _audit(
 
 
 def _valid_kernel_name(value: str) -> bool:
-    return bool(value) and "/" not in value and "\x00" not in value and ".." not in value
+    return KERNEL_NAME_RE.fullmatch(value) is not None and ".." not in value
 
 
 def _valid_major_minor(value: str) -> bool:
-    major, separator, minor = value.partition(":")
-    return bool(separator) and major.isdigit() and minor.isdigit()
+    return MAJOR_MINOR_RE.fullmatch(value) is not None
+
+
+def _major_minor(value: str) -> tuple[int, int]:
+    if not _valid_major_minor(value):
+        raise ReadOnlyOperationError("invalid major:minor")
+    major, minor = value.split(":", 1)
+    return int(major), int(minor)

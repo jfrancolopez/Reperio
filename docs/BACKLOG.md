@@ -177,7 +177,11 @@ Task size target: approximately 0.5–2 focused engineering days for a capable a
 - **Depends:** RPR-011, RPR-014.
 - **Deliver:** host operation equivalent to `BLKROSET`, followed by independent verification for the whole disk and discovered children.
 - **Acceptance:** launch stops if read-only cannot be set or verified; audit records facts without source bytes.
-- **Tests:** privileged loop-device test verifies writes fail after preparation and normal writes resume only after test teardown outside Reperio.
+- **Tests:** mocked ioctl/open-identity tests verify `BLKROSET`, independent
+  `BLKROGET`, read-only opens, and device-renumber refusal. Disposable loop and
+  representative hardware write-failure proof are RPR-020/RPR-153 acceptance
+  work because privileged/raw devices are prohibited in CI; restoring writable
+  state remains teardown tooling outside Reperio.
 
 ### RPR-017 — Add read-only disk-health inspection `[P1, M1]`
 

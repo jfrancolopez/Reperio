@@ -20,6 +20,7 @@ from hostd import (
     protocol,
     read_only,
     scanner_sandbox,
+    storage_inspection,
 )
 
 
@@ -165,7 +166,11 @@ class NoSourceWriteHarness:
 
     def scanner_restart(self) -> dict[str, Any]:
         source = self._source_device()
-        prep = read_only.prepare_read_only(source, ops=FakeReadOnlyOps())
+        prep = read_only.prepare_read_only(
+            source,
+            ops=FakeReadOnlyOps(),
+            storage_state=storage_inspection.inspect_storage_state(source),
+        )
         resources = {
             "memory_limit_mib": 512,
             "pids_limit": 64,

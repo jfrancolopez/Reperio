@@ -10,6 +10,7 @@ from hostd import removable_sources
 from shared import media_identity
 
 FINGERPRINT = "a" * 64
+SAFE_STORAGE = {"safe_for_preparation": True, "inspection_complete": True, "blockers": []}
 
 
 class FakeReadOnlyOps:
@@ -63,7 +64,7 @@ def removable_device(**overrides: Any) -> dict[str, Any]:
 class PrepareSourceTests(unittest.TestCase):
     def test_ready_when_identity_and_read_only_are_proven(self) -> None:
         prepared = removable_sources.prepare_removable_source(
-            removable_device(), ops=FakeReadOnlyOps()
+            removable_device(), ops=FakeReadOnlyOps(), storage_state=SAFE_STORAGE
         )
         self.assertTrue(prepared.medium_identity_proven)
         self.assertTrue(prepared.read_only_verified)
@@ -73,7 +74,7 @@ class PrepareSourceTests(unittest.TestCase):
     def test_scan_launch_denied_without_proven_read_only(self) -> None:
         device = removable_device()
         prepared = removable_sources.prepare_removable_source(
-            device, ops=FakeReadOnlyOps(verify=False)
+            device, ops=FakeReadOnlyOps(verify=False), storage_state=SAFE_STORAGE
         )
         self.assertFalse(prepared.read_only_verified)
         with self.assertRaisesRegex(
@@ -83,7 +84,9 @@ class PrepareSourceTests(unittest.TestCase):
 
     def test_scan_launch_denied_without_proven_medium_identity(self) -> None:
         device = removable_device(medium_identity=None)
-        prepared = removable_sources.prepare_removable_source(device, ops=FakeReadOnlyOps())
+        prepared = removable_sources.prepare_removable_source(
+            device, ops=FakeReadOnlyOps(), storage_state=SAFE_STORAGE
+        )
         with self.assertRaisesRegex(
             removable_sources.ScanLaunchDenied, "medium_identity_not_proven"
         ):
@@ -96,7 +99,9 @@ class PrepareSourceTests(unittest.TestCase):
             media_identity.normalize_medium_signals({"size_bytes": 32 * 1024 * 1024}),
             identity_strength="reader-facts",
         )
-        prepared = removable_sources.prepare_removable_source(device, ops=FakeReadOnlyOps())
+        prepared = removable_sources.prepare_removable_source(
+            device, ops=FakeReadOnlyOps(), storage_state=SAFE_STORAGE
+        )
         self.assertFalse(prepared.medium_identity_proven)
         with self.assertRaisesRegex(removable_sources.ScanLaunchDenied, "medium_identity"):
             removable_sources.require_scan_launch_approval(device, prepared)
@@ -108,7 +113,9 @@ class PrepareSourceTests(unittest.TestCase):
             media_identity.normalize_medium_signals({}),
             identity_strength="reader-facts",
         )
-        prepared = removable_sources.prepare_removable_source(device, ops=FakeReadOnlyOps())
+        prepared = removable_sources.prepare_removable_source(
+            device, ops=FakeReadOnlyOps(), storage_state=SAFE_STORAGE
+        )
         self.assertIn("no_medium_present", prepared.blockers)
         self.assertFalse(prepared.ready_for_scan)
 
@@ -118,7 +125,9 @@ class PrepareSourceTests(unittest.TestCase):
             device,
             ops=FakeReadOnlyOps(),
             storage_state={
-                "blockers": [{"reason": "source_mounted_read_write", "detail": "/mnt/card"}]
+                "safe_for_preparation": False,
+                "inspection_complete": True,
+                "blockers": [{"reason": "source_mounted_read_write", "detail": "/mnt/card"}],
             },
         )
         self.assertFalse(prepared.ready_for_scan)
@@ -128,14 +137,17 @@ class PrepareSourceTests(unittest.TestCase):
         prepared = removable_sources.prepare_removable_source(
             removable_device(),
             ops=FakeReadOnlyOps(),
-            storage_state={"blockers": [], "mounts": [{"mode": "ro", "mount_point": "/mnt/card"}]},
+            storage_state={
+                **SAFE_STORAGE,
+                "mounts": [{"mode": "ro", "mount_point": "/mnt/card"}],
+            },
         )
         self.assertTrue(prepared.ready_for_scan)
         self.assertTrue(any("mounted_read_only" in w for w in prepared.warnings))
 
     def test_read_only_set_failure_is_blocker(self) -> None:
         prepared = removable_sources.prepare_removable_source(
-            removable_device(), ops=FakeReadOnlyOps(fail_set=True)
+            removable_device(), ops=FakeReadOnlyOps(fail_set=True), storage_state=SAFE_STORAGE
         )
         self.assertIn("read_only_set_failed", prepared.blockers)
 
@@ -146,7 +158,9 @@ class PrepareSourceTests(unittest.TestCase):
             {"kernel_name": "mmcblk0p1", "major_minor": "179:1"},
             {"kernel_name": "mmcblk0p2", "major_minor": "179:2"},
         ]
-        prepared = removable_sources.prepare_removable_source(device, ops=ops)
+        prepared = removable_sources.prepare_removable_source(
+            device, ops=ops, storage_state=SAFE_STORAGE
+        )
         self.assertTrue(prepared.ready_for_scan)
         self.assertEqual(
             {"mmcblk0", "mmcblk0p1", "mmcblk0p2"}, {c["kernel_name"] for c in ops.verify_calls}
@@ -271,7 +285,9 @@ class ReadOnlyOperationAllowlistTests(unittest.TestCase):
     def test_source_bytes_unchanged_after_preparation(self) -> None:
         source_bytes = b"\x00\x01\x02\x03" * 8
         device = removable_device()
-        removable_sources.prepare_removable_source(device, ops=FakeReadOnlyOps())
+        removable_sources.prepare_removable_source(
+            device, ops=FakeReadOnlyOps(), storage_state=SAFE_STORAGE
+        )
         self.assertEqual(b"\x00\x01\x02\x03" * 8, source_bytes)
 
 
