@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import shutil
+import threading
 import uuid
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
@@ -50,14 +51,17 @@ class ScratchStore:
         quota_bytes: int,
         statvfs: Callable[[Path], os.statvfs_result] | None = None,
     ) -> None:
-        if quota_bytes <= 0:
+        if isinstance(quota_bytes, bool) or not isinstance(quota_bytes, int) or quota_bytes <= 0:
             raise ScratchStoreError("invalid_quota", "scratch quota must be positive")
+        if root.is_symlink():
+            raise ScratchStoreError("scratch_symlink", "scratch storage root must not be a symlink")
         self.root = root.resolve(strict=False)
         self.objects = self.root / "objects"
         self.tmp = self.root / "tmp"
         self.metadata = self.root / "metadata"
         self.quota_bytes = quota_bytes
         self._statvfs = statvfs or os.statvfs
+        self._metadata_lock = threading.Lock()
         separation = evaluate_destination_separation(
             source, self.root, mounts=mounts, holders=holders
         )
@@ -109,18 +113,40 @@ class ScratchStore:
             self._check_available_quota(size)
             final_path = self._object_path(sha256)
             final_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+            _refuse_symlink(final_path.parent)
+            if final_path.exists() or final_path.is_symlink():
+                _refuse_symlink(final_path)
             if final_path.exists():
                 temp_path.unlink(missing_ok=True)
             else:
                 os.replace(temp_path, final_path)
-            return self._record_metadata(sha256, size, final_path, provenance)
+            with self._metadata_lock:
+                return self._record_metadata(sha256, size, final_path, provenance)
         except Exception:
             temp_path.unlink(missing_ok=True)
             raise
 
     def load_metadata(self, sha256: str) -> ScratchObject:
         metadata_path = self._metadata_path(sha256)
-        data = json.loads(metadata_path.read_text(encoding="utf-8"))
+        _refuse_symlink(metadata_path)
+        try:
+            data = json.loads(metadata_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ScratchStoreError(
+                "invalid_metadata", "scratch metadata cannot be read"
+            ) from error
+        if (
+            not isinstance(data, dict)
+            or data.get("sha256") != sha256
+            or not isinstance(data.get("size_bytes"), int)
+            or isinstance(data["size_bytes"], bool)
+            or data["size_bytes"] < 0
+            or not isinstance(data.get("ref_count"), int)
+            or isinstance(data["ref_count"], bool)
+            or data["ref_count"] < 1
+            or not isinstance(data.get("provenance"), list)
+        ):
+            raise ScratchStoreError("invalid_metadata", "scratch metadata is malformed")
         path = self._object_path(sha256)
         return ScratchObject(
             content_id=str(data["content_id"]),
@@ -141,7 +167,9 @@ class ScratchStore:
     ) -> ScratchObject:
         metadata_path = self._metadata_path(sha256)
         metadata_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        _refuse_symlink(metadata_path.parent)
         if metadata_path.exists():
+            _refuse_symlink(metadata_path)
             existing = json.loads(metadata_path.read_text(encoding="utf-8"))
             provenance_list = list(existing["provenance"])
             provenance_list.append(dict(provenance))

@@ -96,6 +96,41 @@ class ScratchStoreTests(unittest.TestCase):
 
             self.assertEqual("scratch_symlink", captured.exception.code)
 
+    def test_symlinked_root_and_object_bucket_are_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            target = base / "target"
+            target.mkdir()
+            link = base / "scratch-link"
+            link.symlink_to(target, target_is_directory=True)
+
+            with self.assertRaisesRegex(scratch_store.ScratchStoreError, "symlink"):
+                make_store(link).initialize()
+
+            root = base / "scratch"
+            root.mkdir()
+            store = make_store(root)
+            store.initialize()
+            digest = hashlib.sha256(b"content").hexdigest()
+            (root / "objects" / digest[:2]).symlink_to(target, target_is_directory=True)
+
+            with self.assertRaisesRegex(scratch_store.ScratchStoreError, "symlink"):
+                store.put_bytes([b"content"], provenance={"entry_id": "entry1"})
+
+    def test_malformed_metadata_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "scratch"
+            root.mkdir()
+            store = make_store(root)
+            store.initialize()
+            digest = hashlib.sha256(b"content").hexdigest()
+            metadata = root / "metadata" / digest[:2] / f"{digest}.json"
+            metadata.parent.mkdir(parents=True)
+            metadata.write_text("{}", encoding="utf-8")
+
+            with self.assertRaisesRegex(scratch_store.ScratchStoreError, "metadata"):
+                store.load_metadata(digest)
+
     def test_same_disk_scratch_is_refused_before_write(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "scratch"
