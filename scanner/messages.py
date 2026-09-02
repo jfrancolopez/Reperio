@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -68,8 +69,18 @@ def encode_message(message_type: str, sequence: int, payload: Mapping[str, Any])
         "sequence": sequence,
         "payload": dict(payload),
     }
-    _validate_decoded_object(message)
-    encoded = json.dumps(message, sort_keys=True, separators=(",", ":")).encode("utf-8") + b"\n"
+    try:
+        _validate_decoded_object(message)
+        encoded = (
+            json.dumps(message, allow_nan=False, sort_keys=True, separators=(",", ":")).encode(
+                "utf-8"
+            )
+            + b"\n"
+        )
+    except (RecursionError, ValueError) as error:
+        if isinstance(error, ScannerMessageError):
+            raise
+        raise ScannerMessageError("scanner message contains invalid JSON") from error
     if len(encoded) > MAX_LINE_BYTES:
         raise ScannerMessageError("message exceeds maximum line size")
     return encoded
@@ -87,12 +98,19 @@ def decode_line(line: bytes) -> ScannerMessage:
     except UnicodeDecodeError as error:
         raise ScannerMessageError("scanner message is not valid UTF-8") from error
     try:
-        decoded = json.loads(text)
-    except json.JSONDecodeError as error:
+        decoded = json.loads(text, parse_constant=_reject_constant)
+    except (RecursionError, json.JSONDecodeError, ValueError) as error:
+        if isinstance(error, ScannerMessageError):
+            raise
+        if isinstance(error, RecursionError):
+            raise ScannerMessageError("scanner message is too deeply nested") from error
         raise ScannerMessageError("scanner message is not valid JSON") from error
     if not isinstance(decoded, dict):
         raise ScannerMessageError("scanner message must be a JSON object")
-    _validate_decoded_object(decoded)
+    try:
+        _validate_decoded_object(decoded)
+    except RecursionError as error:
+        raise ScannerMessageError("scanner message is too deeply nested") from error
     return ScannerMessage(
         message_type=str(decoded["type"]),
         sequence=int(decoded["sequence"]),
@@ -121,7 +139,7 @@ def _validate_decoded_object(message: Mapping[str, Any]) -> None:
     if message_type not in MESSAGE_TYPES:
         raise ScannerMessageError("unknown scanner message type")
     sequence = message.get("sequence")
-    if not isinstance(sequence, int) or sequence < 0:
+    if isinstance(sequence, bool) or not isinstance(sequence, int) or sequence < 0:
         raise ScannerMessageError("scanner message sequence must be a non-negative integer")
     payload = message.get("payload")
     if not isinstance(payload, dict):
@@ -151,7 +169,13 @@ def _validate_value(value: object) -> None:
     elif isinstance(value, list):
         for child in value:
             _validate_value(child)
+    elif isinstance(value, float) and not math.isfinite(value):
+        raise ScannerMessageError("scanner message contains a non-finite number")
     elif value is None or isinstance(value, bool | int | float):
         return
     else:
         raise ScannerMessageError("scanner message field has unsupported type")
+
+
+def _reject_constant(value: str) -> None:
+    raise ValueError(f"non-standard JSON constant: {value}")

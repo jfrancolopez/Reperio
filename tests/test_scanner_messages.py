@@ -97,6 +97,28 @@ class ScannerMessageTests(unittest.TestCase):
         with self.assertRaisesRegex(messages.ScannerMessageError, "unsafe"):
             messages.decode_line(json.dumps(payload).encode() + b"\n")
 
+    def test_non_finite_numbers_and_boolean_sequences_are_rejected(self) -> None:
+        with self.assertRaisesRegex(messages.ScannerMessageError, "non-finite"):
+            messages.encode_message(
+                "progress", 1, {"stage": "validate", "completed": float("nan"), "total": 2}
+            )
+
+        with self.assertRaises(messages.ScannerMessageError):
+            messages.decode_line(
+                b'{"protocol_version":1,"type":"hello","sequence":true,"payload":{'
+                b'"worker_id":"w","scanner_version":"v"}}\n'
+            )
+
+    def test_deeply_nested_output_is_rejected_as_protocol_error(self) -> None:
+        nested = b"[" * 2_000 + b'"leaf"' + b"]" * 2_000
+        payload = (
+            b'{"protocol_version":1,"type":"warning","sequence":1,"payload":'
+            b'{"stage":"validate","code":"deep","message":' + nested + b"}}\n"
+        )
+
+        with self.assertRaises(messages.ScannerMessageError):
+            messages.decode_line(payload)
+
 
 if __name__ == "__main__":
     unittest.main()
