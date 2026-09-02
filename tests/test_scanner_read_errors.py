@@ -115,6 +115,45 @@ class ScannerReadErrorTests(unittest.TestCase):
 
         self.assertEqual("source temperature threshold reached", outcome.pause_reason)
 
+    def test_policy_and_read_ranges_are_strictly_bounded(self) -> None:
+        for kwargs in (
+            {"max_attempts": True},
+            {"max_attempts": read_errors.MAX_ATTEMPTS + 1},
+            {"base_backoff_ms": read_errors.MAX_BACKOFF_MS + 1},
+            {"max_error_ranges": read_errors.MAX_ERROR_RANGES + 1},
+            {"pause_after_errors": 0},
+        ):
+            with self.subTest(kwargs=kwargs):
+                with self.assertRaises(read_errors.ReadErrorHandlingError):
+                    read_errors.ReadPolicy(**kwargs)
+
+        reader = read_errors.ResilientReader(
+            FaultReader([b""]), policy=read_errors.ReadPolicy(max_attempts=1)
+        )
+        with self.assertRaisesRegex(read_errors.ReadErrorHandlingError, "non-negative"):
+            reader.read_or_gap(True, 1)
+        with self.assertRaisesRegex(read_errors.ReadErrorHandlingError, "bounded limit"):
+            reader.read_or_gap(0, read_errors.MAX_READ_LENGTH_BYTES + 1)
+
+    def test_invalid_reader_data_becomes_a_gap_instead_of_raising(self) -> None:
+        class InvalidReader:
+            def read_at(self, offset_bytes: int, length_bytes: int) -> object:
+                del offset_bytes, length_bytes
+                return "not-bytes"
+
+        reader = read_errors.ResilientReader(
+            InvalidReader(), policy=read_errors.ReadPolicy(max_attempts=1)
+        )
+
+        outcome = reader.read_or_gap(0, 4)
+
+        self.assertEqual("invalid_data", outcome.gap.code if outcome.gap else None)
+        self.assertEqual(bytes(4), outcome.data)
+        self.assertEqual(1, outcome.counters.invalid_reads)
+
+    def test_error_module_exposes_no_repair_operation(self) -> None:
+        self.assertFalse(hasattr(read_errors, "repair"))
+
 
 if __name__ == "__main__":
     unittest.main()

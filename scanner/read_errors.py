@@ -8,6 +8,11 @@ from typing import Protocol
 
 from scanner import messages
 
+MAX_ATTEMPTS = 16
+MAX_BACKOFF_MS = 60_000
+MAX_ERROR_RANGES = 4_096
+MAX_READ_LENGTH_BYTES = 16 * 1024 * 1024
+
 
 class ReadErrorHandlingError(ValueError):
     """Raised when a read policy is invalid."""
@@ -39,6 +44,7 @@ class ReadCounters:
     recovered_after_retry: int = 0
     short_reads: int = 0
     timeouts: int = 0
+    invalid_reads: int = 0
 
     def as_payload(self) -> dict[str, int]:
         return {
@@ -50,6 +56,7 @@ class ReadCounters:
             "recovered_after_retry": self.recovered_after_retry,
             "short_reads": self.short_reads,
             "timeouts": self.timeouts,
+            "invalid_reads": self.invalid_reads,
         }
 
 
@@ -62,12 +69,21 @@ class ReadPolicy:
     pause_temperature_celsius: int | None = None
 
     def __post_init__(self) -> None:
-        if self.max_attempts <= 0:
-            raise ReadErrorHandlingError("invalid_policy", "max attempts must be positive")
-        if self.base_backoff_ms < 0:
-            raise ReadErrorHandlingError("invalid_policy", "backoff must not be negative")
-        if self.max_error_ranges <= 0 or self.pause_after_errors <= 0:
-            raise ReadErrorHandlingError("invalid_policy", "thresholds must be positive")
+        if (
+            type(self.max_attempts) is not int
+            or not 0 < self.max_attempts <= MAX_ATTEMPTS
+            or type(self.base_backoff_ms) is not int
+            or not 0 <= self.base_backoff_ms <= MAX_BACKOFF_MS
+            or type(self.max_error_ranges) is not int
+            or not 0 < self.max_error_ranges <= MAX_ERROR_RANGES
+            or type(self.pause_after_errors) is not int
+            or not 0 < self.pause_after_errors <= MAX_ERROR_RANGES
+            or (
+                self.pause_temperature_celsius is not None
+                and type(self.pause_temperature_celsius) is not int
+            )
+        ):
+            raise ReadErrorHandlingError("invalid_policy", "read policy values are out of bounds")
 
 
 @dataclass(frozen=True)
@@ -80,7 +96,7 @@ class ReadOutcome:
 
 
 class RawReader(Protocol):
-    def read_at(self, offset_bytes: int, length_bytes: int) -> bytes: ...
+    def read_at(self, offset_bytes: int, length_bytes: int) -> object: ...
 
 
 class ResilientReader:
@@ -108,8 +124,7 @@ class ResilientReader:
         return outcome.data
 
     def read_or_gap(self, offset_bytes: int, length_bytes: int) -> ReadOutcome:
-        if offset_bytes < 0 or length_bytes < 0:
-            raise ReadErrorHandlingError("invalid_range", "read range must not be negative")
+        _validate_range(offset_bytes, length_bytes)
         last_code = "read_error"
         for attempt in range(1, self.policy.max_attempts + 1):
             self.counters = _replace_counter(
@@ -123,7 +138,12 @@ class ResilientReader:
             except OSError:
                 last_code = "eio"
             else:
-                if len(data) == length_bytes:
+                if not isinstance(data, bytes):
+                    last_code = "invalid_data"
+                    self.counters = _replace_counter(
+                        self.counters, invalid_reads=self.counters.invalid_reads + 1
+                    )
+                elif len(data) == length_bytes:
                     self.counters = _replace_counter(
                         self.counters,
                         successful_reads=self.counters.successful_reads + 1,
@@ -133,10 +153,11 @@ class ResilientReader:
                     return ReadOutcome(
                         data, None, self.counters, self.warnings(), self._pause_reason()
                     )
-                last_code = "short_read"
-                self.counters = _replace_counter(
-                    self.counters, short_reads=self.counters.short_reads + 1
-                )
+                else:
+                    last_code = "short_read"
+                    self.counters = _replace_counter(
+                        self.counters, short_reads=self.counters.short_reads + 1
+                    )
             if attempt < self.policy.max_attempts:
                 self.counters = _replace_counter(
                     self.counters, retry_reads=self.counters.retry_reads + 1
@@ -201,7 +222,20 @@ class ResilientReader:
         return None
 
     def _backoff_seconds(self, attempt: int) -> float:
-        return float(self.policy.base_backoff_ms * (2 ** (attempt - 1))) / 1000
+        backoff_ms = min(self.policy.base_backoff_ms * (2 ** (attempt - 1)), MAX_BACKOFF_MS)
+        return float(backoff_ms) / 1000
+
+
+def _validate_range(offset_bytes: int, length_bytes: int) -> None:
+    if (
+        type(offset_bytes) is not int
+        or type(length_bytes) is not int
+        or offset_bytes < 0
+        or length_bytes < 0
+    ):
+        raise ReadErrorHandlingError("invalid_range", "read range must be non-negative integers")
+    if length_bytes > MAX_READ_LENGTH_BYTES:
+        raise ReadErrorHandlingError("range_too_large", "read range exceeds the bounded limit")
 
 
 def _replace_counter(counters: ReadCounters, **updates: int) -> ReadCounters:
