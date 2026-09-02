@@ -109,6 +109,54 @@ class MigrationRunnerTests(unittest.TestCase):
             with self.assertRaises(runner.FutureSchemaError):
                 runner.migrate_catalog(db_path)
 
+    def test_symlinked_catalog_database_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            target = root / "target.sqlite3"
+            target.write_bytes(b"not a catalog")
+            db_path = root / "catalog.sqlite3"
+            db_path.symlink_to(target)
+
+            with self.assertRaisesRegex(runner.MigrationError, "catalog database"):
+                runner.migrate_catalog(db_path)
+
+            self.assertEqual(b"not a catalog", target.read_bytes())
+
+    def test_existing_backup_path_is_never_overwritten(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            db_path = root / "catalog.sqlite3"
+            backup_dir = root / "backups"
+            runner.migrate_catalog(db_path)
+            backup_dir.mkdir()
+            backup_path = backup_dir / "catalog.sqlite3.v6-to-v7.bak"
+            backup_path.write_bytes(b"must-not-change")
+
+            connection = catalog_schema.connect_catalog(db_path)
+            try:
+                connection.execute("DELETE FROM schema_migrations WHERE version = 7")
+            finally:
+                connection.close()
+
+            with self.assertRaisesRegex(runner.MigrationError, "backup"):
+                runner.migrate_catalog(db_path, backup_dir=backup_dir)
+
+            self.assertEqual(b"must-not-change", backup_path.read_bytes())
+
+    def test_incomplete_migration_history_is_not_treated_as_current(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "catalog.sqlite3"
+            runner.migrate_catalog(db_path)
+            connection = catalog_schema.connect_catalog(db_path)
+            try:
+                connection.execute("DELETE FROM schema_migrations WHERE version = 3")
+            finally:
+                connection.close()
+
+            with self.assertRaisesRegex(runner.MigrationError, "history"):
+                runner.migrate_catalog(db_path)
+            self.assertFalse(runner.ready_for_workers(db_path))
+
 
 def _version_rows(db_path: Path) -> int:
     connection = catalog_schema.connect_catalog(db_path)

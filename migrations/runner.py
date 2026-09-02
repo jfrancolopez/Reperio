@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+import stat
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -48,6 +49,7 @@ def migrate_catalog(
     selected = tuple(migrations or DEFAULT_MIGRATIONS)
     _validate_migration_sequence(selected)
     database_path.parent.mkdir(parents=True, exist_ok=True)
+    _reject_unsafe_existing_path(database_path, "catalog database")
     existed_before = database_path.exists() and database_path.stat().st_size > 0
     connection = catalog_schema.connect_catalog(database_path)
     try:
@@ -57,6 +59,7 @@ def migrate_catalog(
             raise FutureSchemaError(
                 f"database schema version {current} is newer than supported {target}"
             )
+        _ensure_contiguous_history(connection, current)
         if current == target:
             return MigrationResult(current, (), None, True)
 
@@ -91,7 +94,12 @@ def ready_for_workers(database_path: Path) -> bool:
         return False
     connection = catalog_schema.connect_catalog(database_path)
     try:
-        return current_schema_version(connection) == CURRENT_SCHEMA_VERSION
+        try:
+            current = current_schema_version(connection)
+            _ensure_contiguous_history(connection, current)
+        except (MigrationError, sqlite3.Error):
+            return False
+        return current == CURRENT_SCHEMA_VERSION
     finally:
         connection.close()
 
@@ -283,6 +291,15 @@ def _ensure_version_table(connection: sqlite3.Connection) -> None:
     )
 
 
+def _ensure_contiguous_history(connection: sqlite3.Connection, current: int) -> None:
+    if current == 0:
+        return
+    rows = connection.execute("SELECT version FROM schema_migrations ORDER BY version").fetchall()
+    observed = tuple(int(row[0]) for row in rows)
+    if observed != tuple(range(1, current + 1)):
+        raise MigrationError("schema migration history is incomplete or reordered")
+
+
 def _table_exists(connection: sqlite3.Connection, table: str) -> bool:
     return (
         connection.execute(
@@ -302,6 +319,9 @@ def _backup_database(
     destination_dir = backup_dir or database_path.parent / "backups"
     destination_dir.mkdir(parents=True, exist_ok=True)
     backup_path = destination_dir / f"{database_path.name}.v{current}-to-v{target}.bak"
+    _reject_unsafe_existing_path(backup_path, "catalog backup")
+    if backup_path.exists() or backup_path.is_symlink():
+        raise MigrationError("catalog backup already exists")
     source = sqlite3.connect(database_path)
     destination = sqlite3.connect(backup_path)
     try:
@@ -310,3 +330,13 @@ def _backup_database(
         destination.close()
         source.close()
     return backup_path
+
+
+def _reject_unsafe_existing_path(path: Path, label: str) -> None:
+    """Reject path replacement attacks before SQLite follows a filesystem path."""
+    try:
+        details = path.lstat()
+    except FileNotFoundError:
+        return
+    if not stat.S_ISREG(details.st_mode) or details.st_nlink != 1:
+        raise MigrationError(f"{label} must be a single-link regular file")
