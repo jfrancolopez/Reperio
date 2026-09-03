@@ -40,8 +40,10 @@ read-only and emits normalized findings to the catalog.
   source-reconnect-aware restart, and UI-visible pause acknowledgements for
   `RPR-045`.
 - **PhotoRec resume:** `scanner.photorec_resume` backs up and validates
-  `photorec.ses` state against source/tool/config bindings before any resume
-  invocation for `RPR-047`.
+  the bounded upstream `#timestamp` session format with source/tool/config
+  bindings, then invokes `photorec /cmd resume` from private scratch for
+  `RPR-047`; incomplete state is preserved atomically and the resume result
+  carries the refreshed durable backup.
 - **Carved ingestion:** `scanner.carved_ingestion` watches stable PhotoRec
   quarantine files, stores completed bytes in scratch, and records carved
   provenance for `RPR-048` without ingesting growing files.
